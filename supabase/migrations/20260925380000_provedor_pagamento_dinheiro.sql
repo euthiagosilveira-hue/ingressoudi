@@ -1,0 +1,21 @@
+-- =============================================================================
+-- GZ1 Ingresso - Provedor/origem de pagamento DINHEIRO
+-- Migration: provedor_pagamento_dinheiro
+--
+-- Adiciona DINHEIRO ao enum public.provedor_pagamento, preservando
+-- MERCADO_PAGO e STONE.
+--
+-- Modelagem: no dominio atual a coluna public.pagamentos.provedor discrimina a
+-- origem/forma de pagamento (MERCADO_PAGO, STONE). A venda presencial em
+-- dinheiro e uma origem explicita e deve ser distinguivel no banco e no
+-- financeiro, sem fingir um gateway externo. Por isso o valor entra no mesmo
+-- enum, e nao em uma coluna paralela.
+--
+-- Isolada em arquivo proprio porque ALTER TYPE ... ADD VALUE nao pode ser
+-- utilizado (como valor) na mesma transacao em que e criado. As RPCs que usam
+-- 'DINHEIRO' ficam na migration seguinte.
+--
+-- Idempotente. Sem alteracao de dados. Sem DROP/DELETE/TRUNCATE.
+-- =============================================================================
+
+alter type public.provedor_pagamento add value if not exists 'DINHEIRO';
