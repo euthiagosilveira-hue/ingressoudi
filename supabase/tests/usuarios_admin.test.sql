@@ -137,7 +137,7 @@ begin
 
   -- J) com 2 admins ativos, 1 pode ser desativado
   perform public.atualizar_usuario_admin(v_admin2, 'Admin Usuarios 2', 'ADMINISTRADOR', false);
-  if (select ativo from public.usuarios where id = v_admin2) then
+  if (select m.ativo from public.membros_organizacao m where m.usuario_id = v_admin2 and m.organizacao_id = current_setting('teste.organizacao_id')::uuid) then
     raise exception 'J: admin2 deveria estar inativo';
   end if;
 
@@ -164,11 +164,11 @@ begin
 
   -- K) PORTARIA pode ser desativado/ativado por ADMIN
   perform public.atualizar_usuario_admin(v_port, 'Portaria Renomeada', 'PORTARIA', false);
-  if (select ativo from public.usuarios where id = v_port) then
+  if (select m.ativo from public.membros_organizacao m where m.usuario_id = v_port and m.organizacao_id = current_setting('teste.organizacao_id')::uuid) then
     raise exception 'K: portaria deveria estar inativo';
   end if;
   perform public.atualizar_usuario_admin(v_port, 'Portaria Renomeada', 'PORTARIA', true);
-  if not (select ativo from public.usuarios where id = v_port) then
+  if not (select m.ativo from public.membros_organizacao m where m.usuario_id = v_port and m.organizacao_id = current_setting('teste.organizacao_id')::uuid) then
     raise exception 'K: portaria deveria estar ativo';
   end if;
 
