@@ -16,6 +16,40 @@
 
 begin;
 
+-- [Ingressoudi] Fixture multiempresa (Etapa A) ---------------------------------
+-- Cria uma organizacao de teste; eventos inseridos sem organizacao caem nela e
+-- todo usuario criado (ou com perfil alterado) vira membro dela com o mesmo
+-- perfil. Tudo e desfeito pelo rollback ao final do arquivo.
+do $fx$
+declare
+  v_org uuid;
+begin
+  insert into public.organizacoes (nome, slug)
+  values ('Org Teste', 'org-teste-' || replace(gen_random_uuid()::text, '-', ''))
+  returning id into v_org;
+  execute format('alter table public.eventos alter column organizacao_id set default %L::uuid', v_org);
+  perform set_config('teste.organizacao_id', v_org::text, true);
+end
+$fx$;
+
+create function private.teste_vincular_membro()
+returns trigger
+language plpgsql
+set search_path = ''
+as $fx$
+begin
+  insert into public.membros_organizacao (organizacao_id, usuario_id, perfil, ativo)
+  values (current_setting('teste.organizacao_id')::uuid, new.id, new.perfil, true)
+  on conflict (organizacao_id, usuario_id) do update set perfil = excluded.perfil;
+  return new;
+end
+$fx$;
+
+create trigger trg_teste_vincular_membro
+  after insert or update of perfil on public.usuarios
+  for each row execute function private.teste_vincular_membro();
+-- [/Ingressoudi] ------------------------------------------------------------------
+
 do $$
 begin
   if has_function_privilege('anon', 'public.obter_dashboard_admin()', 'EXECUTE') then
@@ -83,7 +117,7 @@ begin
   update public.eventos set status = 'REALIZADO' where id = v_ag2;
   update public.eventos set inicio_em = now() - interval '1 day' where id = v_ag1;
   v_res := public.obter_dashboard_admin();
-  if v_res->'evento' is not null then
+  if coalesce(jsonb_typeof(v_res->'evento'), 'null') <> 'null' then
     raise exception 'G: AGENDADO no passado nao deveria aparecer';
   end if;
 
@@ -97,14 +131,14 @@ begin
   -- E) apenas REALIZADOS -> null
   update public.eventos set status = 'REALIZADO' where id = v_ag1;
   v_res := public.obter_dashboard_admin();
-  if v_res->'evento' is not null then
+  if coalesce(jsonb_typeof(v_res->'evento'), 'null') <> 'null' then
     raise exception 'E: apenas REALIZADOS deveria ser null';
   end if;
 
   -- F) apenas CANCELADOS -> null
   update public.eventos set status = 'CANCELADO', inicio_em = now() + interval '5 days' where id = v_ag1;
   v_res := public.obter_dashboard_admin();
-  if v_res->'evento' is not null then
+  if coalesce(jsonb_typeof(v_res->'evento'), 'null') <> 'null' then
     raise exception 'F: apenas CANCELADOS deveria ser null';
   end if;
 end $$;

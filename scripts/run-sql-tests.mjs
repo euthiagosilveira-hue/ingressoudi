@@ -14,6 +14,12 @@ if (!url || !ref) {
   console.error('Defina SUPABASE_DB_URL e INGRESSOUDI_PROJECT_REF no .env')
   process.exit(1)
 }
+// Trava de segurança: nunca roda contra o banco de produção do GZ1.
+const GZ1_PROJECT_REF = 'bzifmlghktciwnlpvlju'
+if (ref === GZ1_PROJECT_REF || url.includes(GZ1_PROJECT_REF)) {
+  console.error('BLOQUEADO: o .env aponta para o projeto do GZ1. Use o projeto do Ingressoudi.')
+  process.exit(1)
+}
 // Trava de segurança: só roda se a URL for do projeto do Ingressoudi.
 if (!url.includes(ref)) {
   console.error('SUPABASE_DB_URL não pertence ao projeto INGRESSOUDI_PROJECT_REF. Abortado.')

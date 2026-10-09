@@ -72,7 +72,8 @@ Nome comercial em avaliação: **"Entrô"**. Ainda não está confirmado, por um
 
 **Infraestrutura separada (nunca reaproveitar a do original):**
 
-- **Supabase:** um projeto **novo e vazio**.
+- **Supabase:** um projeto **novo e vazio**, exclusivo do Ingressoudi.
+  - **O projeto do GZ1 tem o ref `bzifmlghktciwnlpvlju`. É PROIBIDO rodar qualquer comando (link, db push, migration, teste, consulta) contra esse ref.** Se o `.env` ou o `supabase/.temp/project-ref` apontarem para ele, PARE e avise.
   - Criado **a partir das migrations**, não de cópia do banco.
   - **Nenhum dado do GZ1 é copiado.** Usar seeds fictícios para desenvolvimento.
   - Rodar `supabase link --project-ref <NOVO>` antes de qualquer `db push`.
