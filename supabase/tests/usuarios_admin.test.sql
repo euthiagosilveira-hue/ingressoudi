@@ -19,6 +19,40 @@
 
 begin;
 
+-- [Ingressoudi] Fixture multiempresa (Etapa A) ---------------------------------
+-- Cria uma organizacao de teste; eventos inseridos sem organizacao caem nela e
+-- todo usuario criado (ou com perfil alterado) vira membro dela com o mesmo
+-- perfil. Tudo e desfeito pelo rollback ao final do arquivo.
+do $fx$
+declare
+  v_org uuid;
+begin
+  insert into public.organizacoes (nome, slug)
+  values ('Org Teste', 'org-teste-' || replace(gen_random_uuid()::text, '-', ''))
+  returning id into v_org;
+  execute format('alter table public.eventos alter column organizacao_id set default %L::uuid', v_org);
+  perform set_config('teste.organizacao_id', v_org::text, true);
+end
+$fx$;
+
+create function private.teste_vincular_membro()
+returns trigger
+language plpgsql
+set search_path = ''
+as $fx$
+begin
+  insert into public.membros_organizacao (organizacao_id, usuario_id, perfil, ativo)
+  values (current_setting('teste.organizacao_id')::uuid, new.id, new.perfil, true)
+  on conflict (organizacao_id, usuario_id) do update set perfil = excluded.perfil;
+  return new;
+end
+$fx$;
+
+create trigger trg_teste_vincular_membro
+  after insert or update of perfil on public.usuarios
+  for each row execute function private.teste_vincular_membro();
+-- [/Ingressoudi] ------------------------------------------------------------------
+
 do $$
 begin
   if has_function_privilege('anon', 'public.listar_usuarios_admin(text)', 'EXECUTE') then
@@ -103,7 +137,7 @@ begin
 
   -- J) com 2 admins ativos, 1 pode ser desativado
   perform public.atualizar_usuario_admin(v_admin2, 'Admin Usuarios 2', 'ADMINISTRADOR', false);
-  if (select ativo from public.usuarios where id = v_admin2) then
+  if (select m.ativo from public.membros_organizacao m where m.usuario_id = v_admin2 and m.organizacao_id = current_setting('teste.organizacao_id')::uuid) then
     raise exception 'J: admin2 deveria estar inativo';
   end if;
 
@@ -130,11 +164,11 @@ begin
 
   -- K) PORTARIA pode ser desativado/ativado por ADMIN
   perform public.atualizar_usuario_admin(v_port, 'Portaria Renomeada', 'PORTARIA', false);
-  if (select ativo from public.usuarios where id = v_port) then
+  if (select m.ativo from public.membros_organizacao m where m.usuario_id = v_port and m.organizacao_id = current_setting('teste.organizacao_id')::uuid) then
     raise exception 'K: portaria deveria estar inativo';
   end if;
   perform public.atualizar_usuario_admin(v_port, 'Portaria Renomeada', 'PORTARIA', true);
-  if not (select ativo from public.usuarios where id = v_port) then
+  if not (select m.ativo from public.membros_organizacao m where m.usuario_id = v_port and m.organizacao_id = current_setting('teste.organizacao_id')::uuid) then
     raise exception 'K: portaria deveria estar ativo';
   end if;
 

@@ -1,14 +1,28 @@
-import type { PerfilOperador } from '~/types/operador'
-
 export type PerfilOperador = 'ADMINISTRADOR' | 'PORTARIA'
 
-/** Linha real de public.usuarios (somente os campos usados). */
+export interface OrganizacaoResumo {
+  id: string
+  nome: string
+  slug: string
+}
+
+export interface OrganizacaoDoOperador extends OrganizacaoResumo {
+  perfil: PerfilOperador
+}
+
+/**
+ * Sessao do operador (RPC public.obter_sessao_operador).
+ * `perfil` e `ativo` referem-se a ORGANIZACAO ATIVA.
+ */
 export interface OperadorProfile {
   id: string
   nome: string
   email: string
   perfil: PerfilOperador
   ativo: boolean
+  superAdmin: boolean
+  organizacao: OrganizacaoResumo | null
+  organizacoes: OrganizacaoDoOperador[]
 }
 
 export type AuthErrorCode =

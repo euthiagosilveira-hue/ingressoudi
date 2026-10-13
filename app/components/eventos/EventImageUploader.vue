@@ -15,6 +15,7 @@ const TIPOS_ACEITOS = ['image/png', 'image/jpeg', 'image/webp']
 const TAMANHO_MAXIMO = 5 * 1024 * 1024
 
 const client = useSupabaseClient()
+const { operador } = useOperatorAuth()
 const inputRef = ref<HTMLInputElement | null>(null)
 const erro = ref('')
 const enviando = ref(false)
@@ -52,7 +53,10 @@ async function aoSelecionar(evento: Event) {
   erro.value = ''
   enviando.value = true
   try {
-    const caminho = `capas/${crypto.randomUUID()}.${extensao(arquivo)}`
+    // Storage exige a pasta da organizacao ativa: {organizacao_id}/{arquivo}
+    const organizacaoId = operador.value?.organizacao?.id
+    if (!organizacaoId) throw new Error('SEM_ORGANIZACAO')
+    const caminho = `${organizacaoId}/${crypto.randomUUID()}.${extensao(arquivo)}`
     const { error } = await client.storage
       .from(BUCKET)
       .upload(caminho, arquivo, { contentType: arquivo.type, upsert: false })

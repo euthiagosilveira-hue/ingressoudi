@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "test": "node --test \"tests/**/*.test.ts\"",
+    "test:db": "node --env-file=.env scripts/run-sql-tests.mjs",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "vue3-toastify": "^0.2.9"
   },
   "devDependencies": {
-    "@types/qrcode": "^1.5.6"
+    "@types/qrcode": "^1.5.6",
+    "pg": "^8.23.1"
   }
 }
