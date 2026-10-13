@@ -12,8 +12,10 @@ const props = withDefaults(
     participantes: CheckoutParticipant[]
     comprador: CheckoutBuyer
     erro?: string
+    /** Taxa de servico total paga pelo comprador. */
+    taxa?: number
   }>(),
-  { erro: '' }
+  { erro: '', taxa: 0 }
 )
 
 const emit = defineEmits<{
@@ -81,6 +83,9 @@ const acaoEditar =
         <div class="mt-2 space-y-1 text-sm">
           <p class="text-zinc-300">
             {{ props.quantidade }} × {{ formatMoeda(props.preco ?? 0) }}
+          </p>
+          <p v-if="props.taxa > 0" class="text-zinc-300">
+            Taxa de serviço: {{ formatMoeda(props.taxa) }}
           </p>
           <p class="text-base font-bold text-amber-400">
             Total: {{ formatMoeda(props.total) }}

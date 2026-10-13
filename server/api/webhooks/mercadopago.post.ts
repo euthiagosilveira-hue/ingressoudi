@@ -1,57 +1,115 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 import { ehUuid } from '../../services/payments/payment-service'
-import { MercadoPagoProvider } from '../../services/payments/mercado-pago/mercado-pago-provider'
+import { MercadoPagoPaymentsProvider, valorConfere } from '../../services/payments/mercado-pago/mercado-pago-payments'
+import { obterAccessTokenOrganizacao } from '../../services/payments/mercado-pago/mercado-pago-conexao'
 import { validarAssinaturaMp } from '../../services/payments/mercado-pago/mercado-pago-signature'
 
+/**
+ * Webhook de pagamentos (multiempresa).
+ *
+ *  1. Assinatura: se MERCADO_PAGO_WEBHOOK_SECRET estiver definido e o header
+ *     x-signature vier, ela precisa ser valida (senao 401).
+ *  2. Organizacao: pelo parametro `org` da notification_url ou, na falta dele,
+ *     pelo `user_id` (conta do vendedor) informado no corpo.
+ *  3. Nunca confia no payload: consulta o pagamento oficial com o token da
+ *     organizacao e so confirma se a referencia pertence a ela e o valor confere.
+ */
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
-  const secret = config.mercadoPagoWebhookSecret
-  const accessToken = config.mercadoPagoAccessToken
+  const secret = String(config.mercadoPagoWebhookSecret ?? '')
 
   const query = getQuery(event)
-  const body = await readBody<{ data?: { id?: string } }>(event).catch(() => ({}))
+  const body = await readBody<{ type?: string; action?: string; user_id?: string | number; data?: { id?: string } }>(
+    event
+  ).catch(() => ({}))
   const dataId = String(query['data.id'] ?? body?.data?.id ?? '') || null
+  const tipo = String(query.type ?? query.topic ?? body?.type ?? '')
 
   const xSignature = getHeader(event, 'x-signature') ?? null
   const xRequestId = getHeader(event, 'x-request-id') ?? null
 
-  if (!secret) {
-    setResponseStatus(event, 500)
-    return { error: 'WEBHOOK_NAO_CONFIGURADO' }
+  if (secret && xSignature) {
+    if (!validarAssinaturaMp({ xSignature, xRequestId, dataId }, secret)) {
+      setResponseStatus(event, 401)
+      return { error: 'ASSINATURA_INVALIDA' }
+    }
   }
 
-  const assinaturaValida = validarAssinaturaMp({ xSignature, xRequestId, dataId }, secret)
-  if (!assinaturaValida) {
-    setResponseStatus(event, 401)
-    return { error: 'ASSINATURA_INVALIDA' }
-  }
+  // Outros topicos (merchant_order, etc.) sao ignorados.
+  if (tipo && tipo !== 'payment') return { ok: true, ignorado: true }
 
   if (!dataId) {
     setResponseStatus(event, 400)
     return { error: 'DATA_ID_AUSENTE' }
   }
 
-  if (!accessToken) {
+  const client = serverSupabaseServiceRole(event)
+
+  let organizacaoId = String(query.org ?? '').trim()
+  if (!ehUuid(organizacaoId)) {
+    organizacaoId = ''
+    const mpUserId = body?.user_id !== undefined && body?.user_id !== null ? String(body.user_id) : ''
+    if (mpUserId) {
+      const { data } = await client
+        .from('organizacoes_mercado_pago')
+        .select('organizacao_id')
+        .eq('mp_user_id', mpUserId)
+        .maybeSingle()
+      organizacaoId = data?.organizacao_id ? String(data.organizacao_id) : ''
+    }
+  }
+  if (!organizacaoId) return { ok: true, ignorado: true }
+
+  let accessToken: string | null
+  try {
+    accessToken = await obterAccessTokenOrganizacao(event, organizacaoId)
+  } catch {
     setResponseStatus(event, 503)
     return { error: 'PAGAMENTO_INDISPONIVEL' }
   }
+  if (!accessToken) return { ok: true, ignorado: true }
 
-  // Nunca confiar apenas no payload: sempre consultar a Order oficial.
-  const provider = new MercadoPagoProvider(accessToken)
-  const charge = await provider.getCharge(dataId)
+  let charge
+  try {
+    charge = await new MercadoPagoPaymentsProvider(accessToken).getCharge(dataId)
+  } catch {
+    // Pagamento nao pertence a esta conta ou provedor indisponivel: o MP reenviara.
+    setResponseStatus(event, 502)
+    return { error: 'CONSULTA_FALHOU' }
+  }
 
-  if (charge.status === 'APROVADO' && ehUuid(charge.externalReference)) {
-    const client = serverSupabaseServiceRole(event)
-    const { error } = await client.rpc('confirmar_pagamento', {
-      p_pagamento_id: charge.externalReference,
-      p_transaction_id: charge.transactionId,
-      p_referencia_externa: charge.externalReference
+  if (charge.status !== 'APROVADO' || !ehUuid(charge.externalReference)) {
+    return { ok: true }
+  }
+
+  const { data: pagamento } = await client
+    .from('pagamentos')
+    .select('id,organizacao_id,valor,status')
+    .eq('id', charge.externalReference)
+    .maybeSingle()
+
+  if (!pagamento || String(pagamento.organizacao_id) !== organizacaoId) {
+    return { ok: true, ignorado: true }
+  }
+  if (pagamento.status === 'APROVADO') return { ok: true }
+
+  if (!valorConfere(charge.amount, pagamento.valor)) {
+    console.error('[mercado-pago] webhook com valor divergente', {
+      pagamentoId: pagamento.id,
+      organizacaoId
     })
-    if (error) {
-      setResponseStatus(event, 500)
-      return { error: 'ERRO_CONFIRMACAO' }
-    }
+    return { ok: true, ignorado: true }
+  }
+
+  const { error } = await client.rpc('confirmar_pagamento', {
+    p_pagamento_id: charge.externalReference,
+    p_transaction_id: charge.transactionId,
+    p_referencia_externa: charge.externalReference
+  })
+  if (error) {
+    setResponseStatus(event, 500)
+    return { error: 'ERRO_CONFIRMACAO' }
   }
 
   return { ok: true }

@@ -18,6 +18,8 @@ export interface PixCharge {
   pixCopyPaste: string | null
   pixQrCode: string | null
   expiresAt: string | null
+  /** Valor cobrado no provedor (quando disponivel), para conferencia. */
+  amount?: number | null
 }
 
 export interface CreatePixChargeInput {
@@ -35,6 +37,12 @@ export interface CreatePixChargeInput {
    * Nunca deve ser true em producao.
    */
   autoApproveTestPix?: boolean
+  /** Comissao da plataforma (marketplace). Ausente ou 0 = sem comissao. */
+  applicationFee?: number
+  /** URL de notificacao (webhook) por cobranca. */
+  notificationUrl?: string
+  /** Descricao exibida ao pagador. */
+  description?: string
 }
 
 export interface PaymentProvider {

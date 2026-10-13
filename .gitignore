@@ -26,3 +26,6 @@ logs
 # Supabase local state
 supabase/.temp
 supabase/.branches
+
+# Claude outputs
+Claude outputs/

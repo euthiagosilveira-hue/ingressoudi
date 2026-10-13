@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { toast } from 'vue3-toastify'
 
 import EventForm from '~/components/eventos/EventForm.vue'
+import EventTaxaCard from '~/components/eventos/EventTaxaCard.vue'
 import { atualizarEventoAdmin, obterEventoAdmin } from '~/services/admin/eventos'
 import type { EventFormValue, EventPayload } from '~/types/evento'
 import { mapearEventoAdminParaFormulario } from '~/utils/eventos'
@@ -108,12 +109,14 @@ onMounted(() => void carregar())
     </div>
   </div>
 
-  <EventForm
-    v-else-if="valorInicial"
-    mode="edit"
-    :evento-id="eventoId"
-    :initial-value="valorInicial"
-    @submit="aoSubmeter"
-    @cancel="aoCancelar"
-  />
+  <div v-else-if="valorInicial" class="space-y-6">
+    <EventTaxaCard :evento-id="eventoId" />
+    <EventForm
+      mode="edit"
+      :evento-id="eventoId"
+      :initial-value="valorInicial"
+      @submit="aoSubmeter"
+      @cancel="aoCancelar"
+    />
+  </div>
 </template>

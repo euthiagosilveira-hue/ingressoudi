@@ -33,6 +33,12 @@ export interface PublicEventDetail {
   preco: number | null
 
   /**
+   * Taxa de servico por ingresso paga pelo comprador (0 quando o produtor
+   * absorve a taxa). Opcional: mocks de desenvolvimento podem omitir.
+   */
+  taxaServico?: number
+
+  /**
    * Quantidade disponivel.
    * - Mocks de desenvolvimento: preenchido.
    * - RPC publica real: retorna null (nao expoe estoque).

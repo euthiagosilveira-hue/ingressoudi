@@ -31,9 +31,10 @@ test('config expõe public.siteUrl a partir de NUXT_PUBLIC_SITE_URL', () => {
   assert.ok(nuxtConfig.includes('siteUrl: process.env.NUXT_PUBLIC_SITE_URL'))
 })
 
-test('.env.example documenta NUXT_PUBLIC_SITE_URL com o dominio de producao', () => {
+test('.env.example documenta NUXT_PUBLIC_SITE_URL com URL https de producao (sem dominio do GZ1)', () => {
   assert.ok(envExample.includes('NUXT_PUBLIC_SITE_URL'))
-  assert.ok(envExample.includes('https://gz-1-ingressos.vercel.app'))
+  assert.ok(/Producao: https:\/\//.test(envExample))
+  assert.ok(!envExample.includes('gz-1-ingressos'))
 })
 
 // D) convite expirado -> mensagem amigavel

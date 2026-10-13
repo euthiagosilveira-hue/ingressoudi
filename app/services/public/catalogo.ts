@@ -71,5 +71,18 @@ export async function obterEventoPublico(slug: string): Promise<PublicEventDetai
 
   const rows = (data ?? []) as EventoPublicoRow[]
   const row = rows[0]
-  return row ? mapearEventoPublico(row) : null
+  if (!row) return null
+
+  const evento = mapearEventoPublico(row)
+  evento.taxaServico = await obterTaxaEventoPublico(slug)
+  return evento
+}
+
+/** Taxa por ingresso exibida ao comprador. Falha de leitura nao bloqueia a pagina. */
+async function obterTaxaEventoPublico(slug: string): Promise<number> {
+  const client = useSupabaseClient()
+  const { data, error } = await client.rpc('obter_taxa_evento_publico', { p_slug: slug })
+  if (error || !data) return 0
+  const taxa = Number((data as { taxa_servico?: number | string | null }).taxa_servico ?? 0)
+  return Number.isNaN(taxa) ? 0 : taxa
 }

@@ -6,7 +6,6 @@ import {
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
-  const accessToken = config.mercadoPagoAccessToken
 
   const body = await readBody<{ checkoutToken?: string }>(event).catch(() => ({}))
   const checkoutToken = String(body?.checkoutToken ?? '').trim()
@@ -16,7 +15,7 @@ export default defineEventHandler(async (event) => {
     return { error: 'CHECKOUT_INVALIDO' }
   }
 
-  if (!accessToken) {
+  if (String(config.mercadoPagoTokenKey ?? '').length < 32) {
     setResponseStatus(event, 503)
     return {
       error: 'PAGAMENTO_INDISPONIVEL',
@@ -27,7 +26,7 @@ export default defineEventHandler(async (event) => {
   try {
     const autoApproveTestEnabled =
       String(config.mercadoPagoTestAutoApprovePix ?? 'false') === 'true'
-    return await criarPix(event, checkoutToken, accessToken, autoApproveTestEnabled)
+    return await criarPix(event, checkoutToken, autoApproveTestEnabled)
   } catch (erro) {
     if (erro instanceof PaymentServiceError) {
       setResponseStatus(event, erro.status)

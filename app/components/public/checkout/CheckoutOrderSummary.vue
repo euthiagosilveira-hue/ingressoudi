@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { formatMoeda } from '~/utils/format'
 
-const props = defineProps<{
-  quantidade: number
-  preco: number | null
-  total: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    quantidade: number
+    preco: number | null
+    total: number
+    /** Taxa de servico total paga pelo comprador. */
+    taxa?: number
+  }>(),
+  { taxa: 0 }
+)
 </script>
 
 <template>
@@ -20,6 +25,10 @@ const props = defineProps<{
       <div class="flex items-center justify-between gap-3">
         <dt class="text-zinc-500">Preço unitário</dt>
         <dd class="text-zinc-200">{{ formatMoeda(props.preco ?? 0) }}</dd>
+      </div>
+      <div v-if="props.taxa > 0" class="flex items-center justify-between gap-3">
+        <dt class="text-zinc-500">Taxa de serviço</dt>
+        <dd class="text-zinc-200">{{ formatMoeda(props.taxa) }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3 border-t border-zinc-800 pt-2">
         <dt class="font-medium text-zinc-300">Total</dt>

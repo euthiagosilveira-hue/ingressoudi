@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { toast } from 'vue3-toastify'
 import { BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 
 import AppButton from '~/components/AppButton.vue'
@@ -8,6 +9,7 @@ import BaseInput from '~/components/BaseInput.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import { criarOrganizacao } from '~/services/admin/organizacoes'
+import { definirTaxaOrganizacao, obterStatusMercadoPago } from '~/services/admin/mercadoPago'
 
 definePageMeta({
   title: 'Organizações',
@@ -41,6 +43,41 @@ async function criar() {
     enviando.value = false
   }
 }
+
+// Taxa de servico da organizacao ativa (somente super admin)
+const taxa = ref('')
+const salvandoTaxa = ref(false)
+
+async function carregarTaxa() {
+  if (!ehSuperAdmin.value || !operador.value?.organizacao?.id) return
+  try {
+    const status = await obterStatusMercadoPago()
+    taxa.value = status.taxaServico.toFixed(2)
+  } catch {
+    taxa.value = ''
+  }
+}
+
+async function salvarTaxa() {
+  const organizacaoId = operador.value?.organizacao?.id
+  const valor = Number(String(taxa.value).replace(',', '.'))
+  if (!organizacaoId || String(taxa.value).trim() === '' || Number.isNaN(valor) || valor < 0 || valor > 100) {
+    toast.error('Informe uma taxa entre 0 e 100.')
+    return
+  }
+  salvandoTaxa.value = true
+  try {
+    await definirTaxaOrganizacao(organizacaoId, valor)
+    taxa.value = valor.toFixed(2)
+    toast.success('Taxa atualizada.')
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Não foi possível salvar a taxa.')
+  } finally {
+    salvandoTaxa.value = false
+  }
+}
+
+onMounted(() => void carregarTaxa())
 
 async function acessar(id: string) {
   erro.value = ''
@@ -84,6 +121,21 @@ async function acessar(id: string) {
             </AppButton>
             <p v-if="erro" class="text-xs text-red-400">{{ erro }}</p>
           </div>
+        </form>
+      </BaseCard>
+
+      <BaseCard v-if="operador?.organizacao">
+        <h2 class="text-sm font-semibold text-white">
+          Taxa de serviço — {{ operador.organizacao.nome }}
+        </h2>
+        <p class="mt-1 text-xs text-zinc-500">
+          Valor por ingresso vendido online nesta organização (padrão R$ 1,00). Vale para os próximos pedidos.
+        </p>
+        <form class="mt-4 flex flex-wrap items-end gap-3" @submit.prevent="salvarTaxa">
+          <BaseInput v-model="taxa" label="Taxa (R$)" placeholder="1.00" />
+          <AppButton type="submit" variant="primary" :disabled="salvandoTaxa">
+            {{ salvandoTaxa ? 'Salvando...' : 'Salvar taxa' }}
+          </AppButton>
         </form>
       </BaseCard>
 

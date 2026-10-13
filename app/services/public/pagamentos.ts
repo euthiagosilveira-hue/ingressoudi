@@ -28,6 +28,9 @@ interface CheckoutRpcRow {
   quantidade: number
   valor_unitario: number | string
   valor_total: number | string
+  valor_ingressos?: number | string | null
+  taxa_repassada?: boolean | null
+  valor_taxa_total?: number | string | null
   pedido_status: string
   reserva_expira_em: string
   pagamento: CheckoutRpcPagamento | null
@@ -73,6 +76,9 @@ function mapearCheckout(row: CheckoutRpcRow): CheckoutPublico {
     quantidade: Number(row.quantidade),
     valorUnitario: Number(row.valor_unitario),
     valorTotal: Number(row.valor_total),
+    valorIngressos: row.valor_ingressos == null ? undefined : Number(row.valor_ingressos),
+    taxaRepassada: row.taxa_repassada ?? undefined,
+    valorTaxaTotal: row.valor_taxa_total == null ? undefined : Number(row.valor_taxa_total),
     pedidoStatus: row.pedido_status as OrderStatus,
     reservaExpiraEm: row.reserva_expira_em,
     pagamento: row.pagamento ? mapearPagamento(row.pagamento) : null
