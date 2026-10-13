@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-import { obterOperadorAtual } from '~/services/auth/operador'
+import { definirOrganizacaoAtiva, obterOperadorAtual } from '~/services/auth/operador'
 import type { AuthErrorCode, OperadorProfile } from '~/types/operador'
 import { codigoErroPerfil, mensagemLoginErro, perfilPermitido, resolverUid, uidDoUsuario } from '~/utils/auth'
 
@@ -74,6 +74,17 @@ export function useOperatorAuth() {
     }
   }
 
+  /**
+   * Troca a organizacao ativa (multiempresa) e atualiza o perfil em memoria.
+   * Quem chama deve recarregar a navegacao para limpar dados da organizacao anterior.
+   */
+  async function trocarOrganizacao(organizacaoId: string): Promise<OperadorProfile | null> {
+    const perfil = await definirOrganizacaoAtiva(organizacaoId)
+    operador.value = perfil
+    carregado.value = true
+    return perfil
+  }
+
   async function logout(): Promise<void> {
     await supabase.auth.signOut()
     operador.value = null
@@ -89,6 +100,7 @@ export function useOperatorAuth() {
     login,
     logout,
     carregarOperador,
+    trocarOrganizacao,
     refreshProfile: carregarOperador
   }
 }

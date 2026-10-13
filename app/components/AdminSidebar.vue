@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import type { Component } from 'vue'
 import {
   ArrowRightOnRectangleIcon,
   BanknotesIcon,
+  BuildingOffice2Icon,
   CalendarDaysIcon,
   ChartBarIcon,
   Cog6ToothIcon,
@@ -47,7 +48,25 @@ interface NavItem {
 
 const route = useRoute()
 
-const { user, operador, carregado, carregarOperador, logout } = useOperatorAuth()
+const { user, operador, carregado, carregarOperador, trocarOrganizacao, logout } = useOperatorAuth()
+
+const trocando = ref(false)
+const erroTroca = ref('')
+
+async function aoTrocarOrganizacao(evento: Event) {
+  const id = (evento.target as HTMLSelectElement).value
+  if (!id || id === operador.value?.organizacao?.id) return
+  trocando.value = true
+  erroTroca.value = ''
+  try {
+    const perfil = await trocarOrganizacao(id)
+    // recarrega a aplicacao para nao manter dados da organizacao anterior em memoria
+    window.location.assign(perfil?.perfil === 'PORTARIA' ? '/portaria' : '/')
+  } catch {
+    erroTroca.value = 'Não foi possível trocar de organização.'
+    trocando.value = false
+  }
+}
 
 onMounted(() => {
   if (user.value && !operador.value) {
@@ -98,9 +117,19 @@ const perfil = computed<PerfilSidebar | null>(() => operador.value?.perfil ?? nu
 // Enquanto o perfil nao estiver resolvido, nao liberar nenhum item (evita flash
 // do menu administrativo para PORTARIA).
 const perfilResolvido = computed(() => carregado.value && perfil.value !== null)
-const items = computed(() =>
-  perfilResolvido.value ? itens.filter((item) => podeVerItemSidebar(item, perfil.value)) : []
-)
+const items = computed(() => {
+  if (!perfilResolvido.value) return []
+  const visiveis = itens.filter((item) => podeVerItemSidebar(item, perfil.value))
+  if (operador.value?.superAdmin) {
+    visiveis.push({
+      to: '/plataforma/organizacoes',
+      icon: BuildingOffice2Icon,
+      label: 'Organizações',
+      allowedProfiles: PERFIS_ADMIN_PORTARIA
+    })
+  }
+  return visiveis
+})
 
 const raizClasses = computed(() =>
   props.mobile
@@ -140,6 +169,25 @@ const raizClasses = computed(() =>
     <div v-if="operador" class="mt-5 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
       <p class="truncate text-sm font-semibold text-white">{{ operador.nome }}</p>
       <p class="truncate text-xs text-zinc-500">{{ operador.email }}</p>
+      <div v-if="operador.organizacao" class="mt-3">
+        <p class="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Organização</p>
+        <select
+          v-if="operador.organizacoes.length > 1"
+          :value="operador.organizacao.id"
+          :disabled="trocando"
+          aria-label="Trocar de organização"
+          class="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-xs text-white focus:border-amber-400/60 focus:outline-none focus:ring-2 focus:ring-amber-400/30 disabled:opacity-50"
+          @change="aoTrocarOrganizacao"
+        >
+          <option v-for="org in operador.organizacoes" :key="org.id" :value="org.id">
+            {{ org.nome }}
+          </option>
+        </select>
+        <p v-else class="mt-0.5 truncate text-xs font-semibold text-zinc-200">
+          {{ operador.organizacao.nome }}
+        </p>
+        <p v-if="erroTroca" class="mt-1 text-xs text-red-400">{{ erroTroca }}</p>
+      </div>
       <span
         class="mt-2 inline-flex items-center rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300"
       >
