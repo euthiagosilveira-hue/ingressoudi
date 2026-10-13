@@ -24,6 +24,10 @@ export interface CheckoutPublico {
   quantidade: number
   valorUnitario: number
   valorTotal: number
+  /** Soma dos ingressos (sem taxa). */
+  valorIngressos?: number
+  taxaRepassada?: boolean
+  valorTaxaTotal?: number
   pedidoStatus: OrderStatus
   reservaExpiraEm: string
   pagamento: CheckoutPublicoPagamento | null

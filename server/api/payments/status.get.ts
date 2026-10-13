@@ -5,7 +5,6 @@ import {
 } from '../../services/payments/payment-service'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig(event)
   const token = String(getQuery(event).token ?? '').trim()
 
   if (!ehUuid(token)) {
@@ -14,7 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    return await consultarStatus(event, token, config.mercadoPagoAccessToken)
+    return await consultarStatus(event, token)
   } catch (erro) {
     if (erro instanceof PaymentServiceError) {
       setResponseStatus(event, erro.status)

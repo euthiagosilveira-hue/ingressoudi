@@ -39,6 +39,7 @@ const {
   disponiveis,
   maximo,
   total,
+  valorTaxa,
   definirQuantidade,
   atualizarParticipante,
   proximo,
@@ -111,6 +112,7 @@ function aoVoltar() {
           :quantidade="quantidade"
           :preco="preco"
           :total="total"
+          :taxa="valorTaxa"
           :participantes="participantes"
           :comprador="comprador"
           :erro="erroReserva"
@@ -124,7 +126,7 @@ function aoVoltar() {
         />
 
         <div v-if="step !== 'RESERVA_CRIADA'" class="lg:hidden">
-          <CheckoutOrderSummary :quantidade="quantidade" :preco="preco" :total="total" />
+          <CheckoutOrderSummary :quantidade="quantidade" :preco="preco" :total="total" :taxa="valorTaxa" />
         </div>
 
         <CheckoutNavigation
@@ -139,7 +141,7 @@ function aoVoltar() {
       <div class="hidden space-y-6 lg:block">
         <CheckoutEventSummary :evento="props.evento" />
         <div v-if="step !== 'RESERVA_CRIADA'">
-          <CheckoutOrderSummary :quantidade="quantidade" :preco="preco" :total="total" />
+          <CheckoutOrderSummary :quantidade="quantidade" :preco="preco" :total="total" :taxa="valorTaxa" />
         </div>
       </div>
     </div>

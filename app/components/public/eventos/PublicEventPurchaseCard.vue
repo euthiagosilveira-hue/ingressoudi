@@ -29,7 +29,10 @@ const situacaoBloqueada = computed<Exclude<PublicVendaSituacao, 'DISPONIVEL'> | 
         <p class="text-3xl font-bold text-amber-400">
           {{ formatMoeda(props.evento.preco ?? 0) }}
         </p>
-        <p class="text-xs text-zinc-500">por ingresso</p>
+        <p class="text-xs text-zinc-500">
+          por ingresso<template v-if="(props.evento.taxaServico ?? 0) > 0">
+            + {{ formatMoeda(props.evento.taxaServico ?? 0) }} de taxa de serviço</template>
+        </p>
       </div>
 
       <div class="mt-3">

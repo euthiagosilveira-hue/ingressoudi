@@ -21,6 +21,10 @@ interface CriarReservaRpcRow {
   quantidade: number
   valor_unitario: number | string
   valor_total: number | string
+  valor_ingressos?: number | string | null
+  taxa_servico_unitaria?: number | string | null
+  taxa_repassada?: boolean | null
+  valor_taxa_total?: number | string | null
   reserva_expira_em: string
   status: string
   ingressos: CriarReservaIngressoRow[]
@@ -59,6 +63,12 @@ function mapearReserva(row: CriarReservaRpcRow): CheckoutReservation {
     quantidade: Number(row.quantidade),
     valorUnitario: Number(row.valor_unitario),
     valorTotal: Number(row.valor_total),
+    valorIngressos:
+      row.valor_ingressos == null ? undefined : Number(row.valor_ingressos),
+    taxaServicoUnitaria:
+      row.taxa_servico_unitaria == null ? undefined : Number(row.taxa_servico_unitaria),
+    taxaRepassada: row.taxa_repassada ?? undefined,
+    valorTaxaTotal: row.valor_taxa_total == null ? undefined : Number(row.valor_taxa_total),
     reservaExpiraEm: row.reserva_expira_em,
     status: row.status,
     ingressos: (row.ingressos ?? []).map(mapearIngresso)

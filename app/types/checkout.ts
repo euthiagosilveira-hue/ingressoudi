@@ -41,6 +41,13 @@ export interface CheckoutReservation {
   quantidade: number
   valorUnitario: number
   valorTotal: number
+  /** Soma dos ingressos (sem taxa). Ausente no mock DEV. */
+  valorIngressos?: number
+  taxaServicoUnitaria?: number
+  /** true = comprador paga a taxa; false = produtor absorve. */
+  taxaRepassada?: boolean
+  /** Comissao da plataforma neste pedido. */
+  valorTaxaTotal?: number
   reservaExpiraEm: string
   status: string
   ingressos: CheckoutReservationTicket[]

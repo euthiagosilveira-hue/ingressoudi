@@ -2,6 +2,7 @@
 import { CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 import { formatHora, formatMoeda } from '~/utils/format'
+import { taxaVisivelAoComprador } from '~/utils/taxa'
 import type { CheckoutReservation } from '~/types/checkout'
 import type { PublicEventDetail } from '~/types/publicEvento'
 
@@ -9,6 +10,10 @@ const props = defineProps<{
   reserva: CheckoutReservation
   evento: PublicEventDetail
 }>()
+
+const taxa = computed(() =>
+  taxaVisivelAoComprador(props.reserva.valorTaxaTotal, props.reserva.taxaRepassada)
+)
 </script>
 
 <template>
@@ -39,6 +44,10 @@ const props = defineProps<{
       <div class="flex items-center justify-between gap-3">
         <dt class="text-zinc-500">Quantidade</dt>
         <dd class="text-zinc-200">{{ props.reserva.quantidade }}</dd>
+      </div>
+      <div v-if="taxa > 0" class="flex items-center justify-between gap-3">
+        <dt class="text-zinc-500">Taxa de serviço</dt>
+        <dd class="text-zinc-200">{{ formatMoeda(taxa) }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3">
         <dt class="text-zinc-500">Total</dt>

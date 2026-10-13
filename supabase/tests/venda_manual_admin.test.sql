@@ -40,8 +40,9 @@ do $fx$
 declare
   v_org uuid;
 begin
-  insert into public.organizacoes (nome, slug)
-  values ('Org Teste', 'org-teste-' || replace(gen_random_uuid()::text, '-', ''))
+  -- taxa_servico 0: os testes herdados validam valores sem a taxa da plataforma
+  insert into public.organizacoes (nome, slug, taxa_servico)
+  values ('Org Teste', 'org-teste-' || replace(gen_random_uuid()::text, '-', ''), 0)
   returning id into v_org;
   execute format('alter table public.eventos alter column organizacao_id set default %L::uuid', v_org);
   perform set_config('teste.organizacao_id', v_org::text, true);

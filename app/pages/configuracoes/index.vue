@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { UsersIcon } from '@heroicons/vue/24/outline'
+import { BanknotesIcon, UsersIcon } from '@heroicons/vue/24/outline'
 
 import BaseCard from '~/components/BaseCard.vue'
 import PageHeader from '~/components/PageHeader.vue'
@@ -32,6 +32,26 @@ definePageMeta({
               </p>
               <p class="mt-1 text-xs text-zinc-500">
                 Gerencie quem pode acessar o administrativo e a portaria.
+              </p>
+            </div>
+          </div>
+        </BaseCard>
+      </NuxtLink>
+
+      <NuxtLink to="/configuracoes/mercado-pago" class="group">
+        <BaseCard class="h-full transition-colors duration-200 group-hover:border-amber-400/40">
+          <div class="flex items-start gap-3">
+            <span
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 text-amber-400"
+            >
+              <BanknotesIcon class="h-6 w-6" />
+            </span>
+            <div>
+              <p class="text-sm font-semibold text-white transition-colors group-hover:text-amber-400">
+                Mercado Pago
+              </p>
+              <p class="mt-1 text-xs text-zinc-500">
+                Conecte a conta que recebe as vendas Pix e veja a taxa de serviço.
               </p>
             </div>
           </div>

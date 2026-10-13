@@ -19,6 +19,7 @@ import {
   nomeValido,
   telefoneValido
 } from '~/utils/checkout'
+import { calcularValoresCheckout } from '~/utils/taxa'
 
 export function usePublicCheckout(
   evento: PublicEventDetail,
@@ -44,7 +45,12 @@ export function usePublicCheckout(
   const preco = computed(() => evento.preco)
   const disponiveis = computed(() => evento.disponiveis)
   const maximo = computed(() => limiteQuantidade(disponiveis.value))
-  const total = computed(() => (preco.value ?? 0) * quantidade.value)
+  const taxaPorIngresso = computed(() => evento.taxaServico ?? 0)
+  const valores = computed(() =>
+    calcularValoresCheckout(preco.value, quantidade.value, taxaPorIngresso.value)
+  )
+  const valorTaxa = computed(() => valores.value.valorTaxa)
+  const total = computed(() => valores.value.total)
 
   watch(quantidade, (valor) => {
     sincronizarParticipantes(valor)
@@ -178,6 +184,8 @@ export function usePublicCheckout(
     disponiveis,
     maximo,
     total,
+    taxaPorIngresso,
+    valorTaxa,
     definirQuantidade,
     atualizarParticipante,
     proximo,

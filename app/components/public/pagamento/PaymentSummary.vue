@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { formatMoeda } from '~/utils/format'
+import { taxaVisivelAoComprador } from '~/utils/taxa'
 import type { CheckoutPublico } from '~/types/checkoutPagamento'
 
 const props = defineProps<{
   checkout: CheckoutPublico
 }>()
+
+const taxa = computed(() =>
+  taxaVisivelAoComprador(props.checkout.valorTaxaTotal, props.checkout.taxaRepassada)
+)
 </script>
 
 <template>
@@ -25,6 +30,16 @@ const props = defineProps<{
       <dt class="text-zinc-500">Quantidade</dt>
       <dd class="text-zinc-200">{{ props.checkout.quantidade }}</dd>
     </div>
+    <template v-if="taxa > 0">
+      <div class="flex items-center justify-between gap-3">
+        <dt class="text-zinc-500">Ingressos</dt>
+        <dd class="text-zinc-200">{{ formatMoeda(props.checkout.valorTotal - taxa) }}</dd>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <dt class="text-zinc-500">Taxa de serviço</dt>
+        <dd class="text-zinc-200">{{ formatMoeda(taxa) }}</dd>
+      </div>
+    </template>
     <div class="flex items-center justify-between gap-3 border-t border-zinc-800 pt-2">
       <dt class="font-medium text-zinc-300">Valor</dt>
       <dd class="text-base font-bold text-amber-400">{{ formatMoeda(props.checkout.valorTotal) }}</dd>
