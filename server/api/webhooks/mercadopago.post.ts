@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<{ type?: string; action?: string; user_id?: string | number; data?: { id?: string } }>(
     event
   ).catch(() => ({}))
-  const dataId = String(query['data.id'] ?? body?.data?.id ?? '') || null
+  const dataId = String(query['data.id'] ?? body?.data?.id ?? query.id ?? '') || null
   const tipo = String(query.type ?? query.topic ?? body?.type ?? '')
 
   const xSignature = getHeader(event, 'x-signature') ?? null
@@ -39,10 +39,7 @@ export default defineEventHandler(async (event) => {
   // Outros topicos (merchant_order, etc.) sao ignorados.
   if (tipo && tipo !== 'payment') return { ok: true, ignorado: true }
 
-  if (!dataId) {
-    setResponseStatus(event, 400)
-    return { error: 'DATA_ID_AUSENTE' }
-  }
+  if (!dataId) return { ok: true, ignorado: true }
 
   const client = serverSupabaseServiceRole(event)
 
