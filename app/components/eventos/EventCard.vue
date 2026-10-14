@@ -126,7 +126,7 @@ const vendasAbertas = computed(() => props.event.vendasStatus === 'ABERTAS')
       <!-- Rodapé -->
       <div class="mt-5 flex items-center justify-between border-t border-zinc-800 pt-4">
         <AppButton variant="outline" size="sm" @click="emit('edit')">Editar</AppButton>
-        <EventCardActions @action="emit('action', $event)" />
+        <EventCardActions :status="props.event.status" @action="emit('action', $event)" />
       </div>
     </div>
   </BaseCard>

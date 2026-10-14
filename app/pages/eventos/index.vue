@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { PlusIcon } from '@heroicons/vue/24/outline'
+import { toast } from 'vue3-toastify'
 
 import AppButton from '~/components/AppButton.vue'
+import ConfirmDialog from '~/components/ConfirmDialog.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import EventEmptyState from '~/components/eventos/EventEmptyState.vue'
 import EventFilters from '~/components/eventos/EventFilters.vue'
 import EventGrid from '~/components/eventos/EventGrid.vue'
 import { useAdminEvents } from '~/composables/useAdminEvents'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
+import { iniciarEventoAgora, reabrirVendasDemonstracao } from '~/services/admin/eventos'
 import { rotaEvento } from '~/utils/rotasPublicas'
 
 definePageMeta({
@@ -41,7 +44,45 @@ function editarEvento(id: string) {
   navigateTo(`/eventos/${id}/editar`)
 }
 
+// Modo demonstracao (super admin): iniciar agora / reabrir vendas
+const demo = ref<{ id: string; acao: 'iniciar-agora' | 'reabrir-vendas'; nome: string } | null>(null)
+const demoProcessando = ref(false)
+
+const demoTitulo = computed(() =>
+  demo.value?.acao === 'iniciar-agora' ? 'Iniciar evento agora?' : 'Reabrir vendas do evento?'
+)
+const demoDescricao = computed(() =>
+  demo.value?.acao === 'iniciar-agora'
+    ? `"${demo.value?.nome}" ficará em andamento: a portaria passa a validar ingressos e as vendas online são encerradas.`
+    : `"${demo.value?.nome}" volta para agendado com vendas abertas. Se o horário já passou, ele é adiado para daqui a 1 dia.`
+)
+
+async function confirmarDemo() {
+  if (!demo.value) return
+  demoProcessando.value = true
+  try {
+    if (demo.value.acao === 'iniciar-agora') {
+      await iniciarEventoAgora(demo.value.id)
+      toast.success('Evento em andamento: a portaria já pode validar ingressos.')
+    } else {
+      await reabrirVendasDemonstracao(demo.value.id)
+      toast.success('Vendas reabertas.')
+    }
+    demo.value = null
+    await refresh()
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Não foi possível concluir a ação.')
+  } finally {
+    demoProcessando.value = false
+  }
+}
+
 function acaoEvento(payload: { id: string; action: string }) {
+  if (payload.action === 'iniciar-agora' || payload.action === 'reabrir-vendas') {
+    const evento = eventosLista.value.find((item) => item.id === payload.id)
+    demo.value = { id: payload.id, acao: payload.action, nome: evento?.nome ?? 'Evento' }
+    return
+  }
   if (payload.action === 'lotes') {
     navigateTo(`/eventos/${payload.id}/lotes`)
     return
@@ -110,6 +151,16 @@ function acaoEvento(payload: { id: string; action: string }) {
       @create="irParaCriar"
     />
   </div>
+
+  <ConfirmDialog
+    :open="demo !== null"
+    :title="demoTitulo"
+    :description="demoDescricao"
+    :confirm-label="demo?.acao === 'iniciar-agora' ? 'Iniciar agora' : 'Reabrir vendas'"
+    :loading="demoProcessando"
+    @confirm="confirmarDemo"
+    @cancel="demo = null"
+  />
 
   <!-- Botao de refresh acessivel (revalida a lista) -->
   <div v-if="!carregando && !erro" class="mt-4 flex justify-center">

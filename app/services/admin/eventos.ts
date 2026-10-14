@@ -144,6 +144,37 @@ function mensagemErroEvento(error: RpcErrorLike | null, padrao: string): string 
   return padrao
 }
 
+function mensagemErroDemonstracao(error: RpcErrorLike | null, padrao: string): string {
+  const mensagem = (error?.message ?? '').toLowerCase()
+  if (error?.code === '42501' || mensagem.includes('permiss')) {
+    return 'Apenas o super administrador pode usar o modo demonstração.'
+  }
+  if (mensagem.includes('somente evento agendado')) return 'Só é possível iniciar um evento agendado.'
+  if (mensagem.includes('somente evento em_andamento')) return 'Só é possível reabrir as vendas de um evento em andamento.'
+  if (error?.code === '23503' || mensagem.includes('nao encontrado')) return 'Evento não encontrado.'
+  return padrao
+}
+
+/**
+ * Modo demonstracao (super admin): inicia o evento agora (EM_ANDAMENTO), liberando
+ * a portaria antes do horario. As vendas online encerram, como no inicio normal.
+ */
+export async function iniciarEventoAgora(eventoId: string): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('iniciar_evento_agora', { p_evento_id: eventoId })
+  if (error) throw new Error(mensagemErroDemonstracao(error, 'Não foi possível iniciar o evento.'))
+}
+
+/**
+ * Modo demonstracao (super admin): volta o evento em andamento para AGENDADO com
+ * vendas abertas. Se o horario ja passou, o evento e adiado para daqui a 1 dia.
+ */
+export async function reabrirVendasDemonstracao(eventoId: string): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('reabrir_vendas_demonstracao', { p_evento_id: eventoId })
+  if (error) throw new Error(mensagemErroDemonstracao(error, 'Não foi possível reabrir as vendas.'))
+}
+
 /** Cria um evento real (RPC segura, ADMINISTRADOR). Sem INSERT direto. */
 export async function criarEventoAdmin(
   input: CriarEventoAdminInput

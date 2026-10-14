@@ -1,14 +1,26 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
+  ArrowPathIcon,
   ChartBarIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
   PencilSquareIcon,
+  PlayIcon,
   TicketIcon,
   UserGroupIcon,
   XCircleIcon
 } from '@heroicons/vue/24/outline'
+
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
+import type { EventStatus } from '~/types/evento'
+
+const props = withDefaults(defineProps<{ status?: EventStatus | null }>(), { status: null })
+
+// Modo demonstracao: somente o super admin da plataforma.
+const { operador } = useOperatorAuth()
+const podeIniciar = computed(() => Boolean(operador.value?.superAdmin) && props.status === 'AGENDADO')
+const podeReabrir = computed(() => Boolean(operador.value?.superAdmin) && props.status === 'EM_ANDAMENTO')
 
 const emit = defineEmits<{
   action: [action: string]
@@ -95,6 +107,29 @@ onBeforeUnmount(() => document.removeEventListener('click', aoClicarFora))
         <PencilSquareIcon class="h-4 w-4 text-zinc-500" />
         Editar evento
       </button>
+
+      <template v-if="podeIniciar || podeReabrir">
+        <div class="my-1 h-px bg-zinc-800"></div>
+        <p class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Demonstração</p>
+        <button
+          v-if="podeIniciar"
+          type="button"
+          class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-amber-300 transition-colors hover:bg-amber-400/10"
+          @click.stop="selecionar('iniciar-agora')"
+        >
+          <PlayIcon class="h-4 w-4" />
+          Iniciar evento agora
+        </button>
+        <button
+          v-if="podeReabrir"
+          type="button"
+          class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-amber-300 transition-colors hover:bg-amber-400/10"
+          @click.stop="selecionar('reabrir-vendas')"
+        >
+          <ArrowPathIcon class="h-4 w-4" />
+          Reabrir vendas
+        </button>
+      </template>
 
       <div class="my-1 h-px bg-zinc-800"></div>
 
