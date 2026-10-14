@@ -190,6 +190,7 @@ async function sair() {
           v-model="login.senha"
           label="Senha"
           type="password"
+          revelar-senha
           name="password"
           autocomplete="current-password"
         />

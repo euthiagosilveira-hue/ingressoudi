@@ -205,6 +205,7 @@ async function cadastrar() {
                 v-model="form.senha"
                 label="Senha"
                 type="password"
+                revelar-senha
                 name="password"
                 autocomplete="new-password"
                 :invalid="!!erros.senha"
@@ -215,6 +216,7 @@ async function cadastrar() {
                 v-model="form.confirmacao"
                 label="Confirmar senha"
                 type="password"
+                revelar-senha
                 name="password-confirm"
                 autocomplete="new-password"
                 :invalid="!!erros.confirmacao"
