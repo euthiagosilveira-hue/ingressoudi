@@ -65,7 +65,7 @@ onBeforeUnmount(() => document.removeEventListener('click', aoClicarFora))
 
     <div
       v-if="aberto"
-      class="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 p-1 shadow-xl shadow-black/40"
+      class="absolute bottom-full right-0 z-30 mb-2 max-h-[22rem] w-56 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900 p-1 shadow-xl shadow-black/40"
     >
       <button
         type="button"
