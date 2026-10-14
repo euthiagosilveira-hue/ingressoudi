@@ -62,7 +62,7 @@ export function mensagemErroReserva(codigo: ReservaErrorCode): string {
 // ---------------------------------------------------------------------------
 
 export function gerarCodigoPedidoMock(): string {
-  return `GZ${Math.floor(100000 + Math.random() * 900000)}`
+  return `IU${Math.floor(100000 + Math.random() * 900000)}`
 }
 
 export function calcularExpiracao(minutos = RESERVA_MINUTOS, base = new Date()): string {

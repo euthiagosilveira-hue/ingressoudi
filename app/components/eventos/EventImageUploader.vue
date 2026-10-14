@@ -2,9 +2,14 @@
 import { ref } from 'vue'
 import { ArrowUpTrayIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
-const props = defineProps<{
-  modelValue: string | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    modelValue: string | null
+    /** Texto da recomendacao de tamanho/proporcao. */
+    recomendacao?: string
+  }>(),
+  { recomendacao: 'Imagem recomendada: 1200×628px ou proporção 16:9.' }
+)
 
 const emit = defineEmits<{
   'update:modelValue': [value: string | null]
@@ -104,7 +109,7 @@ function remover() {
 
     <ul class="space-y-1 text-xs text-zinc-500">
       <li>Tamanho máximo: 5 MB</li>
-      <li>Imagem recomendada: 1200×628px ou proporção 16:9.</li>
+      <li>{{ props.recomendacao }}</li>
     </ul>
 
     <p v-if="erro" class="text-xs text-red-400">{{ erro }}</p>

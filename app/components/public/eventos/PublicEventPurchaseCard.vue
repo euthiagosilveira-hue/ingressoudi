@@ -27,7 +27,7 @@ const situacaoBloqueada = computed<Exclude<PublicVendaSituacao, 'DISPONIVEL'> | 
       <p class="text-sm font-semibold text-white">{{ props.evento.loteNome ?? 'Lote' }}</p>
 
       <div class="mt-4">
-        <p class="text-3xl font-bold text-amber-400">
+        <p class="text-3xl font-bold" style="color: var(--cor-casa)">
           {{ formatMoeda(props.evento.preco ?? 0) }}
         </p>
         <p class="text-xs text-zinc-500">
@@ -42,7 +42,8 @@ const situacaoBloqueada = computed<Exclude<PublicVendaSituacao, 'DISPONIVEL'> | 
 
       <NuxtLink
         :to="rotaCheckout(props.evento.organizacaoSlug, props.evento.slug)"
-        class="mt-6 flex w-full items-center justify-center rounded-xl bg-amber-400 px-6 py-4 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors duration-150 hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+        class="mt-6 flex w-full items-center justify-center rounded-xl px-6 py-4 text-sm font-bold uppercase tracking-wide transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+        style="background: var(--cor-casa); color: var(--cor-casa-texto)"
       >
         Comprar ingresso
       </NuxtLink>

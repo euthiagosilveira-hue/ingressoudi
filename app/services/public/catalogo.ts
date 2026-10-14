@@ -35,6 +35,7 @@ export interface OrganizacaoPublicaDados {
   nome: string
   slug: string
   logoUrl: string | null
+  corPrimaria: string | null
 }
 
 export class CatalogoIndisponivelError extends Error {
@@ -99,8 +100,20 @@ export async function obterOrganizacaoPublica(slug: string): Promise<Organizacao
   const { data, error } = await client.rpc('obter_organizacao_publica', { p_slug: slug })
   if (error) throw new CatalogoIndisponivelError(error.message)
   if (!data) return null
-  const row = data as { organizacao_id: string; nome: string; slug: string; logo_url: string | null }
-  return { organizacaoId: row.organizacao_id, nome: row.nome, slug: row.slug, logoUrl: row.logo_url ?? null }
+  const row = data as {
+    organizacao_id: string
+    nome: string
+    slug: string
+    logo_url: string | null
+    cor_primaria?: string | null
+  }
+  return {
+    organizacaoId: row.organizacao_id,
+    nome: row.nome,
+    slug: row.slug,
+    logoUrl: row.logo_url ?? null,
+    corPrimaria: row.cor_primaria ?? null
+  }
 }
 
 /** Catalogo de uma casa: somente eventos publicados e agendados dela. */

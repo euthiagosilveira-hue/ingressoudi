@@ -98,6 +98,14 @@ const acaoEditar =
       Após a confirmação do pagamento, os nomes dos participantes não poderão ser alterados.
     </p>
 
+    <p class="text-xs text-zinc-500">
+      Ao continuar, você concorda com os
+      <NuxtLink to="/termos" target="_blank" class="text-zinc-300 underline hover:text-amber-400">Termos de uso</NuxtLink>
+      e a
+      <NuxtLink to="/privacidade" target="_blank" class="text-zinc-300 underline hover:text-amber-400">
+        Política de privacidade</NuxtLink>.
+    </p>
+
     <p
       v-if="props.erro"
       role="alert"

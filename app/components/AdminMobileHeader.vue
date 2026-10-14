@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Bars3Icon } from '@heroicons/vue/24/outline'
+
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
+import { iniciais } from '~/utils/marca'
 
 withDefaults(
   defineProps<{
@@ -15,6 +19,9 @@ withDefaults(
 const emit = defineEmits<{
   'open-menu': []
 }>()
+
+const { operador } = useOperatorAuth()
+const sigla = computed(() => iniciais(operador.value?.organizacao?.nome ?? operador.value?.nome))
 </script>
 
 <template>
@@ -32,7 +39,7 @@ const emit = defineEmits<{
       <Bars3Icon class="h-6 w-6" />
     </button>
 
-    <img src="/Logo horizontal.png" alt="Galeria Zero 1" class="h-7 w-auto shrink-0" />
+    <span class="shrink-0 text-base font-bold tracking-tight text-white">Ingressoudi<span class="text-amber-400">.</span></span>
 
     <span v-if="title" class="min-w-0 truncate text-sm font-semibold text-zinc-300">
       {{ title }}
@@ -41,7 +48,7 @@ const emit = defineEmits<{
     <span
       class="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-400/50 bg-zinc-800 text-xs font-semibold text-amber-400"
     >
-      GZ
+      {{ sigla }}
     </span>
   </header>
 </template>

@@ -135,6 +135,9 @@ function mensagemErroEvento(error: RpcErrorLike | null, padrao: string): string 
   if (e.code === '23503' || mensagem.includes('nao encontrado')) {
     return 'Evento não encontrado.'
   }
+  if (mensagem.includes('em analise')) {
+    return 'Sua casa ainda está em análise. Você poderá publicar eventos após a aprovação; até lá, salve como rascunho.'
+  }
   if (e.code === '23514') {
     return 'Verifique os dados informados.'
   }

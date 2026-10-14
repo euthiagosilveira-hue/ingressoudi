@@ -4,9 +4,16 @@ import { CalendarDaysIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { useRoute } from '#imports'
 
 import AdminShell from '~/components/AdminShell.vue'
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
+import { iniciais } from '~/utils/marca'
 
 const route = useRoute()
 const title = computed(() => String(route.meta.title ?? 'Dashboard'))
+
+const { operador } = useOperatorAuth()
+const nomeOrganizacao = computed(() => operador.value?.organizacao?.nome ?? 'Minha organização')
+const sigla = computed(() => iniciais(nomeOrganizacao.value))
+const perfilRotulo = computed(() => (operador.value?.perfil === 'PORTARIA' ? 'Portaria' : 'Administrador'))
 </script>
 
 <template>
@@ -37,11 +44,11 @@ const title = computed(() => String(route.meta.title ?? 'Dashboard'))
               <span
                 class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-amber-400/50 bg-zinc-800 text-sm font-semibold text-amber-400"
               >
-                GZ
+                {{ sigla }}
               </span>
               <span class="hidden min-w-0 text-left sm:block">
-                <span class="block truncate text-sm font-semibold text-white">Galeria Zero 1</span>
-                <span class="block truncate text-xs text-zinc-400">Administrador</span>
+                <span class="block truncate text-sm font-semibold text-white">{{ nomeOrganizacao }}</span>
+                <span class="block truncate text-xs text-zinc-400">{{ perfilRotulo }}</span>
               </span>
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-zinc-400" />
             </button>
