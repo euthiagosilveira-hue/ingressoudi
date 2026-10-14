@@ -61,7 +61,7 @@ async function aoTrocarOrganizacao(evento: Event) {
   try {
     const perfil = await trocarOrganizacao(id)
     // recarrega a aplicacao para nao manter dados da organizacao anterior em memoria
-    window.location.assign(perfil?.perfil === 'PORTARIA' ? '/portaria' : '/')
+    window.location.assign(perfil?.perfil === 'PORTARIA' ? '/portaria' : '/painel')
   } catch {
     erroTroca.value = 'Não foi possível trocar de organização.'
     trocando.value = false
@@ -85,7 +85,7 @@ const activeLabel = computed(() => {
 })
 
 const itens: NavItem[] = [
-  { to: '/', icon: Squares2X2Icon, label: 'Dashboard', allowedProfiles: PERFIS_ADMIN },
+  { to: '/painel', icon: Squares2X2Icon, label: 'Dashboard', allowedProfiles: PERFIS_ADMIN },
   { to: '/eventos', icon: CalendarDaysIcon, label: 'Eventos', allowedProfiles: PERFIS_ADMIN },
   { to: '/pedidos', icon: RectangleStackIcon, label: 'Pedidos', allowedProfiles: PERFIS_ADMIN },
   { to: '/ingressos', icon: TicketIcon, label: 'Ingressos', allowedProfiles: PERFIS_ADMIN },

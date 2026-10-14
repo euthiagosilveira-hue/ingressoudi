@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
 
+import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
+import { rotaEvento } from '~/utils/rotasPublicas'
+
 const props = defineProps<{
   eventoSlug: string
   eventoNome: string
 }>()
+
+const { organizacao: organizacaoPublica } = useOrganizacaoPublica()
 </script>
 
 <template>
   <div class="space-y-3">
     <NuxtLink
-      :to="`/eventos/${props.eventoSlug}`"
+      :to="rotaEvento(organizacaoPublica?.slug, props.eventoSlug)"
       class="inline-flex w-fit items-center gap-2 text-sm text-zinc-400 transition-colors duration-150 hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
     >
       <ArrowLeftIcon class="h-4 w-4" />

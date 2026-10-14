@@ -1,3 +1,5 @@
+import { PLATAFORMA_NOME } from './marca.ts'
+
 export interface ShareData {
   title: string
   text: string
@@ -8,7 +10,7 @@ export type ShareResult = 'compartilhado' | 'copiado' | 'falha'
 
 export function montarShareData(input: { url: string; eventoNome: string }): ShareData {
   return {
-    title: 'GZ1 Ingresso',
+    title: PLATAFORMA_NOME,
     text: `Seu ingresso para ${input.eventoNome}`,
     url: input.url
   }

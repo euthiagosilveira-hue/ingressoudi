@@ -104,7 +104,7 @@ test('rotas admin continuam protegidas por admin-auth', () => {
   assert.ok(middleware.includes("perfil.perfil !== 'ADMINISTRADOR'"))
 
   const paginas = [
-    '../app/pages/index.vue',
+    '../app/pages/painel.vue',
     '../app/pages/lista-vip.vue',
     '../app/pages/configuracoes/usuarios.vue',
     '../app/pages/eventos/index.vue',

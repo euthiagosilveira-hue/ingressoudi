@@ -12,6 +12,7 @@ import CheckoutQuantityStep from '~/components/public/checkout/CheckoutQuantityS
 import CheckoutReservationCreated from '~/components/public/checkout/CheckoutReservationCreated.vue'
 import CheckoutReviewStep from '~/components/public/checkout/CheckoutReviewStep.vue'
 import { usePublicCheckout } from '~/composables/usePublicCheckout'
+import { rotaEvento } from '~/utils/rotasPublicas'
 import type { EventoOrigem } from '~/types/checkout'
 import type { PublicEventDetail } from '~/types/publicEvento'
 
@@ -59,7 +60,7 @@ function aoAtualizarParticipante(payload: { indice: number; valor: string }) {
 
 function aoVoltar() {
   if (step.value === 'QUANTIDADE') {
-    navigateTo(`/eventos/${props.evento.slug}`)
+    navigateTo(rotaEvento(props.evento.organizacaoSlug, props.evento.slug))
     return
   }
   voltar()

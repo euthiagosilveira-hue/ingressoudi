@@ -20,6 +20,9 @@ interface IngressosRpc {
   codigo_pedido: string
   evento_id: string
   evento_slug: string
+  organizacao_slug?: string | null
+  organizacao_nome?: string | null
+  organizacao_logo_url?: string | null
   evento_nome: string
   evento_inicio_em: string
   evento_local: string
@@ -60,6 +63,9 @@ function mapearTickets(row: IngressosRpc): PublicOrderTickets {
     codigoPedido: row.codigo_pedido,
     eventoId: row.evento_id,
     eventoSlug: row.evento_slug,
+    organizacaoSlug: row.organizacao_slug ?? null,
+    organizacaoNome: row.organizacao_nome ?? null,
+    organizacaoLogoUrl: row.organizacao_logo_url ?? null,
     eventoNome: row.evento_nome,
     eventoInicioEm: row.evento_inicio_em,
     eventoLocal: row.evento_local,

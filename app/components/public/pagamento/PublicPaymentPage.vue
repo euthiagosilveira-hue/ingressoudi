@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import PaymentApprovedState from '~/components/public/pagamento/PaymentApprovedState.vue'
 import PaymentError from '~/components/public/pagamento/PaymentError.vue'
@@ -8,6 +8,7 @@ import PaymentHeader from '~/components/public/pagamento/PaymentHeader.vue'
 import PaymentLoading from '~/components/public/pagamento/PaymentLoading.vue'
 import PaymentPendingCard from '~/components/public/pagamento/PaymentPendingCard.vue'
 import PaymentUnavailableState from '~/components/public/pagamento/PaymentUnavailableState.vue'
+import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { usePublicPayment } from '~/composables/usePublicPayment'
 
 const {
@@ -29,6 +30,21 @@ const {
 
 const eventoSlug = computed(() => checkout.value?.eventoSlug ?? '')
 const eventoNome = computed(() => checkout.value?.eventoNome ?? 'Checkout')
+
+const { definir: definirOrganizacao } = useOrganizacaoPublica()
+watch(
+  checkout,
+  (valor) => {
+    if (valor) {
+      definirOrganizacao({
+        slug: valor.organizacaoSlug,
+        nome: valor.organizacaoNome,
+        logoUrl: valor.organizacaoLogoUrl
+      })
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

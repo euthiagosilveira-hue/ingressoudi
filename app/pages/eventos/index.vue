@@ -8,6 +8,8 @@ import EventEmptyState from '~/components/eventos/EventEmptyState.vue'
 import EventFilters from '~/components/eventos/EventFilters.vue'
 import EventGrid from '~/components/eventos/EventGrid.vue'
 import { useAdminEvents } from '~/composables/useAdminEvents'
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
+import { rotaEvento } from '~/utils/rotasPublicas'
 
 definePageMeta({
   title: 'Eventos',
@@ -28,6 +30,8 @@ const subtituloVazio = computed(() =>
     ? 'Tente ajustar a busca ou os filtros.'
     : 'Crie seu primeiro evento para começar.'
 )
+
+const { operador } = useOperatorAuth()
 
 function irParaCriar() {
   navigateTo('/eventos/novo')
@@ -52,7 +56,7 @@ function acaoEvento(payload: { id: string; action: string }) {
   }
   if (payload.action === 'visualizar') {
     const evento = eventosLista.value.find((item) => item.id === payload.id)
-    if (evento) navigateTo(`/eventos/${evento.slug}`)
+    if (evento) navigateTo(rotaEvento(operador.value?.organizacao?.slug, evento.slug))
   }
 }
 </script>

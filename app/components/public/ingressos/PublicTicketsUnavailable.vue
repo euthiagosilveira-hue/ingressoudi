@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { TicketIcon } from '@heroicons/vue/24/outline'
 
+import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
+import { rotaEvento, rotaPagamento } from '~/utils/rotasPublicas'
+
 const props = defineProps<{
   titulo: string
   descricao: string
   eventoSlug?: string
   checkoutToken?: string | null
 }>()
+
+const { organizacao: organizacaoPublica } = useOrganizacaoPublica()
 </script>
 
 <template>
@@ -19,7 +24,7 @@ const props = defineProps<{
 
     <NuxtLink
       v-if="props.eventoSlug && props.checkoutToken"
-      :to="`/eventos/${props.eventoSlug}/comprar/pagamento?token=${props.checkoutToken}`"
+      :to="rotaPagamento(organizacaoPublica?.slug, props.eventoSlug, props.checkoutToken ?? '')"
       class="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-amber-400/60 px-6 py-3 text-sm font-bold uppercase tracking-wide text-amber-400 transition-colors duration-150 hover:bg-amber-400 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
     >
       Voltar ao pagamento
@@ -27,7 +32,7 @@ const props = defineProps<{
 
     <NuxtLink
       v-else-if="props.eventoSlug"
-      :to="`/eventos/${props.eventoSlug}`"
+      :to="rotaEvento(organizacaoPublica?.slug, props.eventoSlug)"
       class="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-zinc-700 px-6 py-3 text-sm font-bold uppercase tracking-wide text-zinc-300 transition-colors duration-150 hover:border-zinc-600 hover:text-white"
     >
       Voltar ao evento

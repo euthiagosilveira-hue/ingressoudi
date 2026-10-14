@@ -3,6 +3,7 @@ import { CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 import { formatHora, formatMoeda } from '~/utils/format'
 import { taxaVisivelAoComprador } from '~/utils/taxa'
+import { rotaPagamento } from '~/utils/rotasPublicas'
 import type { CheckoutReservation } from '~/types/checkout'
 import type { PublicEventDetail } from '~/types/publicEvento'
 
@@ -63,7 +64,7 @@ const taxa = computed(() =>
 
     <NuxtLink
       v-if="props.reserva.checkoutToken"
-      :to="`/eventos/${props.evento.slug}/comprar/pagamento?token=${props.reserva.checkoutToken}`"
+      :to="rotaPagamento(props.evento.organizacaoSlug, props.evento.slug, props.reserva.checkoutToken)"
       class="flex w-full items-center justify-center rounded-xl bg-amber-400 px-6 py-4 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors duration-150 hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
     >
       Continuar para pagamento

@@ -18,6 +18,9 @@ export interface CheckoutPublico {
   codigoPedido: string
   eventoId: string
   eventoSlug: string
+  organizacaoSlug?: string | null
+  organizacaoNome?: string | null
+  organizacaoLogoUrl?: string | null
   eventoNome: string
   loteId: string | null
   loteNome: string | null

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import PublicEventUnavailable from '~/components/public/eventos/PublicEventUnavailable.vue'
 import type { PublicEventDetail, PublicVendaSituacao } from '~/types/publicEvento'
+import { rotaEvento } from '~/utils/rotasPublicas'
 
 const props = defineProps<{
   evento: PublicEventDetail
@@ -35,7 +36,7 @@ const situacaoBloqueada = computed<Exclude<PublicVendaSituacao, 'DISPONIVEL'> | 
 
     <div class="mt-8 flex justify-center">
       <NuxtLink
-        :to="`/eventos/${props.evento.slug}`"
+        :to="rotaEvento(props.evento.organizacaoSlug, props.evento.slug)"
         class="inline-flex items-center justify-center rounded-xl border border-amber-400/60 px-8 py-3 text-sm font-bold uppercase tracking-wide text-amber-400 transition-colors duration-150 hover:bg-amber-400 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
       >
         Voltar ao evento

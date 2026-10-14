@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { PencilSquareIcon } from '@heroicons/vue/24/outline'
 
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
+
 const props = defineProps<{
   modelValue: string
   manual: boolean
@@ -14,7 +16,13 @@ const emit = defineEmits<{
   'use-auto': []
 }>()
 
-const urlExibida = computed(() => `/eventos/${props.modelValue || ''}`)
+const { operador } = useOperatorAuth()
+/** Prefixo publico da casa ativa: /{casa}/ (slug do evento e unico por casa). */
+const prefixo = computed(() => {
+  const org = operador.value?.organizacao?.slug
+  return org ? `/${org}/` : '/'
+})
+const urlExibida = computed(() => `${prefixo.value}${props.modelValue || ''}`)
 
 function aoDigitar(evento: Event) {
   emit('update:modelValue', (evento.target as HTMLInputElement).value)
@@ -58,7 +66,7 @@ function aoDigitar(evento: Event) {
               : 'border-zinc-700 focus-within:border-amber-400/60 focus-within:ring-amber-400/30'
           "
         >
-          <span class="shrink-0 pl-3.5 text-sm text-zinc-500">/eventos/</span>
+          <span class="shrink-0 pl-3.5 text-sm text-zinc-500">{{ prefixo }}</span>
           <input
             :value="props.modelValue"
             type="text"

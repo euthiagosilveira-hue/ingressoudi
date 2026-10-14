@@ -37,7 +37,7 @@ async function criar() {
   try {
     await criarOrganizacao(nome.value.trim(), slug.value)
     // a nova organizacao ja e a ativa: recarrega a aplicacao nela
-    window.location.assign('/')
+    window.location.assign('/painel')
   } catch (e) {
     erro.value = e instanceof Error ? e.message : 'Não foi possível criar a organização.'
     enviando.value = false
@@ -83,7 +83,7 @@ async function acessar(id: string) {
   erro.value = ''
   try {
     const perfil = await trocarOrganizacao(id)
-    window.location.assign(perfil?.perfil === 'PORTARIA' ? '/portaria' : '/')
+    window.location.assign(perfil?.perfil === 'PORTARIA' ? '/portaria' : '/painel')
   } catch {
     erro.value = 'Não foi possível acessar a organização.'
   }

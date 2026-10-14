@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { tituloPublico } from '~/utils/marca'
 import PublicPaymentPage from '~/components/public/pagamento/PublicPaymentPage.vue'
 
 useSeoMeta({
-  title: 'Pagamento | GZ1 Ingresso',
+  title: tituloPublico('Pagamento'),
   description: 'Acompanhe o pagamento da sua reserva.'
 })
 </script>

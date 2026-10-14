@@ -22,6 +22,9 @@ interface CheckoutRpcRow {
   codigo_pedido: string
   evento_id: string
   evento_slug: string
+  organizacao_slug?: string | null
+  organizacao_nome?: string | null
+  organizacao_logo_url?: string | null
   evento_nome: string
   lote_id: string | null
   lote_nome: string | null
@@ -70,6 +73,9 @@ function mapearCheckout(row: CheckoutRpcRow): CheckoutPublico {
     codigoPedido: row.codigo_pedido,
     eventoId: row.evento_id,
     eventoSlug: row.evento_slug,
+    organizacaoSlug: row.organizacao_slug ?? null,
+    organizacaoNome: row.organizacao_nome ?? null,
+    organizacaoLogoUrl: row.organizacao_logo_url ?? null,
     eventoNome: row.evento_nome,
     loteId: row.lote_id,
     loteNome: row.lote_nome,
