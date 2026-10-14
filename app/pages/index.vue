@@ -62,7 +62,7 @@ const recursos = [
           to="/cadastro"
           class="inline-flex items-center justify-center rounded-xl bg-amber-400 px-6 py-3 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors hover:bg-amber-300"
         >
-          Cadastre sua casa
+          Começar grátis
         </NuxtLink>
         <NuxtLink
           to="/login"
@@ -77,6 +77,9 @@ const recursos = [
           Já comprei: meus ingressos
         </NuxtLink>
       </div>
+      <p class="mt-4 text-sm text-zinc-500">
+        Sem mensalidade: você só paga uma taxa por ingresso vendido online.
+      </p>
     </section>
 
     <section class="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2">

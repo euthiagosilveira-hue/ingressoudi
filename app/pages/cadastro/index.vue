@@ -23,7 +23,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: `Cadastre sua casa | ${PLATAFORMA_NOME}`,
+  title: `Crie sua conta de produtor | ${PLATAFORMA_NOME}`,
   description: 'Crie sua conta de produtor e comece a vender ingressos com Pix.'
 })
 
@@ -145,9 +145,10 @@ async function cadastrar() {
         <NuxtLink to="/" class="text-2xl font-bold tracking-tight text-white">
           {{ PLATAFORMA_NOME }}<span class="text-amber-400">.</span>
         </NuxtLink>
-        <h1 class="text-2xl font-bold text-white">Cadastre sua casa</h1>
+        <h1 class="text-2xl font-bold text-white">Crie sua conta de produtor</h1>
         <p class="text-sm text-zinc-400">
-          Crie sua conta de produtor. Após uma rápida análise, você publica seus eventos e vende com Pix.
+          Sem mensalidade: você só paga uma taxa por ingresso vendido online. Após uma rápida análise, você publica
+          seus eventos e vende com Pix.
         </p>
       </header>
 

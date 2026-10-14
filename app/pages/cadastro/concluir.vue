@@ -198,7 +198,7 @@ async function sair() {
         </AppButton>
         <p class="text-center text-xs text-zinc-500">
           Ainda não tem conta?
-          <NuxtLink to="/cadastro" class="font-semibold text-amber-400 hover:text-amber-300">Cadastre sua casa</NuxtLink>
+          <NuxtLink to="/cadastro" class="font-semibold text-amber-400 hover:text-amber-300">Começar grátis</NuxtLink>
         </p>
       </form>
 

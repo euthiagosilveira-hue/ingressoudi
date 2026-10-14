@@ -201,7 +201,7 @@ async function entrar() {
           <p class="mt-6 text-center text-sm text-zinc-400">
             Ainda não vende com a gente?
             <NuxtLink to="/cadastro" class="font-semibold text-[#D9B138] hover:text-[#e6c452]">
-              Cadastre sua casa
+              Começar grátis
             </NuxtLink>
           </p>
 
