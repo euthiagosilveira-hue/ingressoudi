@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Rota legada: o dashboard oficial agora e "/".
+// Rota legada: o dashboard oficial agora e "/painel".
 definePageMeta({
   middleware: ['dashboard-legacy']
 })

@@ -64,10 +64,14 @@ begin
     (v_admin, 'Admin Dash', 'admindash_' || replace(v_admin::text,'-','') || '@test.local', 'ADMINISTRADOR', true),
     (v_portaria, 'Port Dash', 'portdash_' || replace(v_portaria::text,'-','') || '@test.local', 'PORTARIA', true);
 
-  -- baseline global (a RPC e global; ha fixtures reais no banco)
-  select count(*) filter (where status in ('VALIDO','UTILIZADO')) into v_base_vend from public.ingressos;
-  select count(*) filter (where status = 'UTILIZADO') into v_base_util from public.ingressos;
-  select coalesce(sum(valor), 0) into v_base_fat from public.pagamentos where status = 'APROVADO';
+  -- baseline da organizacao do teste (o dashboard e por organizacao; o banco
+  -- remoto tem vendas reais de outras organizacoes)
+  select count(*) filter (where status in ('VALIDO','UTILIZADO')) into v_base_vend
+    from public.ingressos where organizacao_id = current_setting('teste.organizacao_id')::uuid;
+  select count(*) filter (where status = 'UTILIZADO') into v_base_util
+    from public.ingressos where organizacao_id = current_setting('teste.organizacao_id')::uuid;
+  select coalesce(sum(valor), 0) into v_base_fat from public.pagamentos
+   where status = 'APROVADO' and organizacao_id = current_setting('teste.organizacao_id')::uuid;
 
   insert into public.eventos (nome, slug, inicio_em, local, endereco, capacidade_total, estoque_antecipado, status, publicacao_status, vendas_status)
   values ('Evento Dash','dash-'||replace(gen_random_uuid()::text,'-',''), now()+interval '3 days','L','E',100,50,'AGENDADO','PUBLICADO','ABERTAS') returning id into v_e;

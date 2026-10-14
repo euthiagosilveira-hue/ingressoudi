@@ -18,7 +18,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Definir senha | GZ1 Ingresso',
+  title: 'Definir senha | Ingressoudi',
   description: 'Conclua o seu convite definindo uma senha de acesso.'
 })
 

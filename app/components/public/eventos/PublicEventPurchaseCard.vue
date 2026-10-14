@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import PublicEventAvailability from '~/components/public/eventos/PublicEventAvailability.vue'
 import PublicEventUnavailable from '~/components/public/eventos/PublicEventUnavailable.vue'
 import { formatMoeda } from '~/utils/format'
+import { rotaCheckout } from '~/utils/rotasPublicas'
 import type { PublicEventDetail, PublicVendaSituacao } from '~/types/publicEvento'
 
 const props = defineProps<{
@@ -40,7 +41,7 @@ const situacaoBloqueada = computed<Exclude<PublicVendaSituacao, 'DISPONIVEL'> | 
       </div>
 
       <NuxtLink
-        :to="`/eventos/${props.evento.slug}/comprar`"
+        :to="rotaCheckout(props.evento.organizacaoSlug, props.evento.slug)"
         class="mt-6 flex w-full items-center justify-center rounded-xl bg-amber-400 px-6 py-4 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors duration-150 hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
       >
         Comprar ingresso

@@ -19,6 +19,9 @@ export interface PublicOrderTickets {
   codigoPedido: string
   eventoId: string
   eventoSlug: string
+  organizacaoSlug?: string | null
+  organizacaoNome?: string | null
+  organizacaoLogoUrl?: string | null
   eventoNome: string
   eventoInicioEm: string
   eventoLocal: string

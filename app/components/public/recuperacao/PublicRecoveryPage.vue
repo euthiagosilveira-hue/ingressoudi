@@ -100,10 +100,10 @@ async function enviar() {
       </form>
 
       <NuxtLink
-        to="/eventos-publicos"
+        to="/"
         class="block text-center text-xs font-medium uppercase tracking-wide text-zinc-500 transition-colors hover:text-zinc-300"
       >
-        Ver eventos
+        Voltar ao início
       </NuxtLink>
     </section>
   </main>

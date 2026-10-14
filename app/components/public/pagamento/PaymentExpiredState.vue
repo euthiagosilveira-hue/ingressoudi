@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
+import { rotaCheckout } from '~/utils/rotasPublicas'
+
 const props = defineProps<{
   eventoSlug: string
 }>()
+
+const { organizacao: organizacaoPublica } = useOrganizacaoPublica()
 </script>
 
 <template>
@@ -12,7 +17,7 @@ const props = defineProps<{
     </p>
 
     <NuxtLink
-      :to="`/eventos/${props.eventoSlug}/comprar`"
+      :to="rotaCheckout(organizacaoPublica?.slug, props.eventoSlug)"
       class="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-amber-400 px-6 py-4 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors duration-150 hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
     >
       Fazer nova compra

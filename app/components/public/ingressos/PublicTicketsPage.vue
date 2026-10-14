@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import PublicOrderSummary from '~/components/public/ingressos/PublicOrderSummary.vue'
 import PublicTicketCard from '~/components/public/ingressos/PublicTicketCard.vue'
@@ -7,10 +7,26 @@ import PublicTicketsError from '~/components/public/ingressos/PublicTicketsError
 import PublicTicketsHeader from '~/components/public/ingressos/PublicTicketsHeader.vue'
 import PublicTicketsLoading from '~/components/public/ingressos/PublicTicketsLoading.vue'
 import PublicTicketsUnavailable from '~/components/public/ingressos/PublicTicketsUnavailable.vue'
+import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { usePublicTickets } from '~/composables/usePublicTickets'
 import { mensagemTicketsErro } from '~/utils/publicIngressos'
 
 const { token, recoveryToken, tickets, carregando, erro, estado, carregar } = usePublicTickets()
+
+const { definir: definirOrganizacao } = useOrganizacaoPublica()
+watch(
+  tickets,
+  (valor) => {
+    if (valor) {
+      definirOrganizacao({
+        slug: valor.organizacaoSlug,
+        nome: valor.organizacaoNome,
+        logoUrl: valor.organizacaoLogoUrl
+      })
+    }
+  },
+  { immediate: true }
+)
 
 const tituloIndisponivel = computed(() => {
   const status = tickets.value?.pedidoStatus

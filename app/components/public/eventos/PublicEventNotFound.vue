@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { CalendarDaysIcon } from '@heroicons/vue/24/outline'
+
+import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
+import { rotaOrganizacao } from '~/utils/rotasPublicas'
+
+const { organizacao: organizacaoPublica } = useOrganizacaoPublica()
 </script>
 
 <template>
@@ -12,7 +17,7 @@ import { CalendarDaysIcon } from '@heroicons/vue/24/outline'
     <h1 class="mt-6 text-2xl font-bold text-white">Evento não encontrado</h1>
     <p class="mt-2 text-sm text-zinc-400">Não foi possível localizar este evento.</p>
     <NuxtLink
-      to="/eventos-publicos"
+      :to="rotaOrganizacao(organizacaoPublica?.slug)"
       class="mt-8 inline-flex items-center justify-center rounded-xl border border-amber-400/60 px-8 py-3 text-sm font-bold uppercase tracking-wide text-amber-400 transition-colors duration-150 hover:bg-amber-400 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
     >
       Ver eventos

@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 
+import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
+import { rotaEvento } from '~/utils/rotasPublicas'
+
 const props = defineProps<{
   titulo: string
   descricao: string
   eventoSlug?: string
   tom?: 'neutro' | 'alerta'
 }>()
+
+const { organizacao: organizacaoPublica } = useOrganizacaoPublica()
 
 const tomClasses = props.tom === 'alerta'
   ? 'border-red-500/40 bg-red-500/5'
@@ -23,7 +28,7 @@ const tomClasses = props.tom === 'alerta'
 
     <NuxtLink
       v-if="props.eventoSlug"
-      :to="`/eventos/${props.eventoSlug}`"
+      :to="rotaEvento(organizacaoPublica?.slug, props.eventoSlug)"
       class="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-amber-400/60 px-6 py-3 text-sm font-bold uppercase tracking-wide text-amber-400 transition-colors duration-150 hover:bg-amber-400 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
     >
       Voltar ao evento

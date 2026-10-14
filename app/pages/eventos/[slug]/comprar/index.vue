@@ -1,60 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import CheckoutPage from '~/components/public/checkout/CheckoutPage.vue'
-import CheckoutUnavailable from '~/components/public/checkout/CheckoutUnavailable.vue'
-import PublicCatalogError from '~/components/public/PublicCatalogError.vue'
-import PublicCatalogLoading from '~/components/public/PublicCatalogLoading.vue'
 import PublicEventNotFound from '~/components/public/eventos/PublicEventNotFound.vue'
-import { useCatalogoPublico } from '~/composables/useCatalogoPublico'
-import type { EventoOrigem } from '~/types/checkout'
+import { resolverEventoPublico } from '~/services/public/catalogo'
+import { tituloPublico } from '~/utils/marca'
+import { rotaCheckout } from '~/utils/rotasPublicas'
 
+/** Link antigo /eventos/{slug}/comprar: redireciona para /{casa}/{evento}/comprar. */
 const route = useRoute()
-const slug = computed(() => String(route.params.slug))
+const slug = computed(() => String(route.params.slug ?? ''))
 
-const { obter } = useCatalogoPublico()
+const destino = await resolverEventoPublico(slug.value).catch(() => null)
+if (destino) {
+  await navigateTo(rotaCheckout(destino.organizacaoSlug, destino.eventoSlug), { redirectCode: 301 })
+}
 
-const { data, pending, error, refresh } = await useAsyncData(
-  () => `checkout-evento-${slug.value}`,
-  () => obter(slug.value),
-  { watch: [slug] }
-)
-
-const evento = computed(() => data.value?.evento ?? null)
-const origem = computed<EventoOrigem>(() => (data.value?.fallback ? 'MOCK' : 'SUPABASE'))
-const avisoDev = computed(() => import.meta.dev && origem.value === 'MOCK')
-
-const podeComprar = computed(() => {
-  const atual = evento.value
-  if (!atual || atual.situacaoVenda !== 'DISPONIVEL') return false
-  if (!atual.loteId || atual.preco === null) return false
-  // Evento real pode nao informar `disponiveis`; nesse caso nao bloquear
-  // (a RPC criar_reserva sera a fonte de verdade do estoque no futuro).
-  if (typeof atual.disponiveis === 'number' && atual.disponiveis <= 0) return false
-  return true
-})
-
-useSeoMeta({
-  title: () =>
-    evento.value ? `Checkout — ${evento.value.nome} | GZ1 Ingresso` : 'Checkout | GZ1 Ingresso'
-})
+useSeoMeta({ title: tituloPublico('Checkout') })
 </script>
 
 <template>
-  <PublicCatalogLoading v-if="pending" />
-
-  <PublicCatalogError v-else-if="error" @retry="refresh" />
-
-  <template v-else>
-    <p
-      v-if="avisoDev"
-      class="mx-auto mt-4 w-full max-w-6xl px-4 text-xs text-amber-300 sm:px-6"
-    >
-      Modo desenvolvimento: exibindo dados de demonstração.
-    </p>
-
-    <CheckoutPage v-if="evento && podeComprar" :evento="evento" :origem="origem" />
-    <CheckoutUnavailable v-else-if="evento" :evento="evento" />
-    <PublicEventNotFound v-else />
-  </template>
+  <PublicEventNotFound />
 </template>

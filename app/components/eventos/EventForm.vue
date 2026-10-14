@@ -11,6 +11,8 @@ import EventFormActions from '~/components/eventos/EventFormActions.vue'
 import EventImageSection from '~/components/eventos/EventImageSection.vue'
 import EventPublicationSection from '~/components/eventos/EventPublicationSection.vue'
 import { useEventForm } from '~/composables/useEventForm'
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
+import { rotaEvento } from '~/utils/rotasPublicas'
 import type { EventFormMode, EventFormValue, EventPayload } from '~/types/evento'
 
 const props = withDefaults(
@@ -44,6 +46,8 @@ const {
   initialValue: props.initialValue
 })
 
+const { operador } = useOperatorAuth()
+
 const modoCriacao = computed(() => props.mode === 'create')
 const titulo = computed(() => (modoCriacao.value ? 'Criar evento' : 'Editar evento'))
 
@@ -58,7 +62,7 @@ function aoCancelar() {
 
 function visualizarPublico() {
   if (props.mode === 'create' || !valor.slug) return
-  navigateTo(`/eventos/${valor.slug}`)
+  navigateTo(rotaEvento(operador.value?.organizacao?.slug, valor.slug))
 }
 </script>
 

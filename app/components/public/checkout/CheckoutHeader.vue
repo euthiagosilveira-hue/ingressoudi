@@ -2,6 +2,7 @@
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
 
 import type { PublicEventDetail } from '~/types/publicEvento'
+import { rotaEvento } from '~/utils/rotasPublicas'
 
 const props = defineProps<{
   evento: PublicEventDetail
@@ -11,7 +12,7 @@ const props = defineProps<{
 <template>
   <div class="space-y-3">
     <NuxtLink
-      :to="`/eventos/${props.evento.slug}`"
+      :to="rotaEvento(props.evento.organizacaoSlug, props.evento.slug)"
       class="inline-flex w-fit items-center gap-2 text-sm text-zinc-400 transition-colors duration-150 hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
     >
       <ArrowLeftIcon class="h-4 w-4" />

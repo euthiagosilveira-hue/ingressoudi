@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { BanknotesIcon, UsersIcon } from '@heroicons/vue/24/outline'
+import { computed } from 'vue'
+import { BanknotesIcon, GlobeAltIcon, UsersIcon } from '@heroicons/vue/24/outline'
 
 import BaseCard from '~/components/BaseCard.vue'
 import PageHeader from '~/components/PageHeader.vue'
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
 
 definePageMeta({
   title: 'Configurações',
@@ -10,6 +12,12 @@ definePageMeta({
   layout: 'admin-layout',
   sidebarActive: 'Configurações',
   middleware: ['admin-auth']
+})
+
+const { operador } = useOperatorAuth()
+const linkPublico = computed(() => {
+  const slug = operador.value?.organizacao?.slug
+  return slug ? `/${slug}` : null
 })
 </script>
 
@@ -37,6 +45,31 @@ definePageMeta({
           </div>
         </BaseCard>
       </NuxtLink>
+
+      <a
+        v-if="linkPublico"
+        :href="linkPublico"
+        target="_blank"
+        rel="noopener"
+        class="group"
+      >
+        <BaseCard class="h-full transition-colors duration-200 group-hover:border-amber-400/40">
+          <div class="flex items-start gap-3">
+            <span
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 text-amber-400"
+            >
+              <GlobeAltIcon class="h-6 w-6" />
+            </span>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-white transition-colors group-hover:text-amber-400">
+                Sua página de eventos
+              </p>
+              <p class="mt-1 truncate text-xs text-zinc-500">{{ linkPublico }}</p>
+              <p class="mt-1 text-xs text-zinc-500">Divulgue este link para vender online.</p>
+            </div>
+          </div>
+        </BaseCard>
+      </a>
 
       <NuxtLink to="/configuracoes/mercado-pago" class="group">
         <BaseCard class="h-full transition-colors duration-200 group-hover:border-amber-400/40">

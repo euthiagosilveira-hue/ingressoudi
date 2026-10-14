@@ -30,9 +30,9 @@ export function mensagemErroConviteLink(erro: ErroLinkConvite | null): string {
   return CONVITE_EXPIRADO_MSG
 }
 
-/** Destino pos-setup conforme o perfil (ADMIN -> '/', PORTARIA -> '/portaria'). */
+/** Destino pos-setup conforme o perfil (ADMIN -> '/painel', PORTARIA -> '/portaria'). */
 export function destinoAposConvite(perfil: string | null | undefined): string {
-  return perfil === 'PORTARIA' ? '/portaria' : '/'
+  return perfil === 'PORTARIA' ? '/portaria' : '/painel'
 }
 
 export interface ErrosSenhaConvite {

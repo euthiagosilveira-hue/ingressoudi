@@ -70,11 +70,11 @@ test('pagina /auth/convite conclui setup via updateUser({ password })', () => {
   assert.ok(!pagina.includes("middleware: ['admin-auth']"))
 })
 
-test('destinoAposConvite: PORTARIA -> /portaria, ADMIN/outros -> /', () => {
+test('destinoAposConvite: PORTARIA -> /portaria, ADMIN/outros -> /painel', () => {
   assert.equal(destinoAposConvite('PORTARIA'), '/portaria')
-  assert.equal(destinoAposConvite('ADMINISTRADOR'), '/')
-  assert.equal(destinoAposConvite(null), '/')
-  assert.equal(destinoAposConvite(undefined), '/')
+  assert.equal(destinoAposConvite('ADMINISTRADOR'), '/painel')
+  assert.equal(destinoAposConvite(null), '/painel')
+  assert.equal(destinoAposConvite(undefined), '/painel')
 })
 
 test('validarSenhaConvite exige senha forte e confirmacao', () => {

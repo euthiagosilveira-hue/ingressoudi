@@ -17,8 +17,8 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Entrar | GZ1 Ingresso',
-  description: 'Acesso restrito ao painel da Galeria Zero 1.'
+  title: 'Entrar | Ingressoudi',
+  description: 'Acesso restrito ao painel do produtor.'
 })
 
 const route = useRoute()
@@ -57,7 +57,7 @@ async function entrar() {
       await navigateTo(destino)
       return
     }
-    await navigateTo(perfil.perfil === 'PORTARIA' ? '/portaria' : '/')
+    await navigateTo(perfil.perfil === 'PORTARIA' ? '/portaria' : '/painel')
   } catch (e) {
     erro.value = e instanceof AuthError ? e.message : mensagemLoginErro('ERRO_TEMPORARIO')
     // Garante que uma sessao sem permissao nao permaneca ativa.
@@ -110,13 +110,11 @@ async function entrar() {
           class="relative w-full max-w-md rounded-[28px] border border-[#D9B138]/45 bg-[#0b0b0c]/95 p-6 shadow-[0_30px_90px_-25px_rgba(0,0,0,0.95)] ring-1 ring-white/5 backdrop-blur-md sm:p-9 lg:bg-[#0b0b0c]"
         >
           <header class="space-y-2 text-center">
-            <img
-              src="/Logo horizontal.png"
-              alt="Galeria Zero 1"
-              class="mx-auto h-12 w-auto sm:h-14"
-            />
+            <p class="text-2xl font-bold tracking-tight text-white">
+              Ingressoudi<span class="text-[#D9B138]">.</span>
+            </p>
             <h1 class="pt-4 text-3xl font-bold tracking-tight text-white">Entrar</h1>
-            <p class="text-sm text-zinc-400">Acesse o painel da Galeria Zero 1</p>
+            <p class="text-sm text-zinc-400">Acesse o painel do produtor</p>
           </header>
 
           <p

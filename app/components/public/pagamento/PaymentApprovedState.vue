@@ -3,6 +3,7 @@ import { CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 import PaymentSummary from '~/components/public/pagamento/PaymentSummary.vue'
 import type { CheckoutPublico } from '~/types/checkoutPagamento'
+import { rotaIngressosPedido } from '~/utils/rotasPublicas'
 
 const props = defineProps<{
   checkout: CheckoutPublico
@@ -31,7 +32,7 @@ const props = defineProps<{
 
     <NuxtLink
       v-if="props.slug && props.checkoutToken"
-      :to="`/eventos/${props.slug}/comprar/ingressos?token=${props.checkoutToken}`"
+      :to="rotaIngressosPedido(props.checkout.organizacaoSlug, props.slug, props.checkoutToken ?? '')"
       class="flex w-full items-center justify-center rounded-xl bg-amber-400 px-6 py-4 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors duration-150 hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
     >
       Ver meus ingressos

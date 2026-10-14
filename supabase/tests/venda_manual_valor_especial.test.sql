@@ -272,7 +272,8 @@ begin
   -- Q/R) financeiro e dashboard contabilizam o valor especial
   -- -------------------------------------------------------------------------
   select coalesce(sum(pg.valor), 0) into v_base
-    from public.pagamentos pg where pg.status = 'APROVADO';
+    from public.pagamentos pg where pg.status = 'APROVADO'
+     and pg.organizacao_id = current_setting('teste.organizacao_id')::uuid;
 
   v_res := public.criar_venda_manual_admin(v_e_avulso, null, 'Comprador Q', null, array['Q1'], null, 'AVULSO', 30.00);
 
@@ -282,7 +283,8 @@ begin
   end if;
 
   select coalesce(sum(pg.valor), 0) into v_apos
-    from public.pagamentos pg where pg.status = 'APROVADO';
+    from public.pagamentos pg where pg.status = 'APROVADO'
+     and pg.organizacao_id = current_setting('teste.organizacao_id')::uuid;
   if v_apos <> v_base + 30.00 then
     raise exception 'R: faturamento total deveria crescer 30 (antes=%, depois=%)', v_base, v_apos;
   end if;

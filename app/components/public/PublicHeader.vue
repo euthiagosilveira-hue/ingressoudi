@@ -1,20 +1,40 @@
 <script setup lang="ts">
-import { PUBLIC_NAV_ITEMS } from '~/utils/publicNav'
+import { computed } from 'vue'
+
+import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
+import { PLATAFORMA_NOME } from '~/utils/marca'
+import { itensNavegacaoPublica } from '~/utils/publicNav'
+
+const { organizacao } = useOrganizacaoPublica()
+
+const navItems = computed(() => itensNavegacaoPublica(organizacao.value?.slug))
+const inicio = computed(() => (organizacao.value ? `/${organizacao.value.slug}` : '/'))
 </script>
 
 <template>
   <header class="sticky top-0 z-40 border-b border-zinc-800 bg-black/90 backdrop-blur">
-    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
       <NuxtLink
-        to="/eventos-publicos"
-        class="flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+        :to="inicio"
+        class="flex min-w-0 items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
       >
-        <img src="/Logo horizontal.png" alt="Galeria Zero 1" class="h-8 w-auto" />
+        <img
+          v-if="organizacao?.logoUrl"
+          :src="organizacao.logoUrl"
+          :alt="organizacao.nome"
+          class="h-8 w-auto"
+        />
+        <span v-else-if="organizacao" class="truncate text-lg font-bold text-white">
+          {{ organizacao.nome }}
+        </span>
+        <span v-else class="text-lg font-bold tracking-tight text-white">
+          {{ PLATAFORMA_NOME }}<span class="text-amber-400">.</span>
+        </span>
       </NuxtLink>
 
-      <nav class="flex items-center gap-4 text-sm sm:gap-5">
+      <nav class="flex shrink-0 items-center gap-4 text-sm sm:gap-5">
         <NuxtLink
-          v-for="item in PUBLIC_NAV_ITEMS"
+          v-for="item in navItems"
           :key="item.to"
           :to="item.to"
           class="text-zinc-300 transition-colors hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"

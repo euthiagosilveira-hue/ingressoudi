@@ -1,3 +1,3 @@
 export default defineNuxtRouteMiddleware(() => {
-  return navigateTo('/', { redirectCode: 301 })
+  return navigateTo('/painel', { redirectCode: 301 })
 })

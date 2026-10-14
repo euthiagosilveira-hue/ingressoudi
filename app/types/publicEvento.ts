@@ -38,6 +38,11 @@ export interface PublicEventDetail {
    */
   taxaServico?: number
 
+  /** Casa (organizacao) dona do evento. Ausente nos dados antigos/mocks. */
+  organizacaoSlug?: string | null
+  organizacaoNome?: string | null
+  organizacaoLogoUrl?: string | null
+
   /**
    * Quantidade disponivel.
    * - Mocks de desenvolvimento: preenchido.
