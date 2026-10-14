@@ -198,9 +198,16 @@ async function entrar() {
             </button>
           </form>
 
+          <p class="mt-6 text-center text-sm text-zinc-400">
+            Ainda não vende com a gente?
+            <NuxtLink to="/cadastro" class="font-semibold text-[#D9B138] hover:text-[#e6c452]">
+              Cadastre sua casa
+            </NuxtLink>
+          </p>
+
           <NuxtLink
             to="/eventos-publicos"
-            class="mt-7 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500 transition-colors hover:text-[#D9B138] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9B138]/50"
+            class="mt-5 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500 transition-colors hover:text-[#D9B138] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D9B138]/50"
           >
             <ArrowLeftIcon class="h-4 w-4" />
             Voltar ao site

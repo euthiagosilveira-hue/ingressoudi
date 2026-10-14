@@ -46,13 +46,7 @@ const linkPublico = computed(() => {
         </BaseCard>
       </NuxtLink>
 
-      <a
-        v-if="linkPublico"
-        :href="linkPublico"
-        target="_blank"
-        rel="noopener"
-        class="group"
-      >
+      <NuxtLink to="/configuracoes/pagina-publica" class="group">
         <BaseCard class="h-full transition-colors duration-200 group-hover:border-amber-400/40">
           <div class="flex items-start gap-3">
             <span
@@ -64,12 +58,12 @@ const linkPublico = computed(() => {
               <p class="text-sm font-semibold text-white transition-colors group-hover:text-amber-400">
                 Sua página de eventos
               </p>
-              <p class="mt-1 truncate text-xs text-zinc-500">{{ linkPublico }}</p>
-              <p class="mt-1 text-xs text-zinc-500">Divulgue este link para vender online.</p>
+              <p v-if="linkPublico" class="mt-1 truncate text-xs text-zinc-500">{{ linkPublico }}</p>
+              <p class="mt-1 text-xs text-zinc-500">Link para divulgar, logo e cor da sua casa.</p>
             </div>
           </div>
         </BaseCard>
-      </a>
+      </NuxtLink>
 
       <NuxtLink to="/configuracoes/mercado-pago" class="group">
         <BaseCard class="h-full transition-colors duration-200 group-hover:border-amber-400/40">

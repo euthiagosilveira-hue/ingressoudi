@@ -141,7 +141,7 @@ const raizClasses = computed(() =>
 <template>
   <aside :class="raizClasses">
     <div class="relative mb-8 flex items-center justify-center">
-      <img src="/Logo horizontal.png" alt="Galeria Zero 1" class="h-11 w-auto" />
+      <p class="text-xl font-bold tracking-tight text-white">Ingressoudi<span class="text-amber-400">.</span></p>
       <button
         v-if="props.mobile"
         type="button"

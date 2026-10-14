@@ -59,8 +59,14 @@ const recursos = [
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
         <NuxtLink
-          to="/login"
+          to="/cadastro"
           class="inline-flex items-center justify-center rounded-xl bg-amber-400 px-6 py-3 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors hover:bg-amber-300"
+        >
+          Cadastre sua casa
+        </NuxtLink>
+        <NuxtLink
+          to="/login"
+          class="inline-flex items-center justify-center rounded-xl border border-amber-400/60 px-6 py-3 text-sm font-bold uppercase tracking-wide text-amber-400 transition-colors hover:bg-amber-400/10"
         >
           Área do produtor
         </NuxtLink>

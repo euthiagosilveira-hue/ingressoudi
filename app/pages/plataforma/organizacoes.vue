@@ -8,7 +8,13 @@ import BaseCard from '~/components/BaseCard.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
-import { criarOrganizacao } from '~/services/admin/organizacoes'
+import {
+  criarOrganizacao,
+  definirAprovacaoOrganizacao,
+  listarOrganizacoesPlataforma,
+  type OrganizacaoPlataforma
+} from '~/services/admin/organizacoes'
+import { rotaOrganizacao } from '~/utils/rotasPublicas'
 import { definirTaxaOrganizacao, obterStatusMercadoPago } from '~/services/admin/mercadoPago'
 
 definePageMeta({
@@ -77,7 +83,46 @@ async function salvarTaxa() {
   }
 }
 
-onMounted(() => void carregarTaxa())
+// Casas da plataforma: aprovacao de cadastros (somente super admin)
+const casas = ref<OrganizacaoPlataforma[]>([])
+const carregandoCasas = ref(false)
+const alterandoId = ref('')
+const pendentes = computed(() => casas.value.filter((c) => !c.aprovada).length)
+
+async function carregarCasas() {
+  if (!ehSuperAdmin.value) return
+  carregandoCasas.value = true
+  try {
+    casas.value = await listarOrganizacoesPlataforma()
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Não foi possível carregar as casas.')
+  } finally {
+    carregandoCasas.value = false
+  }
+}
+
+async function alterarAprovacao(casa: OrganizacaoPlataforma, aprovada: boolean) {
+  alterandoId.value = casa.id
+  try {
+    await definirAprovacaoOrganizacao(casa.id, aprovada)
+    casa.aprovada = aprovada
+    toast.success(aprovada ? `${casa.nome} aprovada.` : `${casa.nome} voltou para análise.`)
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Não foi possível atualizar a aprovação.')
+  } finally {
+    alterandoId.value = ''
+  }
+}
+
+function dataCurta(iso: string): string {
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('pt-BR')
+}
+
+onMounted(() => {
+  void carregarTaxa()
+  void carregarCasas()
+})
 
 async function acessar(id: string) {
   erro.value = ''
@@ -102,6 +147,77 @@ async function acessar(id: string) {
     </BaseCard>
 
     <template v-else>
+      <BaseCard>
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-sm font-semibold text-white">Casas da plataforma</h2>
+          <span
+            v-if="pendentes > 0"
+            class="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300"
+          >
+            {{ pendentes }} em análise
+          </span>
+        </div>
+        <p class="mt-1 text-xs text-zinc-500">
+          Casas cadastradas pelo site entram em análise: não publicam eventos nem aparecem no site até a aprovação.
+        </p>
+        <p v-if="carregandoCasas" class="mt-4 text-sm text-zinc-500">Carregando...</p>
+        <ul v-else class="mt-4 divide-y divide-zinc-800">
+          <li
+            v-for="casa in casas"
+            :key="casa.id"
+            class="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div class="min-w-0">
+              <p class="flex items-center gap-2 truncate text-sm font-semibold text-white">
+                {{ casa.nome }}
+                <span
+                  :class="
+                    casa.aprovada
+                      ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300'
+                      : 'border-amber-400/30 bg-amber-400/10 text-amber-300'
+                  "
+                  class="rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                >
+                  {{ casa.aprovada ? 'Aprovada' : 'Em análise' }}
+                </span>
+                <span
+                  v-if="!casa.ativo"
+                  class="rounded-full border border-zinc-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400"
+                >
+                  Inativa
+                </span>
+              </p>
+              <p class="truncate text-xs text-zinc-500">
+                <a :href="rotaOrganizacao(casa.slug)" target="_blank" class="hover:text-amber-400">/{{ casa.slug }}</a>
+                · {{ casa.administradores || 'sem administrador' }}
+              </p>
+              <p class="text-xs text-zinc-600">
+                Cadastro {{ dataCurta(casa.criadoEm) }} · {{ casa.eventos }} evento(s) · Mercado Pago
+                {{ casa.mercadoPagoConectado ? 'conectado' : 'não conectado' }}
+              </p>
+            </div>
+            <AppButton
+              v-if="!casa.aprovada"
+              size="sm"
+              variant="primary"
+              :disabled="alterandoId === casa.id"
+              @click="alterarAprovacao(casa, true)"
+            >
+              Aprovar
+            </AppButton>
+            <AppButton
+              v-else
+              size="sm"
+              variant="ghost"
+              :disabled="alterandoId === casa.id"
+              @click="alterarAprovacao(casa, false)"
+            >
+              Voltar para análise
+            </AppButton>
+          </li>
+        </ul>
+      </BaseCard>
+
       <BaseCard>
         <h2 class="text-sm font-semibold text-white">Nova organização</h2>
         <p class="mt-1 text-xs text-zinc-500">

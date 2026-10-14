@@ -13,6 +13,7 @@ const inicio = computed(() => (organizacao.value ? `/${organizacao.value.slug}` 
 
 <template>
   <header class="sticky top-0 z-40 border-b border-zinc-800 bg-black/90 backdrop-blur">
+    <div v-if="organizacao" class="h-1 w-full" style="background: var(--cor-casa)" role="presentation" />
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
       <NuxtLink
         :to="inicio"
@@ -28,7 +29,7 @@ const inicio = computed(() => (organizacao.value ? `/${organizacao.value.slug}` 
           {{ organizacao.nome }}
         </span>
         <span v-else class="text-lg font-bold tracking-tight text-white">
-          {{ PLATAFORMA_NOME }}<span class="text-amber-400">.</span>
+          {{ PLATAFORMA_NOME }}<span style="color: var(--cor-casa)">.</span>
         </span>
       </NuxtLink>
 

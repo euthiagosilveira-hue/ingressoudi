@@ -107,11 +107,11 @@ function copiaLegado(texto: string) {
       <div v-if="temPix" class="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
         <p class="text-sm font-semibold text-zinc-200">Pagamento via Pix</p>
 
-        <div v-if="pixCopiaCola" class="mx-auto w-full max-w-[240px] rounded-xl bg-white p-3">
+        <div v-if="pixCopiaCola" class="mx-auto w-full max-w-[280px] rounded-xl bg-white p-3">
           <QrcodeVue
             :value="pixCopiaCola"
-            :size="220"
-            :margin="2"
+            :size="260"
+            :margin="4"
             level="M"
             render-as="svg"
             class="mx-auto block h-auto w-full"

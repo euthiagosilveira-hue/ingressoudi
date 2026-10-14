@@ -112,7 +112,7 @@ async function definirSenha() {
       class="w-full max-w-md rounded-3xl border border-amber-400/20 bg-zinc-950/90 p-7 shadow-2xl shadow-black/60 backdrop-blur-md sm:p-9"
     >
       <header class="space-y-3 text-center">
-        <img src="/Logo horizontal.png" alt="Galeria Zero 1" class="mx-auto h-11 w-auto" />
+        <p class="text-2xl font-bold tracking-tight text-white">Ingressoudi<span class="text-amber-400">.</span></p>
         <h1 class="text-2xl font-bold text-white">Definir senha</h1>
         <p class="text-sm text-zinc-400">Conclua o seu convite para acessar o painel.</p>
       </header>

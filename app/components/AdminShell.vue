@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from '#imports'
+import { ClockIcon } from '@heroicons/vue/24/outline'
 
 import AdminMobileHeader from '~/components/AdminMobileHeader.vue'
 import AdminSidebar from '~/components/AdminSidebar.vue'
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
 
 const props = withDefaults(
   defineProps<{
@@ -14,6 +16,10 @@ const props = withDefaults(
 
 const route = useRoute()
 const sidebarOpen = ref(false)
+const { operador } = useOperatorAuth()
+
+// Casa cadastrada pelo produtor aguardando aprovacao da plataforma.
+const casaEmAnalise = computed(() => operador.value?.organizacao?.aprovada === false)
 
 const titulo = computed(() => props.title || String(route.meta.title ?? ''))
 
@@ -78,6 +84,18 @@ onBeforeUnmount(() => {
       </header>
 
       <main class="flex-1 space-y-6 overflow-y-auto p-5 sm:p-8">
+        <div
+          v-if="casaEmAnalise"
+          role="status"
+          class="flex items-start gap-3 rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100"
+        >
+          <ClockIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+          <p>
+            <strong class="text-amber-300">Sua casa está em análise.</strong>
+            Enquanto isso, conecte o Mercado Pago, personalize sua página e crie eventos como rascunho.
+            A publicação é liberada assim que a plataforma aprovar seu cadastro.
+          </p>
+        </div>
         <slot />
       </main>
     </div>

@@ -4,6 +4,8 @@ export interface OrganizacaoResumo {
   id: string
   nome: string
   slug: string
+  /** false = casa cadastrada pelo produtor aguardando aprovacao da plataforma. */
+  aprovada?: boolean
 }
 
 export interface OrganizacaoDoOperador extends OrganizacaoResumo {

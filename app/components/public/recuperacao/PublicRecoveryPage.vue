@@ -72,7 +72,7 @@ async function enviar() {
             type="text"
             autocomplete="off"
             class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm uppercase text-zinc-100 placeholder:text-zinc-600 focus:border-amber-400/60 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
-            placeholder="GZ100123"
+            placeholder="IU100123"
           />
         </div>
 
