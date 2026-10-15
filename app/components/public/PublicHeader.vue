@@ -28,8 +28,11 @@ const inicio = computed(() => (organizacao.value ? `/${organizacao.value.slug}` 
         <span v-else-if="organizacao" class="truncate text-lg font-bold text-white">
           {{ organizacao.nome }}
         </span>
-        <span v-else class="text-lg font-bold tracking-tight text-white">
-          {{ PLATAFORMA_NOME }}<span style="color: var(--cor-casa)">.</span>
+        <span
+          v-else
+          class="text-2xl font-extrabold tracking-tight text-white drop-shadow-[0_0_16px_rgba(217,177,56,0.35)]"
+        >
+          {{ PLATAFORMA_NOME }}<span class="text-[#E8C24A]">.</span>
         </span>
       </NuxtLink>
 

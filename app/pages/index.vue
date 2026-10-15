@@ -47,9 +47,28 @@ const recursos = [
 </script>
 
 <template>
+  <div class="relative isolate overflow-hidden">
+    <!-- Brilho dourado da marca (mesmo visual do login) -->
+    <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+      <div
+        class="absolute inset-0 bg-[radial-gradient(70%_55%_at_15%_0%,rgba(217,177,56,0.28),transparent_62%)]"
+      />
+      <div
+        class="absolute inset-0 bg-[radial-gradient(60%_45%_at_95%_60%,rgba(217,177,56,0.12),transparent_65%)]"
+      />
+      <div
+        class="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(70%_60%_at_25%_20%,black,transparent)]"
+      />
+    </div>
+
   <div class="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-20">
     <section class="max-w-3xl">
-      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">Para produtores e casas de eventos</p>
+      <p
+        class="text-5xl font-extrabold tracking-tight text-white drop-shadow-[0_0_28px_rgba(217,177,56,0.35)] sm:text-7xl"
+      >
+        {{ PLATAFORMA_NOME }}<span class="text-[#E8C24A]">.</span>
+      </p>
+      <p class="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">Para produtores e casas de eventos</p>
       <h1 class="mt-4 text-4xl font-bold leading-tight text-white sm:text-5xl">
         Venda ingressos com Pix e controle sua portaria em um só lugar.
       </h1>
@@ -95,5 +114,6 @@ const recursos = [
         <p class="mt-2 text-sm text-zinc-400">{{ recurso.texto }}</p>
       </div>
     </section>
+  </div>
   </div>
 </template>
