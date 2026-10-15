@@ -7,6 +7,7 @@ import {
   BuildingOffice2Icon,
   CalendarDaysIcon,
   ChartBarIcon,
+  PresentationChartLineIcon,
   Cog6ToothIcon,
   QrCodeIcon,
   RectangleStackIcon,
@@ -125,6 +126,12 @@ const items = computed(() => {
       to: '/plataforma/organizacoes',
       icon: BuildingOffice2Icon,
       label: 'Organizações',
+      allowedProfiles: PERFIS_ADMIN_PORTARIA
+    })
+    visiveis.push({
+      to: '/plataforma/financeiro',
+      icon: PresentationChartLineIcon,
+      label: 'Receita da plataforma',
       allowedProfiles: PERFIS_ADMIN_PORTARIA
     })
   }
