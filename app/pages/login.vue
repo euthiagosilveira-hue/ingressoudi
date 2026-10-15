@@ -78,10 +78,10 @@ async function entrar() {
     <!-- Fundo da plataforma: brilho ambar + grade sutil (sem foto de casa) -->
     <div class="absolute inset-0" aria-hidden="true">
       <div
-        class="absolute inset-0 bg-[radial-gradient(90%_60%_at_15%_10%,rgba(217,177,56,0.16),transparent_60%)]"
+        class="absolute inset-0 bg-[radial-gradient(90%_60%_at_15%_10%,rgba(217,177,56,0.30),transparent_62%)]"
       />
       <div
-        class="absolute inset-0 bg-[radial-gradient(70%_50%_at_90%_100%,rgba(217,177,56,0.08),transparent_65%)]"
+        class="absolute inset-0 bg-[radial-gradient(70%_50%_at_90%_100%,rgba(217,177,56,0.16),transparent_65%)]"
       />
       <div
         class="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(80%_70%_at_30%_40%,black,transparent)]"
@@ -91,10 +91,12 @@ async function entrar() {
     <div class="relative z-10 grid w-full lg:min-h-[100dvh] lg:grid-cols-[55%_45%]">
       <!-- Painel de marca (desktop) -->
       <div class="hidden flex-col justify-center px-16 py-16 lg:flex xl:px-24">
-        <p class="text-3xl font-bold tracking-tight text-white">
-          Ingressoudi<span class="text-[#D9B138]">.</span>
+        <p
+          class="text-6xl font-extrabold tracking-tight text-white drop-shadow-[0_0_28px_rgba(217,177,56,0.35)] xl:text-7xl"
+        >
+          Ingressoudi<span class="text-[#E8C24A]">.</span>
         </p>
-        <h2 class="mt-10 max-w-lg text-4xl font-bold leading-tight text-white xl:text-5xl">
+        <h2 class="mt-12 max-w-lg text-4xl font-bold leading-tight text-white xl:text-5xl">
           Venda ingressos com Pix e controle sua portaria em um só lugar.
         </h2>
         <ul class="mt-10 space-y-4">
@@ -123,8 +125,10 @@ async function entrar() {
           class="relative w-full max-w-md rounded-[28px] border border-[#D9B138]/45 bg-[#0b0b0c]/95 p-6 shadow-[0_30px_90px_-25px_rgba(0,0,0,0.95)] ring-1 ring-white/5 backdrop-blur-md sm:p-9 lg:bg-[#0b0b0c]"
         >
           <header class="space-y-2 text-center">
-            <p class="text-2xl font-bold tracking-tight text-white lg:hidden">
-              Ingressoudi<span class="text-[#D9B138]">.</span>
+            <p
+              class="text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_0_20px_rgba(217,177,56,0.35)] lg:hidden"
+            >
+              Ingressoudi<span class="text-[#E8C24A]">.</span>
             </p>
             <h1 class="pt-4 text-3xl lg:pt-0 font-bold tracking-tight text-white">Entrar</h1>
             <p class="text-sm text-zinc-400">Acesse o painel do produtor</p>
