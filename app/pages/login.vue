@@ -2,11 +2,14 @@
 import { computed, reactive, ref } from 'vue'
 import {
   ArrowLeftIcon,
+  BanknotesIcon,
   EnvelopeIcon,
   ExclamationTriangleIcon,
   EyeIcon,
   EyeSlashIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  QrCodeIcon,
+  UserGroupIcon
 } from '@heroicons/vue/24/outline'
 
 import { AuthError, useOperatorAuth } from '~/composables/useOperatorAuth'
@@ -27,13 +30,13 @@ const { login, carregando, logout } = useOperatorAuth()
 const form = reactive({ email: '', senha: '' })
 const erro = ref('')
 const mostrarSenha = ref(false)
-const fotoOk = ref(true)
 
-/**
- * Foto real da fachada (public/galeria-fachada.webp — WebP otimizado).
- * Referenciada dinamicamente; ha fallback grafico se a imagem faltar.
- */
-const fotoSrc = '/galeria-fachada.webp'
+// Painel de marca da plataforma (visivel no desktop). Sem marca de casa fixa.
+const destaques = [
+  { icone: BanknotesIcon, texto: 'Pix direto na conta do produtor' },
+  { icone: QrCodeIcon, texto: 'Portaria com QR Code no celular' },
+  { icone: UserGroupIcon, texto: 'Lista VIP e venda na porta' }
+]
 
 const erroQuery = computed(() => {
   const e = route.query.erro
@@ -72,29 +75,39 @@ async function entrar() {
   <main
     class="relative flex min-h-[100dvh] w-full overflow-x-hidden bg-[#050505] text-white"
   >
-    <!-- Fotografia da fachada em tela cheia, atras do formulario -->
+    <!-- Fundo da plataforma: brilho ambar + grade sutil (sem foto de casa) -->
     <div class="absolute inset-0" aria-hidden="true">
-      <img
-        v-if="fotoOk"
-        :src="fotoSrc"
-        alt=""
-        fetchpriority="high"
-        loading="eager"
-        decoding="async"
-        class="h-full w-full object-cover object-[42%_45%] md:object-contain md:object-center"
-        @error="fotoOk = false"
-      />
-      <!-- Overlay leve: mantem o brilho da placa e da fachada -->
-      <div class="absolute inset-0 bg-black/30" />
-      <div class="absolute inset-0 bg-gradient-to-b from-black/45 via-black/15 to-black/60" />
       <div
-        class="absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_0%,rgba(217,177,56,0.10),transparent_60%)]"
+        class="absolute inset-0 bg-[radial-gradient(90%_60%_at_15%_10%,rgba(217,177,56,0.16),transparent_60%)]"
+      />
+      <div
+        class="absolute inset-0 bg-[radial-gradient(70%_50%_at_90%_100%,rgba(217,177,56,0.08),transparent_65%)]"
+      />
+      <div
+        class="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(80%_70%_at_30%_40%,black,transparent)]"
       />
     </div>
 
-    <!-- Conteudo: card sobre a fotografia -->
     <div class="relative z-10 grid w-full lg:min-h-[100dvh] lg:grid-cols-[55%_45%]">
-      <div class="hidden lg:block" />
+      <!-- Painel de marca (desktop) -->
+      <div class="hidden flex-col justify-center px-16 py-16 lg:flex xl:px-24">
+        <p class="text-3xl font-bold tracking-tight text-white">
+          Ingressoudi<span class="text-[#D9B138]">.</span>
+        </p>
+        <h2 class="mt-10 max-w-lg text-4xl font-bold leading-tight text-white xl:text-5xl">
+          Venda ingressos com Pix e controle sua portaria em um só lugar.
+        </h2>
+        <ul class="mt-10 space-y-4">
+          <li v-for="item in destaques" :key="item.texto" class="flex items-center gap-3 text-zinc-300">
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#D9B138]/30 bg-[#D9B138]/10 text-[#D9B138]"
+            >
+              <component :is="item.icone" class="h-5 w-5" />
+            </span>
+            {{ item.texto }}
+          </li>
+        </ul>
+      </div>
 
       <!-- Card -->
       <div
@@ -110,10 +123,10 @@ async function entrar() {
           class="relative w-full max-w-md rounded-[28px] border border-[#D9B138]/45 bg-[#0b0b0c]/95 p-6 shadow-[0_30px_90px_-25px_rgba(0,0,0,0.95)] ring-1 ring-white/5 backdrop-blur-md sm:p-9 lg:bg-[#0b0b0c]"
         >
           <header class="space-y-2 text-center">
-            <p class="text-2xl font-bold tracking-tight text-white">
+            <p class="text-2xl font-bold tracking-tight text-white lg:hidden">
               Ingressoudi<span class="text-[#D9B138]">.</span>
             </p>
-            <h1 class="pt-4 text-3xl font-bold tracking-tight text-white">Entrar</h1>
+            <h1 class="pt-4 text-3xl lg:pt-0 font-bold tracking-tight text-white">Entrar</h1>
             <p class="text-sm text-zinc-400">Acesse o painel do produtor</p>
           </header>
 

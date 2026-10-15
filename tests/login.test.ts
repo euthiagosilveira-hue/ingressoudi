@@ -43,22 +43,18 @@ test('Voltar ao site aponta para a rota publica', () => {
   assert.ok(page.includes('to="/eventos-publicos"'))
 })
 
-test('usa a foto real da fachada (WebP) com fallback gracioso', () => {
-  assert.ok(page.includes('galeria-fachada.webp'))
-  assert.ok(page.includes('object-cover'))
-  assert.ok(page.includes('@error="fotoOk = false"'))
-})
-
-test('background e um unico full-screen com menos zoom no desktop', () => {
+test('login tem visual da plataforma, sem foto de casa especifica', () => {
+  assert.ok(!page.includes('galeria-fachada'))
+  assert.ok(!page.includes('Galeria'))
+  assert.ok(!page.includes('<img'))
   assert.ok(page.includes('absolute inset-0'))
-  assert.ok(!page.includes('lg:bg-[#080808]'))
-  assert.ok(!page.includes('object-[50%_45%]'))
-  assert.ok(page.includes('md:object-contain'))
+  assert.ok(page.includes('Ingressoudi'))
 })
 
-test('asset WebP da fachada existe em public/', () => {
-  const caminho = fileURLToPath(new URL('../public/galeria-fachada.webp', import.meta.url))
-  assert.ok(existsSync(caminho), 'public/galeria-fachada.webp deve existir')
+test('painel de marca so no desktop e link de cadastro', () => {
+  assert.ok(page.includes('hidden flex-col justify-center'))
+  assert.ok(page.includes('lg:flex'))
+  assert.ok(page.includes('to="/cadastro"'))
 })
 
 test('asset antigo login-fachada.jpg foi removido', () => {
