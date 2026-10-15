@@ -5,6 +5,10 @@ import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { COR_PADRAO, corTextoContraste, normalizarCor } from '~/utils/marca'
 
 const { organizacao } = useOrganizacaoPublica()
+const route = useRoute()
+
+// Paginas que ja trazem a marca em destaque (ex.: pagina inicial) dispensam o topo.
+const semCabecalho = computed(() => route.meta.semCabecalho === true)
 
 // Cor de destaque da casa disponivel para os componentes via CSS.
 const estilo = computed(() => {
@@ -15,7 +19,7 @@ const estilo = computed(() => {
 
 <template>
   <div class="flex min-h-screen flex-col bg-zinc-950 text-white" :style="estilo">
-    <PublicHeader />
+    <PublicHeader v-if="!semCabecalho" />
     <main class="flex-1">
       <slot />
     </main>

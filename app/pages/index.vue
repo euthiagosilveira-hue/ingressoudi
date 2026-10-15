@@ -10,7 +10,9 @@ import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { PLATAFORMA_NOME } from '~/utils/marca'
 
 definePageMeta({
-  layout: 'public-layout'
+  layout: 'public-layout',
+  // A logo ja aparece em destaque na abertura: sem o topo repetido.
+  semCabecalho: true
 })
 
 // Pagina geral da plataforma: sem marca de casa no topo.
