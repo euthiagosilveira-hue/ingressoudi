@@ -2,7 +2,8 @@
 -- Ingressoudi - Testes: guarda de seguranca (RLS e permissoes)
 -- Arquivo: supabase/tests/seguranca_acl.test.sql
 -- Falha se alguma tabela ficar sem RLS, se anon/authenticated ganharem acesso
--- direto a tabelas ou se funcoes de trigger ficarem executaveis por eles.
+-- direto a tabelas, se surgir politica/SECURITY DEFINER no public, funcao sem
+-- search_path fixo, listagem publica do storage ou funcao de trigger exposta.
 -- =============================================================================
 
 begin;
@@ -20,25 +21,47 @@ begin
     raise exception 'Tabelas sem RLS: %', v_lista;
   end if;
 
-  -- 2) nenhum privilegio direto em tabelas (unica excecao: SELECT em usuarios para authenticated)
+  -- 2) nenhum privilegio direto em tabelas para anon/authenticated
   select string_agg(grantee || ':' || table_name || ':' || privilege_type, ', ') into v_lista
     from information_schema.role_table_grants
    where table_schema = 'public'
-     and grantee in ('anon', 'authenticated', 'PUBLIC')
-     and not (grantee = 'authenticated' and table_name = 'usuarios' and privilege_type = 'SELECT');
+     and grantee in ('anon', 'authenticated', 'PUBLIC');
   if v_lista is not null then
     raise exception 'Privilegios diretos indevidos: %', v_lista;
   end if;
 
-  -- 3) usuarios: unica politica e leitura da propria linha
-  if (select count(*) from pg_policy where polrelid = 'public.usuarios'::regclass) <> 1 then
-    raise exception 'usuarios deveria ter exatamente 1 politica (leitura da propria linha)';
-  end if;
-  select string_agg(c.relname, ', ') into v_lista
+  -- 3) nenhuma politica no schema public (acesso somente por RPC)
+  select string_agg(c.relname || '.' || p.polname, ', ') into v_lista
     from pg_policy p join pg_class c on c.oid = p.polrelid
-   where c.relnamespace = 'public'::regnamespace and c.relname <> 'usuarios';
+   where c.relnamespace = 'public'::regnamespace;
   if v_lista is not null then
-    raise exception 'Politicas inesperadas em: %', v_lista;
+    raise exception 'Politicas inesperadas: %', v_lista;
+  end if;
+
+  -- 3b) nenhuma funcao SECURITY DEFINER no schema public (exposto pela API)
+  select string_agg(p.oid::regprocedure::text, ', ') into v_lista
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace and p.prosecdef;
+  if v_lista is not null then
+    raise exception 'SECURITY DEFINER no schema public: %', v_lista;
+  end if;
+
+  -- 3c) funcoes do public com search_path fixo
+  select string_agg(p.oid::regprocedure::text, ', ') into v_lista
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace
+     and p.prokind = 'f'
+     and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%');
+  if v_lista is not null then
+    raise exception 'Funcoes sem search_path fixo: %', v_lista;
+  end if;
+
+  -- 3d) bucket de capas sem listagem publica
+  if exists (select 1 from pg_policy p
+              where p.polrelid = 'storage.objects'::regclass
+                and p.polcmd in ('r', '*')
+                and (p.polroles = '{0}'::oid[] or 'anon'::regrole::oid = any(p.polroles))) then
+    raise exception 'storage.objects com leitura/listagem para anon/public';
   end if;
 
   -- 4) funcoes de trigger nao executaveis por anon/authenticated
