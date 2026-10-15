@@ -103,7 +103,8 @@ const acaoEditar =
       <NuxtLink to="/termos" target="_blank" class="text-zinc-300 underline hover:text-amber-400">Termos de uso</NuxtLink>
       e a
       <NuxtLink to="/privacidade" target="_blank" class="text-zinc-300 underline hover:text-amber-400">
-        Política de privacidade</NuxtLink>.
+        Política de privacidade</NuxtLink>. Reembolso: até 7 dias após a compra e até 48h antes do evento
+      (<NuxtLink to="/reembolso" target="_blank" class="text-zinc-300 underline hover:text-amber-400">ver política</NuxtLink>).
     </p>
 
     <p

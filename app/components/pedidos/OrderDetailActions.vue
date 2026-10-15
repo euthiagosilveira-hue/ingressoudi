@@ -20,7 +20,7 @@ const emit = defineEmits<{
   <template v-else-if="props.status === 'PAGO'">
     <AppButton variant="outline" @click="emit('action', 'ver-ingressos')">Ver ingressos</AppButton>
     <AppButton variant="ghost" @click="emit('action', 'solicitar-reembolso')">
-      Solicitar reembolso
+      Reembolsar
     </AppButton>
   </template>
 

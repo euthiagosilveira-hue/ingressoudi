@@ -129,6 +129,16 @@ function montarHistorico(
     })
   }
 
+  if (pagamento?.reembolsadoEm) {
+    eventos.push({
+      id: `${pedido.id}_h8`,
+      tipo: 'REEMBOLSO_CONCLUIDO',
+      titulo: 'Reembolso concluído',
+      descricao: 'Valor devolvido ao comprador e ingressos cancelados.',
+      ocorridoEm: pagamento.reembolsadoEm
+    })
+  }
+
   return eventos
 }
 

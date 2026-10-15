@@ -78,9 +78,11 @@ useSeoMeta({
 
     <h2>6. Cancelamento e reembolso</h2>
     <p>
-      Pedidos de cancelamento e reembolso devem ser feitos ao Organizador do evento, que é o responsável por eles,
-      observado o Código de Defesa do Consumidor. Se o evento for cancelado ou alterado de forma relevante, o Organizador
-      deve oferecer o reembolso ao Comprador.
+      O reembolso segue a
+      <NuxtLink to="/reembolso" class="text-amber-400 hover:text-amber-300">Política de reembolso</NuxtLink>: desistência em
+      até 7 dias após a compra e até 48 horas antes do evento, com devolução integral (ingressos e taxa de serviço), e
+      reembolso integral em caso de cancelamento ou alteração relevante do evento. Os pedidos são feitos ao Organizador,
+      que os executa pelo painel da Plataforma.
     </p>
 
     <h2>7. Condutas proibidas</h2>

@@ -36,6 +36,32 @@ export async function listarPedidosAdmin(
   return (data ?? []) as AdminPedidoRow[]
 }
 
+export interface ResultadoReembolso {
+  valor: number
+  manual: boolean
+  emProcesso: boolean
+}
+
+/**
+ * Reembolso total do pedido (ingressos + taxa). Pix: estorno na conta Mercado
+ * Pago da casa. Dinheiro: apenas registra a devolucao. Cancela os ingressos.
+ */
+export async function reembolsarPedido(pedidoId: string, motivo: string): Promise<ResultadoReembolso> {
+  try {
+    const r = await $fetch<{ ok: boolean; valor?: number; manual?: boolean; emProcesso?: boolean; mensagem?: string }>(
+      `/api/admin/pedidos/${encodeURIComponent(pedidoId)}/reembolso`,
+      { method: 'POST', body: { motivo } }
+    )
+    if (!r?.ok) throw new Error(r?.mensagem ?? 'Não foi possível concluir o reembolso.')
+    return { valor: Number(r.valor ?? 0), manual: Boolean(r.manual), emProcesso: Boolean(r.emProcesso) }
+  } catch (e) {
+    const erro = e as Error & { data?: { mensagem?: string; statusMessage?: string } }
+    if (erro?.data?.mensagem) throw new Error(erro.data.mensagem)
+    if (erro?.data?.statusMessage === 'SEM_PERMISSAO') throw new Error('Você não tem permissão para reembolsar pedidos.')
+    throw new Error(erro instanceof Error && erro.message && !erro.data ? erro.message : 'Não foi possível concluir o reembolso.')
+  }
+}
+
 /** Detalhe administrativo real de pedido (RPC segura, ADMINISTRADOR). */
 export async function obterPedidoAdmin(
   pedidoId: string

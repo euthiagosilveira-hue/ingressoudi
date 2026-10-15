@@ -16,6 +16,7 @@ const ano = new Date().getFullYear()
         <nav class="flex gap-4" aria-label="Documentos legais">
           <NuxtLink to="/termos" class="hover:text-zinc-300">Termos de uso</NuxtLink>
           <NuxtLink to="/privacidade" class="hover:text-zinc-300">Privacidade</NuxtLink>
+          <NuxtLink to="/reembolso" class="hover:text-zinc-300">Reembolso</NuxtLink>
         </nav>
         <p v-if="organizacao">
           Ingressos por <NuxtLink to="/" class="text-zinc-300 hover:text-amber-400">{{ PLATAFORMA_NOME }}</NuxtLink>

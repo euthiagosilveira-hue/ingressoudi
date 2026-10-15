@@ -19,7 +19,7 @@ const route = useRoute()
 const pedido = ref<OrderDetail | null>(null)
 const carregado = ref(false)
 
-onMounted(async () => {
+async function carregar() {
   try {
     const row = await obterPedidoAdmin(String(route.params.id))
     pedido.value = row ? mapearPedidoAdminParaDetalhe(row) : null
@@ -28,10 +28,12 @@ onMounted(async () => {
   } finally {
     carregado.value = true
   }
-})
+}
+
+onMounted(carregar)
 </script>
 
 <template>
-  <OrderDetails v-if="pedido" :pedido="pedido" />
+  <OrderDetails v-if="pedido" :pedido="pedido" @atualizado="carregar" />
   <OrderNotFound v-else-if="carregado" />
 </template>
