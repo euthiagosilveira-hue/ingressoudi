@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { situacaoPrazoDesistencia, temIngressoUtilizado } from '../app/utils/reembolso.ts'
 import { MercadoPagoHttpError } from '../server/services/payments/mercado-pago/mercado-pago-client.ts'
 import {
+  detalheErroMp,
   erroJaReembolsado,
   mensagemErroReembolsoMp,
   reembolsarPagamentoMp,
@@ -79,4 +80,20 @@ test('rota de reembolso exige admin da organizacao e politica publicada', () => 
   assert.ok(ler('../app/pages/reembolso.vue').includes('Política de reembolso'))
   assert.ok(ler('../app/components/public/PublicFooter.vue').includes('to="/reembolso"'))
   assert.ok(!ler('../app/components/pedidos/OrderDetails.vue').includes('(mock)'))
+})
+
+test('erro nao mapeado do Mercado Pago mostra o detalhe real', () => {
+  const erro = new MercadoPagoHttpError(
+    400,
+    '{"message":"Invalid refund","error":"bad_request","status":400,"cause":[{"code":4040,"description":"amount invalid"}]}',
+    'req-1'
+  )
+  assert.equal(detalheErroMp(erro), 'HTTP 400: Invalid refund | bad_request | 4040 amount invalid')
+  const msg = mensagemErroReembolsoMp(erro)
+  assert.match(msg, /Tente novamente/)
+  assert.match(msg, /Detalhe do Mercado Pago: HTTP 400: Invalid refund/)
+  assert.equal(detalheErroMp(new MercadoPagoHttpError(500, 'Internal error')), 'HTTP 500: Internal error')
+  assert.equal(detalheErroMp(new Error('fetch failed')), 'fetch failed')
+  assert.equal(detalheErroMp('x'), null)
+  assert.ok(ler('../server/api/admin/pedidos/[id]/reembolso.post.ts').includes('detalhe: detalheErroMp(erro)'))
 })

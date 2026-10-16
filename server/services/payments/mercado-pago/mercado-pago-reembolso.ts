@@ -55,6 +55,37 @@ export function erroJaReembolsado(erro: unknown): boolean {
   return corpo.includes('already refunded') || corpo.includes('payment already refunded') || corpo.includes('ya fue reembolsado')
 }
 
+/**
+ * Detalhe curto do erro devolvido pelo Mercado Pago (message, error e causas),
+ * para o log e para o produtor saber o motivo real da recusa.
+ */
+export function detalheErroMp(erro: unknown): string | null {
+  if (erro instanceof MercadoPagoHttpError) {
+    const partes: string[] = []
+    try {
+      const corpo = JSON.parse(erro.message) as {
+        message?: unknown
+        error?: unknown
+        cause?: Array<{ code?: unknown; description?: unknown }> | null
+      }
+      if (corpo?.message) partes.push(String(corpo.message))
+      if (corpo?.error && String(corpo.error) !== String(corpo.message ?? '')) partes.push(String(corpo.error))
+      for (const c of Array.isArray(corpo?.cause) ? corpo.cause : []) {
+        const texto = [c?.code, c?.description].filter((v) => v !== undefined && v !== null && v !== '').join(' ')
+        if (texto) partes.push(texto)
+      }
+    } catch {
+      if (erro.message.trim()) partes.push(erro.message.trim())
+    }
+    const detalhe = partes.join(' | ').replace(/\s+/g, ' ').slice(0, 240)
+    return detalhe ? `HTTP ${erro.status}: ${detalhe}` : `HTTP ${erro.status}`
+  }
+  if (erro instanceof Error && erro.message.trim()) {
+    return erro.message.trim().replace(/\s+/g, ' ').slice(0, 240)
+  }
+  return null
+}
+
 /** Mensagem amigavel para o produtor a partir do erro do Mercado Pago. */
 export function mensagemErroReembolsoMp(erro: unknown): string {
   if (erro instanceof MercadoPagoHttpError) {
@@ -75,5 +106,7 @@ export function mensagemErroReembolsoMp(erro: unknown): string {
       return 'O prazo do Mercado Pago para reembolsar este pagamento terminou. A devolução precisa ser feita por fora.'
     }
   }
-  return 'Não foi possível concluir o reembolso no Mercado Pago agora. Tente novamente em alguns minutos.'
+  const detalhe = detalheErroMp(erro)
+  const base = 'Não foi possível concluir o reembolso no Mercado Pago agora. Tente novamente em alguns minutos.'
+  return detalhe ? `${base} Detalhe do Mercado Pago: ${detalhe}` : base
 }

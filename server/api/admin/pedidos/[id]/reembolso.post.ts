@@ -3,6 +3,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 import { ehUuid } from '../../../../services/payments/payment-service'
 import { obterAccessTokenOrganizacao } from '../../../../services/payments/mercado-pago/mercado-pago-conexao'
 import {
+  detalheErroMp,
   erroJaReembolsado,
   mensagemErroReembolsoMp,
   reembolsarPagamentoMp,
@@ -118,7 +119,10 @@ export default defineEventHandler(async (event) => {
     console.error('[mercado-pago] reembolso falhou', {
       pedidoId,
       organizacaoId: admin.organizacaoId,
-      status: (erro as { status?: number })?.status ?? null
+      status: (erro as { status?: number })?.status ?? null,
+      requestId: (erro as { requestId?: string | null })?.requestId ?? null,
+      transacaoId: op.transacao_id,
+      detalhe: detalheErroMp(erro)
     })
     return falhar(mensagemErroReembolsoMp(erro))
   }
