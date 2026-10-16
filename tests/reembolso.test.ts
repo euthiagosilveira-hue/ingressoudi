@@ -57,7 +57,7 @@ test('erro do Mercado Pago vira MercadoPagoHttpError e mensagem amigavel', async
   const fetchErro = (async () => new Response('{"message":"Insufficient balance"}', { status: 400 })) as unknown as typeof fetch
   await assert.rejects(() => reembolsarPagamentoMp('T', '1', 'k', fetchErro), (e: unknown) => {
     assert.ok(e instanceof MercadoPagoHttpError)
-    assert.match(mensagemErroReembolsoMp(e), /Saldo insuficiente/)
+    assert.match(mensagemErroReembolsoMp(e), /não tem saldo disponível/)
     return true
   })
   assert.match(mensagemErroReembolsoMp(new MercadoPagoHttpError(401, 'unauthorized')), /Reconecte/)
@@ -96,4 +96,12 @@ test('erro nao mapeado do Mercado Pago mostra o detalhe real', () => {
   assert.equal(detalheErroMp(new Error('fetch failed')), 'fetch failed')
   assert.equal(detalheErroMp('x'), null)
   assert.ok(ler('../server/api/admin/pedidos/[id]/reembolso.post.ts').includes('detalhe: detalheErroMp(erro)'))
+})
+
+test('saldo indisponivel do vendedor (120065) vira mensagem de saldo', () => {
+  const erro = new MercadoPagoHttpError(
+    400,
+    '{"message":"Collector hasn\'t enough available money","error":"bad_request","status":400,"cause":[{"code":120065,"description":"Collector hasn\'t enough available money"}]}'
+  )
+  assert.match(mensagemErroReembolsoMp(erro), /não tem saldo disponível/)
 })

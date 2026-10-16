@@ -96,8 +96,14 @@ export function mensagemErroReembolsoMp(erro: unknown): string {
     if (erro.status === 404) {
       return 'Pagamento não encontrado na conta Mercado Pago conectada.'
     }
-    if (corpo.includes('insufficient') || corpo.includes('saldo') || corpo.includes('balance')) {
-      return 'Saldo insuficiente na conta Mercado Pago da casa para devolver o valor. Adicione saldo e tente de novo.'
+    if (
+      corpo.includes('insufficient') ||
+      corpo.includes('saldo') ||
+      corpo.includes('balance') ||
+      corpo.includes('enough available money') ||
+      corpo.includes('120065')
+    ) {
+      return 'A conta Mercado Pago da casa não tem saldo disponível para devolver o valor. O dinheiro das vendas pode ainda estar "a liberar". Adicione saldo na conta (por exemplo, um Pix para ela) e tente de novo.'
     }
     if (corpo.includes('refunded') || corpo.includes('already')) {
       return 'Este pagamento já foi reembolsado no Mercado Pago.'
