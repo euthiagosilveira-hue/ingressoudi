@@ -3,6 +3,17 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
   modules: ['@nuxtjs/supabase', '@nuxtjs/tailwindcss'],
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/site.webmanifest' }
+      ],
+      meta: [{ name: 'theme-color', content: '#050505' }]
+    }
+  },
   runtimeConfig: {
     // Somente backend. Nunca expor em public.
     // Legado (conta unica do GZ1). Nao e usado pelo Ingressoudi: cada organizacao
