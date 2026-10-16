@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import PublicEventAvailability from '~/components/public/eventos/PublicEventAvailability.vue'
 import PublicEventUnavailable from '~/components/public/eventos/PublicEventUnavailable.vue'
 import { formatMoeda } from '~/utils/format'
+import { precoMeia } from '~/utils/meiaEntrada'
 import { rotaCheckout } from '~/utils/rotasPublicas'
 import type { PublicEventDetail, PublicVendaSituacao } from '~/types/publicEvento'
 
@@ -27,7 +28,21 @@ const situacaoBloqueada = computed<Exclude<PublicVendaSituacao, 'DISPONIVEL'> | 
       <p class="text-sm font-semibold text-white">{{ props.evento.loteNome ?? 'Lote' }}</p>
 
       <div class="mt-4">
-        <p class="text-3xl font-bold" style="color: var(--cor-casa)">
+        <div v-if="props.evento.meiaEntradaAtiva" class="flex flex-wrap items-end gap-x-6 gap-y-2">
+          <div>
+            <p class="text-xs text-zinc-500">Inteira</p>
+            <p class="text-3xl font-bold" style="color: var(--cor-casa)">
+              {{ formatMoeda(props.evento.preco ?? 0) }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-zinc-500">Meia-entrada</p>
+            <p class="text-3xl font-bold" style="color: var(--cor-casa)">
+              {{ formatMoeda(precoMeia(props.evento.preco)) }}
+            </p>
+          </div>
+        </div>
+        <p v-else class="text-3xl font-bold" style="color: var(--cor-casa)">
           {{ formatMoeda(props.evento.preco ?? 0) }}
         </p>
         <p class="text-xs text-zinc-500">

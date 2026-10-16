@@ -29,6 +29,12 @@ const emit = defineEmits<{
     </div>
 
     <div class="flex flex-wrap items-center gap-3 sm:justify-end">
+      <span
+        v-if="props.ingresso.meia"
+        class="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-300"
+      >
+        Meia-entrada
+      </span>
       <span class="text-sm text-zinc-200">{{ formatMoeda(props.ingresso.valorUnitario) }}</span>
       <TicketStatusBadge :status="props.ingresso.status" />
       <AppButton variant="ghost" size="sm" @click="emit('visualizar')">

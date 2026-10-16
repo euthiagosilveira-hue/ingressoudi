@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatData, formatHora, formatMoeda } from '~/utils/format'
+import { AVISO_MEIA_ENTRADA } from '~/utils/meiaEntrada'
 import type { CheckoutBuyer, CheckoutParticipant, CheckoutStep } from '~/types/checkout'
 import type { PublicEventDetail } from '~/types/publicEvento'
 
@@ -14,8 +15,11 @@ const props = withDefaults(
     erro?: string
     /** Taxa de servico total paga pelo comprador. */
     taxa?: number
+    /** Quantos ingressos sao meia-entrada e o preco da meia. */
+    quantidadeMeia?: number
+    precoMeia?: number | null
   }>(),
-  { erro: '', taxa: 0 }
+  { erro: '', taxa: 0, quantidadeMeia: 0, precoMeia: null }
 )
 
 const emit = defineEmits<{
@@ -60,6 +64,12 @@ const acaoEditar =
         <ol class="mt-2 space-y-1 text-sm text-zinc-200">
           <li v-for="(participante, indice) in props.participantes" :key="indice">
             {{ indice + 1 }}. {{ participante.nome }}
+            <span
+              v-if="participante.meia"
+              class="ml-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-300"
+            >
+              Meia-entrada
+            </span>
           </li>
         </ol>
       </div>
@@ -81,7 +91,15 @@ const acaoEditar =
       <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
         <p class="text-xs uppercase tracking-wide text-zinc-500">Valores</p>
         <div class="mt-2 space-y-1 text-sm">
-          <p class="text-zinc-300">
+          <template v-if="props.quantidadeMeia > 0">
+            <p v-if="props.quantidade > props.quantidadeMeia" class="text-zinc-300">
+              {{ props.quantidade - props.quantidadeMeia }} × inteira {{ formatMoeda(props.preco ?? 0) }}
+            </p>
+            <p class="text-zinc-300">
+              {{ props.quantidadeMeia }} × meia-entrada {{ formatMoeda(props.precoMeia ?? 0) }}
+            </p>
+          </template>
+          <p v-else class="text-zinc-300">
             {{ props.quantidade }} × {{ formatMoeda(props.preco ?? 0) }}
           </p>
           <p v-if="props.taxa > 0" class="text-zinc-300">
@@ -93,6 +111,13 @@ const acaoEditar =
         </div>
       </div>
     </div>
+
+    <p
+      v-if="props.quantidadeMeia > 0"
+      class="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-200"
+    >
+      {{ AVISO_MEIA_ENTRADA }}
+    </p>
 
     <p class="border-t border-zinc-800 pt-4 text-xs text-zinc-500">
       Após a confirmação do pagamento, os nomes dos participantes não poderão ser alterados.

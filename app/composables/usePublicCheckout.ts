@@ -19,6 +19,7 @@ import {
   nomeValido,
   telefoneValido
 } from '~/utils/checkout'
+import { contarMeias, precoMeia as calcularPrecoMeia } from '~/utils/meiaEntrada'
 import { calcularValoresCheckout } from '~/utils/taxa'
 
 export function usePublicCheckout(
@@ -30,7 +31,7 @@ export function usePublicCheckout(
   const step = ref<CheckoutStep>('QUANTIDADE')
 
   const quantidade = ref(CHECKOUT_MIN)
-  const participantes = ref<CheckoutParticipant[]>([{ nome: '' }])
+  const participantes = ref<CheckoutParticipant[]>([{ nome: '', meia: false }])
   const comprador = reactive<CheckoutBuyer>({ nome: '', telefone: '', email: '' })
 
   const reserva = ref<CheckoutReservation | null>(null)
@@ -46,9 +47,18 @@ export function usePublicCheckout(
   const disponiveis = computed(() => evento.disponiveis)
   const maximo = computed(() => limiteQuantidade(disponiveis.value))
   const taxaPorIngresso = computed(() => evento.taxaServico ?? 0)
+  const meiaAtiva = computed(() => evento.meiaEntradaAtiva === true)
+  const precoMeia = computed(() => (meiaAtiva.value ? calcularPrecoMeia(preco.value) : null))
+  const quantidadeMeia = computed(() => (meiaAtiva.value ? contarMeias(participantes.value) : 0))
   const valores = computed(() =>
-    calcularValoresCheckout(preco.value, quantidade.value, taxaPorIngresso.value)
+    calcularValoresCheckout(
+      preco.value,
+      quantidade.value,
+      taxaPorIngresso.value,
+      quantidadeMeia.value
+    )
   )
+  const valorIngressos = computed(() => valores.value.valorIngressos)
   const valorTaxa = computed(() => valores.value.valorTaxa)
   const total = computed(() => valores.value.total)
 
@@ -59,7 +69,7 @@ export function usePublicCheckout(
   function sincronizarParticipantes(valor: number) {
     const atual = participantes.value
     if (valor > atual.length) {
-      const extras = Array.from({ length: valor - atual.length }, () => ({ nome: '' }))
+      const extras = Array.from({ length: valor - atual.length }, () => ({ nome: '', meia: false }))
       participantes.value = [...atual, ...extras]
       return
     }
@@ -75,7 +85,14 @@ export function usePublicCheckout(
 
   function atualizarParticipante(indice: number, nome: string) {
     const lista = [...participantes.value]
-    lista[indice] = { nome }
+    lista[indice] = { ...lista[indice], nome }
+    participantes.value = lista
+  }
+
+  function definirMeia(indice: number, meia: boolean) {
+    if (!meiaAtiva.value) return
+    const lista = [...participantes.value]
+    lista[indice] = { nome: lista[indice]?.nome ?? '', meia }
     participantes.value = lista
   }
 
@@ -109,7 +126,10 @@ export function usePublicCheckout(
   function montarDraft(): CheckoutDraft {
     return {
       quantidade: quantidade.value,
-      participantes: participantes.value.map((participante) => ({ ...participante })),
+      participantes: participantes.value.map((participante) => ({
+        nome: participante.nome,
+        meia: meiaAtiva.value && participante.meia === true
+      })),
       comprador: { ...comprador }
     }
   }
@@ -186,8 +206,13 @@ export function usePublicCheckout(
     total,
     taxaPorIngresso,
     valorTaxa,
+    valorIngressos,
+    meiaAtiva,
+    precoMeia,
+    quantidadeMeia,
     definirQuantidade,
     atualizarParticipante,
+    definirMeia,
     proximo,
     voltar,
     irPara,

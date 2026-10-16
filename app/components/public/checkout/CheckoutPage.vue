@@ -41,8 +41,13 @@ const {
   maximo,
   total,
   valorTaxa,
+  valorIngressos,
+  meiaAtiva,
+  precoMeia,
+  quantidadeMeia,
   definirQuantidade,
   atualizarParticipante,
+  definirMeia,
   proximo,
   voltar,
   irPara
@@ -56,6 +61,10 @@ const errosComprador = computed(() => ({
 
 function aoAtualizarParticipante(payload: { indice: number; valor: string }) {
   atualizarParticipante(payload.indice, payload.valor)
+}
+
+function aoDefinirMeia(payload: { indice: number; valor: boolean }) {
+  definirMeia(payload.indice, payload.valor)
 }
 
 function aoVoltar() {
@@ -88,6 +97,8 @@ function aoVoltar() {
           :quantidade="quantidade"
           :disponiveis="disponiveis"
           :maximo="maximo"
+          :preco-meia="precoMeia"
+          :subtotal="valorIngressos"
           @update:quantidade="definirQuantidade"
         />
 
@@ -95,7 +106,11 @@ function aoVoltar() {
           v-else-if="step === 'PARTICIPANTES'"
           :participantes="participantes"
           :erros="errosParticipantes"
+          :meia-ativa="meiaAtiva"
+          :preco="preco"
+          :preco-meia="precoMeia"
           @update:nome="aoAtualizarParticipante"
+          @update:meia="aoDefinirMeia"
         />
 
         <CheckoutBuyerStep
@@ -114,6 +129,8 @@ function aoVoltar() {
           :preco="preco"
           :total="total"
           :taxa="valorTaxa"
+          :quantidade-meia="quantidadeMeia"
+          :preco-meia="precoMeia"
           :participantes="participantes"
           :comprador="comprador"
           :erro="erroReserva"
@@ -127,7 +144,14 @@ function aoVoltar() {
         />
 
         <div v-if="step !== 'RESERVA_CRIADA'" class="lg:hidden">
-          <CheckoutOrderSummary :quantidade="quantidade" :preco="preco" :total="total" :taxa="valorTaxa" />
+          <CheckoutOrderSummary
+            :quantidade="quantidade"
+            :preco="preco"
+            :total="total"
+            :taxa="valorTaxa"
+            :quantidade-meia="quantidadeMeia"
+            :preco-meia="precoMeia"
+          />
         </div>
 
         <CheckoutNavigation
@@ -142,7 +166,14 @@ function aoVoltar() {
       <div class="hidden space-y-6 lg:block">
         <CheckoutEventSummary :evento="props.evento" />
         <div v-if="step !== 'RESERVA_CRIADA'">
-          <CheckoutOrderSummary :quantidade="quantidade" :preco="preco" :total="total" :taxa="valorTaxa" />
+          <CheckoutOrderSummary
+            :quantidade="quantidade"
+            :preco="preco"
+            :total="total"
+            :taxa="valorTaxa"
+            :quantidade-meia="quantidadeMeia"
+            :preco-meia="precoMeia"
+          />
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { toast } from 'vue3-toastify'
 
 import EventForm from '~/components/eventos/EventForm.vue'
+import EventMeiaCard from '~/components/eventos/EventMeiaCard.vue'
 import EventTaxaCard from '~/components/eventos/EventTaxaCard.vue'
 import { atualizarEventoAdmin, obterEventoAdmin } from '~/services/admin/eventos'
 import type { EventFormValue, EventPayload } from '~/types/evento'
@@ -111,6 +112,7 @@ onMounted(() => void carregar())
 
   <div v-else-if="valorInicial" class="space-y-6">
     <EventTaxaCard :evento-id="eventoId" />
+    <EventMeiaCard :evento-id="eventoId" />
     <EventForm
       mode="edit"
       :evento-id="eventoId"

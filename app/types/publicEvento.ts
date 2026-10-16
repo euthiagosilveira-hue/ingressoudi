@@ -38,6 +38,9 @@ export interface PublicEventDetail {
    */
   taxaServico?: number
 
+  /** O produtor ligou a meia-entrada neste evento (50% do preco do lote). */
+  meiaEntradaAtiva?: boolean
+
   /** Casa (organizacao) dona do evento. Ausente nos dados antigos/mocks. */
   organizacaoSlug?: string | null
   organizacaoNome?: string | null

@@ -8,6 +8,8 @@ export interface PublicTicket {
   ingressoId: string
   codigo: string
   participanteNome: string
+  /** true = meia-entrada (comprovar o direito na entrada). */
+  meia?: boolean
   status: PublicTicketStatus
   qrToken: string | null
   utilizadoEm: string | null

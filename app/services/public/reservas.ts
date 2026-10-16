@@ -10,6 +10,7 @@ interface CriarReservaIngressoRow {
   id: string
   codigo: string
   participante_nome: string
+  meia?: boolean | null
 }
 
 interface CriarReservaRpcRow {
@@ -25,6 +26,8 @@ interface CriarReservaRpcRow {
   taxa_servico_unitaria?: number | string | null
   taxa_repassada?: boolean | null
   valor_taxa_total?: number | string | null
+  quantidade_meia?: number | null
+  valor_unitario_meia?: number | string | null
   reserva_expira_em: string
   status: string
   ingressos: CriarReservaIngressoRow[]
@@ -49,7 +52,8 @@ function mapearIngresso(row: CriarReservaIngressoRow): CheckoutReservationTicket
   return {
     id: row.id,
     codigo: row.codigo,
-    participanteNome: row.participante_nome
+    participanteNome: row.participante_nome,
+    meia: row.meia === true
   }
 }
 
@@ -69,6 +73,9 @@ function mapearReserva(row: CriarReservaRpcRow): CheckoutReservation {
       row.taxa_servico_unitaria == null ? undefined : Number(row.taxa_servico_unitaria),
     taxaRepassada: row.taxa_repassada ?? undefined,
     valorTaxaTotal: row.valor_taxa_total == null ? undefined : Number(row.valor_taxa_total),
+    quantidadeMeia: row.quantidade_meia == null ? undefined : Number(row.quantidade_meia),
+    valorUnitarioMeia:
+      row.valor_unitario_meia == null ? undefined : Number(row.valor_unitario_meia),
     reservaExpiraEm: row.reserva_expira_em,
     status: row.status,
     ingressos: (row.ingressos ?? []).map(mapearIngresso)
@@ -82,6 +89,10 @@ function mapearReserva(row: CriarReservaRpcRow): CheckoutReservation {
  */
 function mapearErro(error: RpcErrorLike): ReservaError {
   const mensagem = (error.message ?? '').toLowerCase()
+
+  if (mensagem.includes('meia-entrada nao disponivel')) {
+    return new ReservaError('MEIA_INDISPONIVEL', error.message ?? 'Meia-entrada indisponível')
+  }
 
   if (mensagem.includes('estoque insuficiente') || mensagem.includes('limite do lote')) {
     return new ReservaError('SEM_ESTOQUE', error.message ?? 'Estoque insuficiente')
@@ -125,12 +136,15 @@ export async function criarReserva(
 ): Promise<CheckoutReservation> {
   const client = useSupabaseClient()
 
+  const temMeia = draft.participantes.some((participante) => participante.meia === true)
   const { data, error } = await client.rpc('criar_reserva', {
     p_evento_id: eventoId,
     p_comprador_nome: draft.comprador.nome.trim(),
     p_comprador_telefone: normalizarTelefone(draft.comprador.telefone),
     p_comprador_email: draft.comprador.email.trim(),
-    p_nomes_participantes: draft.participantes.map((participante) => participante.nome.trim())
+    p_nomes_participantes: draft.participantes.map((participante) => participante.nome.trim()),
+    // Um valor por participante, na mesma ordem. So enviado quando ha meia.
+    ...(temMeia ? { p_meias: draft.participantes.map((participante) => participante.meia === true) } : {})
   })
 
   if (error) throw mapearErro(error)

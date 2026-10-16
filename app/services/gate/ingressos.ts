@@ -27,6 +27,7 @@ interface BuscaRow {
   utilizado_em?: string | null
   entrada_em?: string | null
   telefone?: string | null
+  meia?: boolean | null
 }
 
 /**
@@ -56,7 +57,8 @@ export async function buscarIngressosPorNome(input: {
     status: row.status,
     utilizadoEm: row.utilizado_em ?? null,
     entradaEm: row.entrada_em ?? null,
-    telefone: row.telefone ?? null
+    telefone: row.telefone ?? null,
+    meia: row.meia === true
   }))
 }
 

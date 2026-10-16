@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import BaseCard from '~/components/BaseCard.vue'
 import { formatMoeda } from '~/utils/format'
+import { contarMeias } from '~/utils/meiaEntrada'
 import type { OrderDetail } from '~/types/pedido'
 
 const props = defineProps<{
@@ -11,6 +12,7 @@ const props = defineProps<{
 
 const valorReembolsado = computed(() => props.pedido.pagamento?.valorReembolsado ?? 0)
 const totalLiquido = computed(() => props.pedido.valorTotal - valorReembolsado.value)
+const quantidadeMeia = computed(() => contarMeias(props.pedido.ingressos ?? []))
 </script>
 
 <template>
@@ -19,12 +21,15 @@ const totalLiquido = computed(() => props.pedido.valorTotal - valorReembolsado.v
 
     <dl class="space-y-3">
       <div class="flex items-center justify-between gap-3">
-        <dt class="text-sm text-zinc-500">Valor unitário</dt>
+        <dt class="text-sm text-zinc-500">{{ quantidadeMeia > 0 ? 'Valor da inteira' : 'Valor unitário' }}</dt>
         <dd class="text-sm text-zinc-200">{{ formatMoeda(props.pedido.valorUnitario) }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3">
         <dt class="text-sm text-zinc-500">Quantidade</dt>
-        <dd class="text-sm text-zinc-200">{{ props.pedido.quantidade }}</dd>
+        <dd class="text-sm text-zinc-200">
+          {{ props.pedido.quantidade
+          }}<template v-if="quantidadeMeia > 0"> ({{ quantidadeMeia }} meia-entrada)</template>
+        </dd>
       </div>
       <div class="flex items-center justify-between gap-3">
         <dt class="text-sm text-zinc-500">Total</dt>

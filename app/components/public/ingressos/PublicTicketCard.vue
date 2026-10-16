@@ -7,6 +7,7 @@ import { criarCompartilhamento } from '~/services/public/compartilhamento'
 import type { PublicTicket } from '~/types/publicIngressos'
 import { formatDataHoraCompleta } from '~/utils/format'
 import { qrUtilizavel, rotuloStatusIngresso } from '~/utils/publicIngressos'
+import { AVISO_MEIA_ENTRADA } from '~/utils/meiaEntrada'
 import { compartilharOuCopiar } from '~/utils/share'
 
 const props = defineProps<{
@@ -79,6 +80,12 @@ async function compartilhar() {
       <div>
         <p class="text-base font-semibold text-white">{{ props.ticket.participanteNome }}</p>
         <p class="text-xs text-zinc-500">Ingresso {{ props.ticket.codigo }}</p>
+        <span
+          v-if="props.ticket.meia"
+          class="mt-1 inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-300"
+        >
+          Meia-entrada
+        </span>
       </div>
       <span class="shrink-0 rounded-full border px-3 py-1 text-xs font-semibold" :class="badgeClasses">
         {{ rotuloStatusIngresso(props.ticket.status) }}
@@ -94,6 +101,12 @@ async function compartilhar() {
     <div v-if="podeMostrarQr" class="space-y-3">
       <PublicTicketQr :value="props.ticket.qrToken as string" />
       <p class="text-center text-sm text-zinc-400">Apresente este QR Code na entrada.</p>
+      <p
+        v-if="props.ticket.meia"
+        class="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-center text-xs text-amber-200"
+      >
+        {{ AVISO_MEIA_ENTRADA }}
+      </p>
 
       <button
         type="button"

@@ -128,6 +128,7 @@ export interface AdminPedidoIngressoRaw {
   codigo: string
   participante_nome: string
   valor_unitario: number | string
+  meia?: boolean | null
   status: string
   utilizado_em: string | null
 }

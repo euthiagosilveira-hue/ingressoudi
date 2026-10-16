@@ -28,6 +28,7 @@ interface EventoPublicoOrganizacaoRow extends EventoPublicoRow {
   organizacao_slug: string | null
   organizacao_nome: string | null
   organizacao_logo_url: string | null
+  meia_entrada_ativa?: boolean | null
 }
 
 export interface OrganizacaoPublicaDados {
@@ -146,7 +147,8 @@ export async function obterEventoPublicoOrganizacao(
     taxaServico: Number.isNaN(taxa) ? 0 : taxa,
     organizacaoSlug: row.organizacao_slug,
     organizacaoNome: row.organizacao_nome,
-    organizacaoLogoUrl: row.organizacao_logo_url
+    organizacaoLogoUrl: row.organizacao_logo_url,
+    meiaEntradaAtiva: row.meia_entrada_ativa === true
   }
 }
 

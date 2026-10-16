@@ -8,8 +8,11 @@ const props = withDefaults(
     total: number
     /** Taxa de servico total paga pelo comprador. */
     taxa?: number
+    /** Quantos ingressos sao meia-entrada e o preco da meia. */
+    quantidadeMeia?: number
+    precoMeia?: number | null
   }>(),
-  { taxa: 0 }
+  { taxa: 0, quantidadeMeia: 0, precoMeia: null }
 )
 </script>
 
@@ -22,7 +25,17 @@ const props = withDefaults(
         <dt class="text-zinc-500">Quantidade</dt>
         <dd class="text-zinc-200">{{ props.quantidade }}</dd>
       </div>
-      <div class="flex items-center justify-between gap-3">
+      <template v-if="props.quantidadeMeia > 0">
+        <div v-if="props.quantidade > props.quantidadeMeia" class="flex items-center justify-between gap-3">
+          <dt class="text-zinc-500">{{ props.quantidade - props.quantidadeMeia }} × inteira</dt>
+          <dd class="text-zinc-200">{{ formatMoeda(props.preco ?? 0) }}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <dt class="text-zinc-500">{{ props.quantidadeMeia }} × meia-entrada</dt>
+          <dd class="text-zinc-200">{{ formatMoeda(props.precoMeia ?? 0) }}</dd>
+        </div>
+      </template>
+      <div v-else class="flex items-center justify-between gap-3">
         <dt class="text-zinc-500">Preço unitário</dt>
         <dd class="text-zinc-200">{{ formatMoeda(props.preco ?? 0) }}</dd>
       </div>

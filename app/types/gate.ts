@@ -17,6 +17,8 @@ export interface RegistrarEntradaQrResult {
   entradaId: string | null
   entradaEm: string | null
   mensagem: string
+  /** Ingresso de meia-entrada: conferir o documento do participante. */
+  meia?: boolean
 }
 
 /** Erros de transporte/permissao do scanner (nao sao resultados de negocio). */
@@ -64,6 +66,8 @@ export interface IngressoBuscaNome {
   entradaEm: string | null
   /** Telefone para desambiguacao (cru; mascarar no frontend). Pode ser null. */
   telefone: string | null
+  /** Ingresso de meia-entrada (VIP nunca e meia). */
+  meia?: boolean
 }
 
 export type TipoEntradaGate = 'INGRESSO' | 'VIP'

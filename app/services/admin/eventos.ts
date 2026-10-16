@@ -294,3 +294,24 @@ export async function atualizarEventoAdmin(
     throw new Error(mensagemErroEvento(error, 'Não foi possível atualizar o evento.'))
   }
 }
+
+/** Meia-entrada do evento (ligada pelo produtor; meia = 50% do preco do lote). */
+export async function obterMeiaEntradaEvento(eventoId: string): Promise<boolean> {
+  const client = useSupabaseClient()
+  const { data, error } = await client.rpc('obter_evento_admin', { p_evento_id: eventoId })
+  if (error || !data) {
+    throw new Error(mensagemErroEvento(error, 'Não foi possível carregar a meia-entrada do evento.'))
+  }
+  return (data as { meia_entrada_ativa?: boolean | null }).meia_entrada_ativa === true
+}
+
+export async function definirMeiaEntradaEvento(eventoId: string, ativa: boolean): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('definir_meia_entrada_evento_admin', {
+    p_evento_id: eventoId,
+    p_ativa: ativa
+  })
+  if (error) {
+    throw new Error(mensagemErroEvento(error, 'Não foi possível salvar a meia-entrada do evento.'))
+  }
+}

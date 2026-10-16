@@ -12,6 +12,8 @@ export interface OrderTicket {
   codigo: string
   participanteNome: string
   valorUnitario: number
+  /** true = meia-entrada. */
+  meia?: boolean
   status: TicketStatus
   utilizadoEm: string | null
 }

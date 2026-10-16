@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { toast } from 'vue3-toastify'
 
+import EventMeiaCard from '~/components/eventos/EventMeiaCard.vue'
 import LotEventNotFound from '~/components/lotes/LotEventNotFound.vue'
 import LotManager from '~/components/lotes/LotManager.vue'
 import { useAdminLots } from '~/composables/useAdminLots'
@@ -103,17 +104,19 @@ async function aoAbrirVendas() {
     </button>
   </div>
 
-  <LotManager
-    v-else-if="evento"
-    :evento="evento"
-    :lotes="lotes"
-    :estoque-antecipado="estoqueAntecipado"
-    :processando="processando"
-    @criar="aoCriar"
-    @atualizar="aoAtualizar"
-    @ativar="aoAtivar"
-    @abrir-vendas="aoAbrirVendas"
-  />
+  <div v-else-if="evento" class="space-y-6">
+    <LotManager
+      :evento="evento"
+      :lotes="lotes"
+      :estoque-antecipado="estoqueAntecipado"
+      :processando="processando"
+      @criar="aoCriar"
+      @atualizar="aoAtualizar"
+      @ativar="aoAtivar"
+      @abrir-vendas="aoAbrirVendas"
+    />
+    <EventMeiaCard :evento-id="String(route.params.id)" />
+  </div>
 
   <LotEventNotFound v-else />
 </template>

@@ -105,6 +105,13 @@ const cameraFallback = computed(() =>
         </div>
       </div>
 
+      <p
+        v-if="resultado?.meia"
+        class="rounded-xl border-2 border-amber-400 bg-amber-400/10 p-3 text-center text-sm font-bold uppercase tracking-wide text-amber-300"
+      >
+        Meia-entrada · conferir documento
+      </p>
+
       <dl
         v-if="resultado && (resultado.participanteNome || resultado.codigo)"
         class="space-y-1 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-sm"

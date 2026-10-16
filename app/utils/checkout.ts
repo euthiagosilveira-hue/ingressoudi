@@ -4,6 +4,7 @@ import type {
   ReservaErrorCode
 } from '~/types/checkout'
 import type { PublicEventDetail } from '~/types/publicEvento'
+import { contarMeias, precoMeia, valorIngressosComMeia } from './meiaEntrada.ts'
 
 export const CHECKOUT_MIN = 1
 export const CHECKOUT_MAX = 10
@@ -49,6 +50,7 @@ export function mensagemErroReserva(codigo: ReservaErrorCode): string {
     EVENTO_CANCELADO: 'Este evento foi cancelado.',
     EVENTO_INDISPONIVEL: 'Este evento não está disponível para compra.',
     SEM_LOTE: 'Não há lote disponível para venda neste momento.',
+    MEIA_INDISPONIVEL: 'Este evento não tem meia-entrada. Escolha inteira para todos os ingressos.',
     DADOS_INVALIDOS: 'Revise os dados informados e tente novamente.',
     ERRO_INESPERADO: 'Não foi possível criar sua reserva agora. Tente novamente.'
   }
@@ -75,6 +77,7 @@ export function criarReservaMock(
 ): CheckoutReservation {
   const valorUnitario = evento.preco ?? 0
   const codigoPedido = gerarCodigoPedidoMock()
+  const quantidadeMeia = contarMeias(draft.participantes)
 
   return {
     pedidoId: `mock-reserva-${Date.now()}`,
@@ -84,13 +87,16 @@ export function criarReservaMock(
     loteId: evento.loteId ?? '',
     quantidade: draft.quantidade,
     valorUnitario,
-    valorTotal: valorUnitario * draft.quantidade,
+    valorTotal: valorIngressosComMeia(valorUnitario, draft.quantidade, quantidadeMeia),
+    quantidadeMeia,
+    valorUnitarioMeia: precoMeia(valorUnitario),
     reservaExpiraEm: calcularExpiracao(),
     status: 'RESERVADO',
     ingressos: draft.participantes.map((participante, indice) => ({
       id: `mock-ticket-${indice + 1}`,
       codigo: `${codigoPedido}-${String(indice + 1).padStart(2, '0')}`,
-      participanteNome: participante.nome.trim()
+      participanteNome: participante.nome.trim(),
+      meia: Boolean(participante.meia)
     }))
   }
 }

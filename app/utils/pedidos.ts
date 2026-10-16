@@ -151,6 +151,7 @@ export function mapearPedidoAdminParaDetalhe(row: AdminPedidoDetalheRow): OrderD
     codigo: i.codigo,
     participanteNome: i.participante_nome,
     valorUnitario: Number(i.valor_unitario),
+    meia: i.meia === true,
     status: i.status as TicketStatus,
     utilizadoEm: i.utilizado_em
   }))

@@ -10,13 +10,17 @@ const props = defineProps<{
   quantidade: number
   disponiveis: number | null
   maximo: number
+  /** Preco da meia quando o evento tem meia-entrada (senao null). */
+  precoMeia?: number | null
+  /** Soma dos ingressos ja considerando as meias escolhidas. */
+  subtotal?: number
 }>()
 
 const emit = defineEmits<{
   'update:quantidade': [value: number]
 }>()
 
-const subtotal = computed(() => (props.preco ?? 0) * props.quantidade)
+const subtotal = computed(() => props.subtotal ?? (props.preco ?? 0) * props.quantidade)
 const ultimos = computed(() => props.disponiveis !== null && props.disponiveis <= 10)
 const disponibilidadeTexto = computed(() =>
   props.disponiveis !== null ? `${props.disponiveis} ingressos disponíveis` : ''
@@ -30,8 +34,23 @@ const disponibilidadeTexto = computed(() =>
     <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
       <p class="text-xs uppercase tracking-wide text-zinc-500">Lote atual</p>
       <p class="text-sm font-semibold text-white">{{ props.loteNome ?? 'Lote' }}</p>
-      <p class="mt-2 text-2xl font-bold text-amber-400">{{ formatMoeda(props.preco ?? 0) }}</p>
-      <p class="text-xs text-zinc-500">por ingresso</p>
+      <template v-if="props.precoMeia != null">
+        <div class="mt-2 flex flex-wrap items-end gap-x-6 gap-y-2">
+          <div>
+            <p class="text-xs text-zinc-500">Inteira</p>
+            <p class="text-2xl font-bold text-amber-400">{{ formatMoeda(props.preco ?? 0) }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-zinc-500">Meia-entrada</p>
+            <p class="text-2xl font-bold text-amber-400">{{ formatMoeda(props.precoMeia) }}</p>
+          </div>
+        </div>
+        <p class="mt-1 text-xs text-zinc-500">por ingresso · você escolhe inteira ou meia no próximo passo</p>
+      </template>
+      <template v-else>
+        <p class="mt-2 text-2xl font-bold text-amber-400">{{ formatMoeda(props.preco ?? 0) }}</p>
+        <p class="text-xs text-zinc-500">por ingresso</p>
+      </template>
     </div>
 
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

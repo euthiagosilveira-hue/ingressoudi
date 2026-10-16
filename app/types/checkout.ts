@@ -7,6 +7,8 @@ export type CheckoutStep =
 
 export interface CheckoutParticipant {
   nome: string
+  /** true = meia-entrada (so quando o evento tem meia-entrada ativa). */
+  meia?: boolean
 }
 
 export interface CheckoutBuyer {
@@ -25,6 +27,7 @@ export interface CheckoutReservationTicket {
   id: string
   codigo: string
   participanteNome: string
+  meia?: boolean
 }
 
 /**
@@ -48,6 +51,10 @@ export interface CheckoutReservation {
   taxaRepassada?: boolean
   /** Comissao da plataforma neste pedido. */
   valorTaxaTotal?: number
+  /** Quantos ingressos sao meia-entrada. */
+  quantidadeMeia?: number
+  /** Preco da meia-entrada neste pedido. */
+  valorUnitarioMeia?: number
   reservaExpiraEm: string
   status: string
   ingressos: CheckoutReservationTicket[]
@@ -68,5 +75,6 @@ export type ReservaErrorCode =
   | 'EVENTO_CANCELADO'
   | 'EVENTO_INDISPONIVEL'
   | 'SEM_LOTE'
+  | 'MEIA_INDISPONIVEL'
   | 'DADOS_INVALIDOS'
   | 'ERRO_INESPERADO'

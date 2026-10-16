@@ -1,3 +1,5 @@
+import { valorIngressosComMeia } from './meiaEntrada.ts'
+
 /**
  * Taxa de servico exibida ao comprador. O valor cobrado de verdade e sempre
  * calculado pelo banco (criar_reserva); aqui e so a previa do checkout.
@@ -12,14 +14,18 @@ function centavos(valor: number): number {
   return Math.round(valor * 100) / 100
 }
 
-/** `taxaPorIngresso` ja vem 0 quando o produtor absorve a taxa. */
+/**
+ * `taxaPorIngresso` ja vem 0 quando o produtor absorve a taxa.
+ * `quantidadeMeia`: quantos ingressos sao meia-entrada (a taxa nao muda).
+ */
 export function calcularValoresCheckout(
   preco: number | null | undefined,
   quantidade: number,
-  taxaPorIngresso: number | null | undefined
+  taxaPorIngresso: number | null | undefined,
+  quantidadeMeia = 0
 ): ValoresCheckout {
   const qtd = Math.max(0, Math.floor(quantidade || 0))
-  const valorIngressos = centavos((preco ?? 0) * qtd)
+  const valorIngressos = valorIngressosComMeia(preco, qtd, quantidadeMeia)
   const taxa = Math.max(0, Number(taxaPorIngresso ?? 0) || 0)
   const valorTaxa = centavos(taxa * qtd)
   return { valorIngressos, valorTaxa, total: centavos(valorIngressos + valorTaxa) }
