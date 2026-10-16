@@ -5,6 +5,7 @@ import {
   ChartBarIcon,
   EllipsisHorizontalIcon,
   EyeIcon,
+  LinkIcon,
   PencilSquareIcon,
   PlayIcon,
   TicketIcon,
@@ -74,6 +75,14 @@ onBeforeUnmount(() => document.removeEventListener('click', aoClicarFora))
       >
         <EyeIcon class="h-4 w-4 text-zinc-500" />
         Visualizar página pública
+      </button>
+      <button
+        type="button"
+        class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+        @click.stop="selecionar('copiar-link')"
+      >
+        <LinkIcon class="h-4 w-4 text-zinc-500" />
+        Copiar link
       </button>
       <button
         type="button"

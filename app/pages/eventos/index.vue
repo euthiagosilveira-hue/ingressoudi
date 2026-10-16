@@ -10,6 +10,7 @@ import EventEmptyState from '~/components/eventos/EventEmptyState.vue'
 import EventFilters from '~/components/eventos/EventFilters.vue'
 import EventGrid from '~/components/eventos/EventGrid.vue'
 import { useAdminEvents } from '~/composables/useAdminEvents'
+import { useCopiarLinkEvento } from '~/composables/useCopiarLinkEvento'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import { iniciarEventoAgora, reabrirVendasDemonstracao } from '~/services/admin/eventos'
 import { rotaEvento } from '~/utils/rotasPublicas'
@@ -35,6 +36,7 @@ const subtituloVazio = computed(() =>
 )
 
 const { operador } = useOperatorAuth()
+const { copiarLinkEvento } = useCopiarLinkEvento()
 
 function irParaCriar() {
   navigateTo('/eventos/novo')
@@ -93,6 +95,11 @@ function acaoEvento(payload: { id: string; action: string }) {
   }
   if (payload.action === 'editar') {
     editarEvento(payload.id)
+    return
+  }
+  if (payload.action === 'copiar-link') {
+    const evento = eventosLista.value.find((item) => item.id === payload.id)
+    if (evento) void copiarLinkEvento(evento.slug)
     return
   }
   if (payload.action === 'visualizar') {

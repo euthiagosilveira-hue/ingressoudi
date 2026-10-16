@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { CalendarDaysIcon, MapPinIcon } from '@heroicons/vue/24/outline'
+import { CalendarDaysIcon, LinkIcon, MapPinIcon } from '@heroicons/vue/24/outline'
 
 import AppButton from '~/components/AppButton.vue'
 import BaseCard from '~/components/BaseCard.vue'
 import EventStatusBadge from '~/components/eventos/EventStatusBadge.vue'
+import { useCopiarLinkEvento } from '~/composables/useCopiarLinkEvento'
 import { formatDataHora, formatMoeda, formatNumero } from '~/utils/format'
 import type { EventListItem, SalesStatus } from '~/types/evento'
 
@@ -24,6 +25,7 @@ const emit = defineEmits<{
 }>()
 
 const imagemOk = ref(true)
+const { copiarLinkEvento } = useCopiarLinkEvento()
 const vendasEncerradas = computed(() => props.vendasStatus === 'ENCERRADAS')
 const podeAbrirVendas = computed(
   () => vendasEncerradas.value && props.evento.status !== 'REALIZADO' && props.evento.status !== 'CANCELADO'
@@ -69,6 +71,10 @@ const resumo = computed(() => {
             @click="emit('abrirVendas')"
           >
             Abrir vendas
+          </AppButton>
+          <AppButton variant="outline" size="sm" @click="copiarLinkEvento(props.evento.slug, props.evento.id)">
+            <LinkIcon class="h-4 w-4" />
+            Copiar link
           </AppButton>
         </div>
         <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-zinc-400">
