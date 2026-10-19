@@ -7,6 +7,7 @@ import {
   BuildingOffice2Icon,
   CalendarDaysIcon,
   ChartBarIcon,
+  GlobeAltIcon,
   PresentationChartLineIcon,
   Cog6ToothIcon,
   QrCodeIcon,
@@ -126,6 +127,12 @@ const items = computed(() => {
       to: '/plataforma/organizacoes',
       icon: BuildingOffice2Icon,
       label: 'Organizações',
+      allowedProfiles: PERFIS_ADMIN_PORTARIA
+    })
+    visiveis.push({
+      to: '/plataforma/eventos',
+      icon: GlobeAltIcon,
+      label: 'Todos os eventos',
       allowedProfiles: PERFIS_ADMIN_PORTARIA
     })
     visiveis.push({
