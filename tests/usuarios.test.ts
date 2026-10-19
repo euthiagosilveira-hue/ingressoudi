@@ -139,7 +139,7 @@ test('sidebar aponta Configurações para /configuracoes', () => {
 test('endpoint de convite usa service role + Auth Admin e nao expoe chave', () => {
   const endpoint = ler('../server/api/admin/users/invite.post.ts')
   assert.ok(endpoint.includes('serverSupabaseServiceRole'))
-  assert.ok(endpoint.includes('inviteUserByEmail'))
+  assert.ok(endpoint.includes('gerarLinkConvite'))
   assert.ok(endpoint.includes("perfil !== 'ADMINISTRADOR'"))
   assert.ok(!endpoint.includes('serviceKey'))
   assert.ok(!/SECRET_KEY|secretKey/.test(endpoint))
@@ -148,5 +148,42 @@ test('endpoint de convite usa service role + Auth Admin e nao expoe chave', () =
 test('service do frontend nao referencia service role', () => {
   const service = ler('../app/services/admin/usuarios.ts')
   assert.ok(service.includes('/api/admin/users/invite'))
+  assert.ok(service.includes('/api/admin/users/link-convite'))
   assert.ok(!/service_role|serviceRole|SUPABASE_SECRET/i.test(service))
+})
+
+test('mapearUsuarioAdmin marca convite pendente', () => {
+  const base = {
+    id: 'u1',
+    nome: 'Pessoa',
+    email: 'p@x.com',
+    perfil: 'PORTARIA' as const,
+    ativo: true,
+    ultimo_acesso_em: null,
+    criado_em: '2026-10-19T12:00:00Z'
+  }
+  assert.equal(mapearUsuarioAdmin({ ...base, pendente: true }).pendente, true)
+  assert.equal(mapearUsuarioAdmin({ ...base, pendente: false }).pendente, false)
+  assert.equal(mapearUsuarioAdmin(base).pendente, false)
+})
+
+test('mensagemErroConvite cobre codigos do novo link', () => {
+  assert.match(mensagemErroConvite('CONVITE_JA_ACEITO'), /já criou a senha/)
+  assert.match(mensagemErroConvite('CONVITE_DE_OUTRA_ORGANIZACAO'), /outra organização/)
+  assert.match(mensagemErroConvite('MUITAS_TENTATIVAS'), /Aguarde/)
+})
+
+test('lista mostra convite pendente e oferece novo link', () => {
+  const tabela = ler('../app/components/usuarios/UserTable.vue')
+  const mobile = ler('../app/components/usuarios/UserMobileList.vue')
+  const lista = ler('../app/components/usuarios/UserList.vue')
+  const modal = ler('../app/components/usuarios/UserInviteModal.vue')
+  for (const arquivo of [tabela, mobile]) {
+    assert.ok(arquivo.includes(':pendente="usuario.pendente"'))
+    assert.ok(arquivo.includes('Novo link'))
+  }
+  assert.ok(lista.includes('UserLinkModal'))
+  assert.ok(lista.includes('gerarNovoLink'))
+  assert.ok(modal.includes('UserInviteLinkPanel'))
+  assert.ok(!modal.includes('será enviado por e-mail'))
 })

@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [usuario: UsuarioListItem]
+  link: [usuario: UsuarioListItem]
 }>()
 </script>
 
@@ -22,7 +23,7 @@ const emit = defineEmits<{
           <p class="truncate text-sm font-semibold text-white">{{ usuario.nome }}</p>
           <p class="truncate text-xs text-zinc-500">{{ usuario.email }}</p>
         </div>
-        <UserStatusBadge :ativo="usuario.ativo" />
+        <UserStatusBadge :ativo="usuario.ativo" :pendente="usuario.pendente" />
       </div>
 
       <div class="flex items-center justify-between gap-3 border-t border-zinc-800 pt-3">
@@ -30,8 +31,17 @@ const emit = defineEmits<{
         <p class="text-xs text-zinc-500">Último acesso: {{ usuario.ultimoAcesso }}</p>
       </div>
 
-      <div class="border-t border-zinc-800 pt-3">
-        <AppButton variant="outline" size="sm" class="w-full" @click="emit('edit', usuario)">
+      <div class="flex gap-2 border-t border-zinc-800 pt-3">
+        <AppButton
+          v-if="usuario.pendente && usuario.ativo"
+          variant="ghost"
+          size="sm"
+          class="flex-1"
+          @click="emit('link', usuario)"
+        >
+          Novo link
+        </AppButton>
+        <AppButton variant="outline" size="sm" class="flex-1" @click="emit('edit', usuario)">
           Editar
         </AppButton>
       </div>

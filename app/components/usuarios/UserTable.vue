@@ -10,12 +10,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [usuario: UsuarioListItem]
+  link: [usuario: UsuarioListItem]
 }>()
 </script>
 
 <template>
   <div class="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900">
-    <table class="w-full min-w-[760px] border-collapse text-left">
+    <table class="w-full min-w-[820px] border-collapse text-left">
       <thead>
         <tr class="text-[11px] uppercase tracking-wide text-zinc-500">
           <th scope="col" class="px-4 py-3 font-medium">Nome</th>
@@ -37,10 +38,20 @@ const emit = defineEmits<{
           </td>
           <td class="px-4 py-3 text-sm text-zinc-300">{{ usuario.email }}</td>
           <td class="px-4 py-3"><UserRoleBadge :perfil="usuario.perfil" /></td>
-          <td class="px-4 py-3"><UserStatusBadge :ativo="usuario.ativo" /></td>
+          <td class="px-4 py-3"><UserStatusBadge :ativo="usuario.ativo" :pendente="usuario.pendente" /></td>
           <td class="px-4 py-3 text-sm text-zinc-400">{{ usuario.ultimoAcesso }}</td>
-          <td class="px-4 py-3 text-right">
-            <AppButton variant="outline" size="sm" @click="emit('edit', usuario)">Editar</AppButton>
+          <td class="px-4 py-3">
+            <div class="flex justify-end gap-2">
+              <AppButton
+                v-if="usuario.pendente && usuario.ativo"
+                variant="ghost"
+                size="sm"
+                @click="emit('link', usuario)"
+              >
+                Novo link
+              </AppButton>
+              <AppButton variant="outline" size="sm" @click="emit('edit', usuario)">Editar</AppButton>
+            </div>
           </td>
         </tr>
       </tbody>

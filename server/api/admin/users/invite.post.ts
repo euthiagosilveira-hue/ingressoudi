@@ -13,13 +13,14 @@ const LIMITE_NOME = 120
  *      (membro ativo, organizacao ativa) — via service role;
  *   3. se o e-mail JA tem conta no Ingressoudi:
  *        - ja e membro desta organizacao -> 409;
- *        - senao, apenas cria o vinculo (sem novo convite por e-mail);
- *   4. senao, envia convite oficial via Supabase Auth Admin, cria public.usuarios
- *      e o vinculo em membros_organizacao;
+ *        - senao, apenas cria o vinculo (a pessoa entra com a senha que ja tem);
+ *   4. senao, gera o LINK de convite via Supabase Auth Admin (generateLink, sem
+ *      e-mail), cria public.usuarios e o vinculo em membros_organizacao, e
+ *      devolve o link para o administrador enviar (copiar ou WhatsApp);
  *   5. compensa (remove usuario/auth user) se a sincronizacao falhar;
  *   6. registra auditoria na organizacao.
  *
- * Usa service role SOMENTE no backend. Nunca devolve chaves/tokens.
+ * Usa service role SOMENTE no backend. Devolve apenas o link do convite.
  */
 export default defineEventHandler(async (event) => {
   const claims = await serverSupabaseUser(event).catch(() => null)
@@ -113,30 +114,37 @@ export default defineEventHandler(async (event) => {
       organizacao_id: organizacaoId
     })
 
-    return { ok: true, vinculado: true }
+    // Conta que nunca criou senha e nao pertence a outra organizacao: gera um
+    // novo link para a pessoa concluir o cadastro.
+    const { data: situacao } = await admin.rpc('situacao_convite_usuario', {
+      p_usuario_id: existente.id,
+      p_organizacao_id: organizacaoId
+    })
+    if (situacao?.pendente && Number(situacao.outras_organizacoes) === 0) {
+      const tipo = situacao.email_confirmado ? 'recovery' : 'invite'
+      const convite = await gerarLinkConvite(admin, { email, tipo, siteUrl: urlDoSite(event) }).catch(() => null)
+      if (convite) return { ok: true, link: convite.link }
+    }
+
+    return { ok: true, vinculado: true, pendente: Boolean(situacao?.pendente) }
   }
 
-  // 4) novo usuario: convite oficial
-  // URL publica canonica (NUXT_PUBLIC_SITE_URL). Evita depender de
-  // getRequestURL().origin, que pode resolver localhost/host interno atras de proxy.
-  const config = useRuntimeConfig(event)
-  const siteUrl = String(config.public.siteUrl || getRequestURL(event).origin).replace(/\/+$/, '')
-  const { data: convite, error: erroConvite } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { nome, perfil },
-    redirectTo: `${siteUrl}/auth/convite`
-  })
-
-  if (erroConvite || !convite?.user) {
-    const mensagem = (erroConvite?.message ?? '').toLowerCase()
+  // 4) novo usuario: link de convite (sem e-mail; o administrador envia o link)
+  const siteUrl = urlDoSite(event)
+  let convite: { link: string; usuarioId: string }
+  try {
+    convite = await gerarLinkConvite(admin, { email, tipo: 'invite', siteUrl, dados: { nome, perfil } })
+  } catch (erroConvite) {
+    const mensagem = String((erroConvite as Error)?.message ?? '').toLowerCase()
     if (mensagem.includes('already') || mensagem.includes('registered') || mensagem.includes('exists')) {
       setResponseStatus(event, 409)
       return { error: 'EMAIL_DUPLICADO', message: 'Já existe um usuário com este e-mail.' }
     }
     setResponseStatus(event, 502)
-    return { error: 'FALHA_CONVITE', message: 'Não foi possível enviar o convite.' }
+    return { error: 'FALHA_CONVITE', message: 'Não foi possível gerar o convite.' }
   }
 
-  const novoUsuarioId = convite.user.id
+  const novoUsuarioId = convite.usuarioId
 
   const { error: erroSync } = await admin
     .from('usuarios')
@@ -168,9 +176,9 @@ export default defineEventHandler(async (event) => {
     acao: 'USUARIO_CRIADO',
     entidade: 'usuarios',
     entidade_id: novoUsuarioId,
-    dados_novos: { nome, email, perfil, ativo: true },
+    dados_novos: { nome, email, perfil, ativo: true, convite: 'link' },
     organizacao_id: organizacaoId
   })
 
-  return { ok: true }
+  return { ok: true, link: convite.link }
 })

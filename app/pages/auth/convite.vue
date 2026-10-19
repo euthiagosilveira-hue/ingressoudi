@@ -9,8 +9,10 @@ import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import {
   destinoAposConvite,
   extrairErroConvite,
+  lerTokenConvite,
   mensagemErroConviteLink,
-  validarSenhaConvite
+  validarSenhaConvite,
+  type TokenConvite
 } from '~/utils/convite'
 
 definePageMeta({
@@ -25,9 +27,11 @@ useSeoMeta({
 const supabase = useSupabaseClient()
 const { carregarOperador } = useOperatorAuth()
 
-const estado = ref<'verificando' | 'pronto' | 'erro'>('verificando')
+const estado = ref<'verificando' | 'aceitar' | 'pronto' | 'erro'>('verificando')
 const mensagem = ref('')
 const salvando = ref(false)
+const aceitando = ref(false)
+const token = ref<TokenConvite | null>(null)
 const form = reactive({ senha: '', confirmacao: '' })
 const erros = reactive<{ senha?: string; confirmacao?: string }>({})
 
@@ -48,6 +52,15 @@ onMounted(async () => {
   const erroLink = extrairErroConvite(search, hash)
   if (erroLink) {
     falhar(mensagemErroConviteLink(erroLink))
+    return
+  }
+
+  // Link gerado pelo painel (?token_hash=...): o token so e usado depois do
+  // clique em "Aceitar convite". Assim a pre-visualizacao do link no WhatsApp
+  // ou no e-mail nao consome o convite.
+  token.value = lerTokenConvite(search)
+  if (token.value) {
+    estado.value = 'aceitar'
     return
   }
 
@@ -79,6 +92,28 @@ onMounted(async () => {
 
   falhar(mensagemErroConviteLink(null))
 })
+
+async function aceitarConvite() {
+  if (!token.value || aceitando.value) return
+  aceitando.value = true
+  try {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: token.value.tokenHash,
+      type: token.value.tipo
+    })
+    if (error || !data?.session) {
+      falhar(mensagemErroConviteLink(null))
+      return
+    }
+    // remove o token da barra de enderecos (ja foi usado)
+    window.history.replaceState(null, '', window.location.pathname)
+    estado.value = 'pronto'
+  } catch {
+    falhar(mensagemErroConviteLink(null))
+  } finally {
+    aceitando.value = false
+  }
+}
 
 async function definirSenha() {
   erros.senha = undefined
@@ -113,8 +148,16 @@ async function definirSenha() {
     >
       <header class="space-y-3 text-center">
         <p class="text-2xl font-bold tracking-tight text-white">Ingressoudi<span class="text-amber-400">.</span></p>
-        <h1 class="text-2xl font-bold text-white">Definir senha</h1>
-        <p class="text-sm text-zinc-400">Conclua o seu convite para acessar o painel.</p>
+        <h1 class="text-2xl font-bold text-white">
+          {{ estado === 'aceitar' ? 'Você foi convidado' : 'Definir senha' }}
+        </h1>
+        <p class="text-sm text-zinc-400">
+          {{
+            estado === 'aceitar'
+              ? 'Aceite o convite e crie sua senha para acessar o painel.'
+              : 'Conclua o seu convite para acessar o painel.'
+          }}
+        </p>
       </header>
 
       <div
@@ -127,6 +170,12 @@ async function definirSenha() {
           class="h-8 w-8 animate-spin rounded-full border-2 border-amber-400/30 border-t-amber-400"
         ></span>
         <p class="text-sm text-zinc-400">Verificando o seu convite…</p>
+      </div>
+
+      <div v-else-if="estado === 'aceitar'" class="mt-8">
+        <AppButton variant="primary" block size="lg" :disabled="aceitando" @click="aceitarConvite">
+          {{ aceitando ? 'Verificando…' : 'Aceitar convite' }}
+        </AppButton>
       </div>
 
       <div v-else-if="estado === 'erro'" class="mt-8 space-y-5" role="alert">

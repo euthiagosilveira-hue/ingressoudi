@@ -3,9 +3,15 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import {
   atualizarUsuarioAdmin,
   convidarUsuarioAdmin,
+  gerarNovoLinkConviteAdmin,
   listarUsuariosAdmin
 } from '~/services/admin/usuarios'
-import type { AdminUsuarioRow, ConviteUsuarioInput, EdicaoUsuarioInput } from '~/types/usuario'
+import type {
+  AdminUsuarioRow,
+  ConviteUsuarioInput,
+  EdicaoUsuarioInput,
+  ResultadoConvite
+} from '~/types/usuario'
 import { contarAdminsAtivos, mapearUsuariosAdmin } from '~/utils/usuarios'
 
 const DEBOUNCE_FILTROS_MS = 300
@@ -41,9 +47,14 @@ export function useAdminUsers() {
     await carregar()
   }
 
-  async function convidar(input: ConviteUsuarioInput) {
-    await convidarUsuarioAdmin(input)
+  async function convidar(input: ConviteUsuarioInput): Promise<ResultadoConvite> {
+    const resultado = await convidarUsuarioAdmin(input)
     await carregar()
+    return resultado
+  }
+
+  function gerarNovoLink(usuarioId: string): Promise<string> {
+    return gerarNovoLinkConviteAdmin(usuarioId)
   }
 
   watch(
@@ -81,6 +92,7 @@ export function useAdminUsers() {
     carregar,
     refresh: carregar,
     atualizar,
-    convidar
+    convidar,
+    gerarNovoLink
   }
 }

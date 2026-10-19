@@ -6,6 +6,8 @@ export interface AdminUsuarioRow {
   email: string
   perfil: PerfilUsuario
   ativo: boolean
+  /** Ainda nao criou a senha (convite nao aceito). */
+  pendente?: boolean
   ultimo_acesso_em: string | null
   criado_em: string
 }
@@ -16,6 +18,7 @@ export interface UsuarioListItem {
   email: string
   perfil: PerfilUsuario
   ativo: boolean
+  pendente: boolean
   ultimoAcesso: string
   criadoEm: string
   ehUltimoAdminAtivo: boolean
@@ -32,4 +35,11 @@ export interface EdicaoUsuarioInput {
   nome: string
   perfil: PerfilUsuario
   ativo: boolean
+}
+
+/** Resultado do convite: link para enviar, ou pessoa ja cadastrada vinculada. */
+export interface ResultadoConvite {
+  link: string | null
+  vinculado: boolean
+  pendente: boolean
 }

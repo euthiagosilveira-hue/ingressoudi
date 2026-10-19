@@ -44,6 +44,7 @@ function mapearBase(row: AdminUsuarioRow): Omit<UsuarioListItem, 'ehUltimoAdminA
     email: row.email,
     perfil: row.perfil,
     ativo: row.ativo,
+    pendente: row.pendente === true,
     ultimoAcesso: formatarDataHora(row.ultimo_acesso_em),
     criadoEm: formatarDataHora(row.criado_em)
   }
@@ -139,7 +140,15 @@ export function mensagemErroConvite(codigo?: string): string {
     case 'DADOS_INVALIDOS':
       return 'Verifique o nome, o e-mail e o perfil informados.'
     case 'FALHA_CONVITE':
-      return 'Não foi possível enviar o convite. Tente novamente.'
+      return 'Não foi possível gerar o convite. Tente novamente.'
+    case 'CONVITE_JA_ACEITO':
+      return 'Este usuário já criou a senha. Ele entra pelo login normalmente.'
+    case 'CONVITE_DE_OUTRA_ORGANIZACAO':
+      return 'Este usuário foi convidado por outra organização. Peça para ele usar o convite que recebeu.'
+    case 'USUARIO_NAO_ENCONTRADO':
+      return 'Usuário não encontrado.'
+    case 'MUITAS_TENTATIVAS':
+      return 'Muitas tentativas. Aguarde um minuto e tente novamente.'
     case 'NAO_AUTENTICADO':
       return 'Sua sessão expirou. Entre novamente.'
     default:

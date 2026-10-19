@@ -8,10 +8,16 @@ import UserEditModal from '~/components/usuarios/UserEditModal.vue'
 import UserEmptyState from '~/components/usuarios/UserEmptyState.vue'
 import UserFilters from '~/components/usuarios/UserFilters.vue'
 import UserInviteModal from '~/components/usuarios/UserInviteModal.vue'
+import UserLinkModal from '~/components/usuarios/UserLinkModal.vue'
 import UserMobileList from '~/components/usuarios/UserMobileList.vue'
 import UserTable from '~/components/usuarios/UserTable.vue'
 import { useAdminUsers } from '~/composables/useAdminUsers'
-import type { ConviteUsuarioInput, EdicaoUsuarioInput, UsuarioListItem } from '~/types/usuario'
+import type {
+  ConviteUsuarioInput,
+  EdicaoUsuarioInput,
+  ResultadoConvite,
+  UsuarioListItem
+} from '~/types/usuario'
 
 const {
   filtros,
@@ -23,17 +29,42 @@ const {
   limparFiltros,
   refresh,
   atualizar,
-  convidar
+  convidar,
+  gerarNovoLink
 } = useAdminUsers()
 
 const conviteAberto = ref(false)
+const resultadoConvite = ref<ResultadoConvite | null>(null)
+const linkModal = ref({ aberto: false, nome: '', link: '', carregando: false, erro: '' })
 const usuarioEdicao = ref<UsuarioListItem | null>(null)
 const salvando = ref(false)
 
 const edicaoAberta = ref(false)
 
 function abrirConvite() {
+  resultadoConvite.value = null
   conviteAberto.value = true
+}
+
+function fecharConvite() {
+  conviteAberto.value = false
+  resultadoConvite.value = null
+}
+
+async function abrirNovoLink(usuario: UsuarioListItem) {
+  linkModal.value = { aberto: true, nome: usuario.nome, link: '', carregando: true, erro: '' }
+  try {
+    const link = await gerarNovoLink(usuario.id)
+    if (linkModal.value.aberto) linkModal.value.link = link
+  } catch (e) {
+    linkModal.value.erro = e instanceof Error ? e.message : 'Não foi possível gerar o link.'
+  } finally {
+    linkModal.value.carregando = false
+  }
+}
+
+function fecharNovoLink() {
+  linkModal.value = { aberto: false, nome: '', link: '', carregando: false, erro: '' }
 }
 
 function abrirEdicao(usuario: UsuarioListItem) {
@@ -49,11 +80,9 @@ function fecharEdicao() {
 async function aoConvidar(input: ConviteUsuarioInput) {
   salvando.value = true
   try {
-    await convidar(input)
-    toast.success('Convite enviado com sucesso.')
-    conviteAberto.value = false
+    resultadoConvite.value = await convidar(input)
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Não foi possível enviar o convite.')
+    toast.error(e instanceof Error ? e.message : 'Não foi possível gerar o convite.')
   } finally {
     salvando.value = false
   }
@@ -127,11 +156,11 @@ async function aoSalvar(input: EdicaoUsuarioInput) {
 
       <template v-else>
         <div class="hidden lg:block">
-          <UserTable :usuarios="itens" @edit="abrirEdicao" />
+          <UserTable :usuarios="itens" @edit="abrirEdicao" @link="abrirNovoLink" />
         </div>
 
         <div class="lg:hidden">
-          <UserMobileList :usuarios="itens" @edit="abrirEdicao" />
+          <UserMobileList :usuarios="itens" @edit="abrirEdicao" @link="abrirNovoLink" />
         </div>
       </template>
     </template>
@@ -139,8 +168,18 @@ async function aoSalvar(input: EdicaoUsuarioInput) {
     <UserInviteModal
       :open="conviteAberto"
       :enviando="salvando"
-      @close="conviteAberto = false"
+      :resultado="resultadoConvite"
+      @close="fecharConvite"
       @submit="aoConvidar"
+    />
+
+    <UserLinkModal
+      :open="linkModal.aberto"
+      :nome="linkModal.nome"
+      :link="linkModal.link"
+      :carregando="linkModal.carregando"
+      :erro="linkModal.erro"
+      @close="fecharNovoLink"
     />
 
     <UserEditModal

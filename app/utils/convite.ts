@@ -53,3 +53,34 @@ export function validarSenhaConvite(
   else if (confirmacao !== senha) erros.confirmacao = 'As senhas não conferem.'
   return erros
 }
+
+export type TipoTokenConvite = 'invite' | 'recovery'
+
+export interface TokenConvite {
+  tokenHash: string
+  tipo: TipoTokenConvite
+}
+
+/**
+ * Le o token do link de convite gerado pelo painel
+ * (/auth/convite?token_hash=...&tipo=invite|recovery).
+ */
+export function lerTokenConvite(search: string | null | undefined): TokenConvite | null {
+  const query = new URLSearchParams((search ?? '').replace(/^\?/, ''))
+  const tokenHash = (query.get('token_hash') ?? '').trim()
+  const tipo = query.get('tipo') === 'recovery' ? 'recovery' : 'invite'
+  if (!tokenHash) return null
+  return { tokenHash, tipo }
+}
+
+/** Texto pronto para enviar o convite (WhatsApp ou qualquer mensageiro). */
+export function mensagemConvite(nome: string | null | undefined, link: string): string {
+  const primeiroNome = (nome ?? '').trim().split(/\s+/)[0]
+  const saudacao = primeiroNome ? `Olá, ${primeiroNome}!` : 'Olá!'
+  return `${saudacao} Você foi convidado(a) para acessar o painel do Ingressoudi. Abra o link para criar sua senha: ${link}`
+}
+
+/** Link do WhatsApp com a mensagem do convite (a pessoa escolhe o contato). */
+export function linkWhatsappConvite(nome: string | null | undefined, link: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(mensagemConvite(nome, link))}`
+}

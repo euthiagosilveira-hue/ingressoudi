@@ -1,4 +1,9 @@
-import type { AdminUsuarioRow, ConviteUsuarioInput, EdicaoUsuarioInput } from '~/types/usuario'
+import type {
+  AdminUsuarioRow,
+  ConviteUsuarioInput,
+  EdicaoUsuarioInput,
+  ResultadoConvite
+} from '~/types/usuario'
 import {
   mensagemErroConvite,
   mensagemErroUsuario,
@@ -30,6 +35,9 @@ interface RespostaConvite {
   ok?: boolean
   error?: string
   message?: string
+  link?: string
+  vinculado?: boolean
+  pendente?: boolean
 }
 
 interface ErroFetch {
@@ -38,23 +46,13 @@ interface ErroFetch {
   data?: RespostaConvite
 }
 
-/**
- * Convida um usuario via endpoint server-side (service role + Supabase Auth).
- * O frontend nunca ve a service key nem auth.users.
- */
-export async function convidarUsuarioAdmin(input: ConviteUsuarioInput): Promise<void> {
+async function postarConvite(url: string, body: Record<string, unknown>): Promise<RespostaConvite> {
   try {
-    const resposta = await $fetch<RespostaConvite>('/api/admin/users/invite', {
-      method: 'POST',
-      body: {
-        nome: input.nome.trim(),
-        email: input.email.trim(),
-        perfil: input.perfil
-      }
-    })
+    const resposta = await $fetch<RespostaConvite>(url, { method: 'POST', body })
     if (!resposta?.ok) {
       throw new Error(mensagemErroConvite(resposta?.error))
     }
+    return resposta
   } catch (e) {
     const erro = e as ErroFetch & Error
     if (erro instanceof Error && !erro.data && !erro.status && !erro.statusCode) {
@@ -62,4 +60,29 @@ export async function convidarUsuarioAdmin(input: ConviteUsuarioInput): Promise<
     }
     throw new Error(erro.data?.message ?? mensagemErroConvite(erro.data?.error))
   }
+}
+
+/**
+ * Convida um usuario via endpoint server-side (service role + Supabase Auth).
+ * Devolve o link do convite para o administrador enviar. O frontend nunca ve a
+ * service key nem auth.users.
+ */
+export async function convidarUsuarioAdmin(input: ConviteUsuarioInput): Promise<ResultadoConvite> {
+  const resposta = await postarConvite('/api/admin/users/invite', {
+    nome: input.nome.trim(),
+    email: input.email.trim(),
+    perfil: input.perfil
+  })
+  return {
+    link: resposta.link ?? null,
+    vinculado: resposta.vinculado === true,
+    pendente: resposta.pendente === true
+  }
+}
+
+/** Gera um novo link de convite para um usuario pendente da organizacao. */
+export async function gerarNovoLinkConviteAdmin(usuarioId: string): Promise<string> {
+  const resposta = await postarConvite('/api/admin/users/link-convite', { usuarioId })
+  if (!resposta.link) throw new Error(mensagemErroConvite('FALHA_CONVITE'))
+  return resposta.link
 }
