@@ -9,6 +9,7 @@ import PublicTicketsLoading from '~/components/public/ingressos/PublicTicketsLoa
 import PublicTicketsUnavailable from '~/components/public/ingressos/PublicTicketsUnavailable.vue'
 import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { usePublicTickets } from '~/composables/usePublicTickets'
+import { removerPedidoSalvo, salvarPedido } from '~/utils/ingressosSalvos'
 import { mensagemTicketsErro } from '~/utils/publicIngressos'
 
 const { token, recoveryToken, tickets, carregando, erro, estado, carregar } = usePublicTickets()
@@ -24,6 +25,30 @@ watch(
         logoUrl: valor.organizacaoLogoUrl
       })
     }
+  },
+  { immediate: true }
+)
+
+// Abriu pelo link da compra: guarda neste aparelho para achar depois em "Meus ingressos".
+watch(
+  tickets,
+  (valor) => {
+    if (!valor || !token.value) return
+    if (valor.pedidoStatus === 'CANCELADO' || valor.pedidoStatus === 'EXPIRADO') {
+      removerPedidoSalvo(valor.pedidoId)
+      return
+    }
+    salvarPedido({
+      pedidoId: valor.pedidoId,
+      checkoutToken: token.value,
+      codigoPedido: valor.codigoPedido,
+      organizacaoSlug: valor.organizacaoSlug ?? null,
+      eventoSlug: valor.eventoSlug,
+      eventoNome: valor.eventoNome,
+      eventoInicioEm: valor.eventoInicioEm,
+      eventoLocal: valor.eventoLocal,
+      quantidade: valor.ingressos.length || null
+    })
   },
   { immediate: true }
 )

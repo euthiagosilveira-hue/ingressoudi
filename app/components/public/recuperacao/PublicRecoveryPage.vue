@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import { ExclamationTriangleIcon, TicketIcon } from '@heroicons/vue/24/outline'
+import { ChevronRightIcon, ExclamationTriangleIcon, TicketIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
+import { useIngressosSalvos } from '~/composables/useIngressosSalvos'
 import { recuperarIngressos } from '~/services/public/recuperacao'
+import { formatDataHora } from '~/utils/format'
+import { eventoJaPassou } from '~/utils/ingressosSalvos'
 import { normalizarCodigoPedido, normalizarTelefone } from '~/utils/publicIngressos'
+import { rotaIngressosPedido } from '~/utils/rotasPublicas'
+
+const { pedidos, remover } = useIngressosSalvos()
+const temSalvos = computed(() => pedidos.value.length > 0)
 
 const form = reactive({ codigo: '', telefone: '' })
 const carregando = ref(false)
@@ -46,11 +53,53 @@ async function enviar() {
         <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-zinc-700 bg-zinc-950">
           <TicketIcon class="h-6 w-6 text-amber-400" />
         </span>
-        <h1 class="text-lg font-bold uppercase tracking-wide text-amber-400">Recuperar ingressos</h1>
-        <p class="text-sm text-zinc-400">
+        <h1 class="text-lg font-bold uppercase tracking-wide text-amber-400">Meus ingressos</h1>
+        <p v-if="!temSalvos" class="text-sm text-zinc-400">
           Informe o código do pedido e o telefone usado na compra para acessar seus ingressos.
         </p>
       </header>
+
+      <div v-if="temSalvos" class="space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wide text-zinc-400">Salvos neste aparelho</p>
+        <ul class="space-y-2">
+          <li
+            v-for="p in pedidos"
+            :key="p.pedidoId"
+            class="flex items-stretch gap-2"
+            :class="eventoJaPassou(p) ? 'opacity-60' : ''"
+          >
+            <NuxtLink
+              :to="rotaIngressosPedido(p.organizacaoSlug, p.eventoSlug, p.checkoutToken)"
+              class="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 transition-colors hover:border-amber-400/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+            >
+              <TicketIcon class="h-5 w-5 shrink-0 text-amber-400" />
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-semibold text-white">{{ p.eventoNome }}</span>
+                <span class="block truncate text-xs text-zinc-500">
+                  <template v-if="p.eventoInicioEm">{{ formatDataHora(p.eventoInicioEm) }} · </template>
+                  <template v-if="p.quantidade">{{ p.quantidade }} ingresso{{ p.quantidade === 1 ? '' : 's' }} · </template>
+                  Pedido {{ p.codigoPedido }}
+                </span>
+              </span>
+              <ChevronRightIcon class="h-4 w-4 shrink-0 text-zinc-500" />
+            </NuxtLink>
+            <button
+              type="button"
+              :aria-label="`Remover ${p.eventoNome} deste aparelho`"
+              class="flex w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-800 text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+              @click="remover(p.pedidoId)"
+            >
+              <XMarkIcon class="h-4 w-4" />
+            </button>
+          </li>
+        </ul>
+        <div class="border-t border-zinc-800 pt-5">
+          <p class="text-sm font-semibold text-zinc-200">Comprou em outro aparelho?</p>
+          <p class="mt-1 text-xs text-zinc-500">
+            Informe o código do pedido e o telefone usado na compra.
+          </p>
+        </div>
+      </div>
 
       <p
         v-if="erro"

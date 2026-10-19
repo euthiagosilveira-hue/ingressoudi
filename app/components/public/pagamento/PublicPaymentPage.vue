@@ -10,6 +10,7 @@ import PaymentPendingCard from '~/components/public/pagamento/PaymentPendingCard
 import PaymentUnavailableState from '~/components/public/pagamento/PaymentUnavailableState.vue'
 import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { usePublicPayment } from '~/composables/usePublicPayment'
+import { removerPedidoSalvo, salvarPedido } from '~/utils/ingressosSalvos'
 
 const {
   token,
@@ -42,6 +43,29 @@ watch(
         logoUrl: valor.organizacaoLogoUrl
       })
     }
+  },
+  { immediate: true }
+)
+
+// Guarda o pedido neste aparelho para o comprador voltar em "Meus ingressos".
+watch(
+  [checkout, estado],
+  ([valor, situacao]) => {
+    if (!valor || !token.value) return
+    if (['EXPIRADO', 'CANCELADO', 'REJEITADO', 'REEMBOLSADO'].includes(situacao)) {
+      removerPedidoSalvo(valor.pedidoId)
+      return
+    }
+    if (situacao !== 'PENDENTE' && situacao !== 'PAGO') return
+    salvarPedido({
+      pedidoId: valor.pedidoId,
+      checkoutToken: token.value,
+      codigoPedido: valor.codigoPedido,
+      organizacaoSlug: valor.organizacaoSlug ?? null,
+      eventoSlug: valor.eventoSlug,
+      eventoNome: valor.eventoNome,
+      quantidade: valor.quantidade
+    })
   },
   { immediate: true }
 )
