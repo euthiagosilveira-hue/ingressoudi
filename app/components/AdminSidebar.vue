@@ -20,6 +20,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useRoute } from '#imports'
 
+import InstalarAppBotao from '~/components/InstalarAppBotao.vue'
 import SidebarItem from '~/components/SidebarItem.vue'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import {
@@ -178,6 +179,7 @@ const raizClasses = computed(() =>
         size="lg"
         @click="emit('navigate')"
       />
+      <InstalarAppBotao variante="sidebar" />
     </nav>
 
     <div v-if="operador" class="mt-5 rounded-xl border border-zinc-800 bg-zinc-900 p-4">

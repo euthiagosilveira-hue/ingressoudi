@@ -11,8 +11,21 @@ export default defineNuxtConfig({
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' }
       ],
-      meta: [{ name: 'theme-color', content: '#050505' }]
+      meta: [
+        { name: 'theme-color', content: '#050505' },
+        // App instalado (PWA) no iPhone: tela cheia, titulo e barra de status escura.
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-title', content: 'Ingressoudi' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }
+      ]
     }
+  },
+  routeRules: {
+    // O service worker e o manifesto precisam ser revalidados sempre, para que
+    // atualizacoes do app instalado cheguem sem atraso.
+    '/sw.js': { headers: { 'cache-control': 'no-cache' } },
+    '/site.webmanifest': { headers: { 'cache-control': 'no-cache' } }
   },
   runtimeConfig: {
     // Somente backend. Nunca expor em public.

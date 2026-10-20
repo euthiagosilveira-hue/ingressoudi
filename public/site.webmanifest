@@ -1,11 +1,24 @@
 {
+  "id": "/",
   "name": "Ingressoudi",
   "short_name": "Ingressoudi",
-  "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ],
+  "description": "Ingressos, portaria e vendas do seu evento no celular.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
   "theme_color": "#050505",
   "background_color": "#050505",
-  "display": "standalone"
+  "categories": ["entertainment", "business"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Meus ingressos", "url": "/recuperar-ingressos", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Portaria", "url": "/portaria", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Painel", "url": "/painel", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
 }

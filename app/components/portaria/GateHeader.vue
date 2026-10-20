@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import InstalarAppBotao from '~/components/InstalarAppBotao.vue'
 import type { EventListItem } from '~/types/evento'
 import type { UltimaEntradaGate } from '~/types/gate'
 
@@ -23,6 +24,7 @@ const props = withDefaults(
 
     <div class="flex min-w-0 flex-col gap-2 sm:items-end">
       <div class="flex flex-wrap items-center gap-3">
+        <InstalarAppBotao />
         <span
           v-if="props.evento"
           class="inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-300"
