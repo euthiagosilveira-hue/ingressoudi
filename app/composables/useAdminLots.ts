@@ -5,6 +5,7 @@ import {
   atualizarLoteAdmin,
   criarLoteAdmin,
   definirVendasEventoAdmin,
+  encerrarLoteAdmin,
   listarLotesAdmin,
   type AtualizarLoteAdminInput,
   type CriarLoteAdminInput
@@ -68,6 +69,17 @@ export function useAdminLots(eventoId: string) {
     }
   }
 
+  async function encerrar(loteId: string, ativarProximo: boolean) {
+    processando.value = true
+    try {
+      const resultado = await encerrarLoteAdmin(loteId, ativarProximo)
+      await carregar()
+      return resultado
+    } finally {
+      processando.value = false
+    }
+  }
+
   async function abrirVendas() {
     processando.value = true
     try {
@@ -93,6 +105,7 @@ export function useAdminLots(eventoId: string) {
     criar,
     atualizar,
     ativar,
+    encerrar,
     abrirVendas,
     refresh: carregar
   }

@@ -4,6 +4,7 @@ import { ArrowLeftIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import { toast } from 'vue3-toastify'
 
 import AppButton from '~/components/AppButton.vue'
+import BaseModal from '~/components/BaseModal.vue'
 import ConfirmDialog from '~/components/ConfirmDialog.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import LotDetailsModal from '~/components/lotes/LotDetailsModal.vue'
@@ -18,7 +19,7 @@ import type {
   LotOrdemRef,
   LotPayload
 } from '~/types/lote'
-import { mapearLoteParaFormulario, proximaOrdem } from '~/utils/lotes'
+import { mapearLoteParaFormulario, proximaOrdem, proximoLoteInativo } from '~/utils/lotes'
 
 const props = defineProps<{
   evento: EventListItem
@@ -31,6 +32,7 @@ const emit = defineEmits<{
   criar: [payload: LotPayload]
   atualizar: [id: string, payload: LotPayload]
   ativar: [id: string]
+  encerrar: [id: string, ativarProximo: boolean]
   abrirVendas: []
 }>()
 
@@ -111,10 +113,16 @@ function solicitarEncerramento(id: string) {
   loteParaEncerrar.value = props.lotes.find((item) => item.id === id) ?? null
 }
 
-function confirmarEncerramento() {
+const proximoAoEncerrar = computed(() => {
+  const alvo = loteParaEncerrar.value
+  if (!alvo || !vendasAbertas.value) return null
+  return proximoLoteInativo(props.lotes, alvo)
+})
+
+function confirmarEncerramento(ativarProximo: boolean) {
   const alvo = loteParaEncerrar.value
   if (!alvo) return
-  toast.info('O encerramento ocorre automaticamente na virada do lote.')
+  emit('encerrar', alvo.id, ativarProximo)
   loteParaEncerrar.value = null
 }
 
@@ -211,14 +219,45 @@ function acaoLote(payload: { id: string; action: string }) {
       @cancel="loteParaAtivar = null"
     />
 
-    <ConfirmDialog
+    <BaseModal
       :open="loteParaEncerrar !== null"
-      tone="danger"
       :title="`Encerrar ${loteParaEncerrar?.nome ?? ''}?`"
-      description="O lote para de vender agora. Se ainda tiver ingressos disponíveis, você pode reativá-lo depois."
-      confirm-label="Encerrar lote"
-      @confirm="confirmarEncerramento"
-      @cancel="loteParaEncerrar = null"
-    />
+      @close="loteParaEncerrar = null"
+    >
+      <div class="space-y-3 text-sm text-zinc-400">
+        <p>
+          O lote para de vender agora. Quem já gerou o Pix deste lote ainda pode terminar de pagar. Se sobrarem
+          ingressos, você pode reativá-lo depois.
+        </p>
+        <p v-if="proximoAoEncerrar">
+          Você pode ativar o <span class="font-semibold text-zinc-200">{{ proximoAoEncerrar.nome }}</span> em
+          seguida, para as vendas continuarem.
+        </p>
+        <p v-else>Sem outro lote ativo, o evento fica sem ingressos à venda até você ativar um lote.</p>
+      </div>
+
+      <template #footer>
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <AppButton variant="ghost" :disabled="props.processando" @click="loteParaEncerrar = null">
+            Cancelar
+          </AppButton>
+          <AppButton
+            :variant="proximoAoEncerrar ? 'ghost' : 'danger'"
+            :disabled="props.processando"
+            @click="confirmarEncerramento(false)"
+          >
+            {{ proximoAoEncerrar ? 'Só encerrar' : 'Encerrar lote' }}
+          </AppButton>
+          <AppButton
+            v-if="proximoAoEncerrar"
+            variant="primary"
+            :disabled="props.processando"
+            @click="confirmarEncerramento(true)"
+          >
+            Encerrar e ativar {{ proximoAoEncerrar.nome }}
+          </AppButton>
+        </div>
+      </template>
+    </BaseModal>
   </div>
 </template>

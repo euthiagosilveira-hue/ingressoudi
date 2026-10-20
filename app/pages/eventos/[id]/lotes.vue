@@ -26,6 +26,7 @@ const {
   criar,
   atualizar,
   ativar,
+  encerrar,
   abrirVendas,
   refresh
 } = useAdminLots(String(route.params.id))
@@ -66,6 +67,15 @@ async function aoAtivar(id: string) {
     toast.success('Lote ativado.')
   } catch (e) {
     toast.error(e instanceof Error ? e.message : 'Não foi possível ativar o lote.')
+  }
+}
+
+async function aoEncerrar(id: string, ativarProximo: boolean) {
+  try {
+    const r = await encerrar(id, ativarProximo)
+    toast.success(r.loteAtivadoNome ? `Lote encerrado. ${r.loteAtivadoNome} ativado.` : 'Lote encerrado.')
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Não foi possível encerrar o lote.')
   }
 }
 
@@ -113,6 +123,7 @@ async function aoAbrirVendas() {
       @criar="aoCriar"
       @atualizar="aoAtualizar"
       @ativar="aoAtivar"
+      @encerrar="aoEncerrar"
       @abrir-vendas="aoAbrirVendas"
     />
     <EventMeiaCard :evento-id="String(route.params.id)" />

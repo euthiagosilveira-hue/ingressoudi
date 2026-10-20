@@ -53,6 +53,14 @@ export function montarAtivacaoEm(data: string, hora: string): string | null {
   return instante === '' ? null : instante
 }
 
+/** Proximo lote INATIVO (menor ordem acima do lote informado), o mesmo que o banco ativa ao encerrar. */
+export function proximoLoteInativo(lotes: LotListItem[], lote: LotListItem): LotListItem | null {
+  const candidatos = lotes
+    .filter((item) => item.status === 'INATIVO' && item.ordem > lote.ordem)
+    .sort((a, b) => a.ordem - b.ordem)
+  return candidatos[0] ?? null
+}
+
 export function proximaOrdem(lotes: LotListItem[]): number {
   if (lotes.length === 0) return 1
   return Math.max(...lotes.map((lote) => lote.ordem)) + 1

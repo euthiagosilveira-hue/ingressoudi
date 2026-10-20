@@ -60,6 +60,12 @@ function mensagemErroLote(error: RpcErrorLike | null, padrao: string): string {
   if (mensagem.includes('preco')) {
     return 'O preço não pode ser negativo.'
   }
+  if (mensagem.includes('nao esta ativo')) {
+    return 'Este lote não está ativo.'
+  }
+  if (mensagem.includes('nao permite encerrar')) {
+    return 'Este evento não permite essa ação.'
+  }
   if (mensagem.includes('ja esta ativo')) {
     return 'Este lote já está ativo.'
   }
@@ -119,6 +125,27 @@ export async function ativarLoteAdmin(loteId: string): Promise<void> {
   if (error) {
     throw new Error(mensagemErroLote(error, 'Não foi possível ativar o lote.'))
   }
+}
+
+export interface EncerrarLoteResultado {
+  loteAtivadoNome: string | null
+}
+
+/** Encerra o lote ATIVO agora; opcionalmente ativa o proximo lote INATIVO (RPC, ADMINISTRADOR). */
+export async function encerrarLoteAdmin(
+  loteId: string,
+  ativarProximo: boolean
+): Promise<EncerrarLoteResultado> {
+  const client = useSupabaseClient()
+  const { data, error } = await client.rpc('encerrar_lote_admin', {
+    p_lote_id: loteId,
+    p_ativar_proximo: ativarProximo
+  })
+  if (error) {
+    throw new Error(mensagemErroLote(error, 'Não foi possível encerrar o lote.'))
+  }
+  const payload = (data ?? {}) as { lote_ativado_nome?: string | null }
+  return { loteAtivadoNome: payload.lote_ativado_nome ?? null }
 }
 
 export interface AtualizarLoteAdminInput {

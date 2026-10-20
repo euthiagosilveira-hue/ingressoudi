@@ -7,6 +7,7 @@ import {
   mapearLoteParaFormulario,
   montarAtivacaoEm,
   proximaOrdem,
+  proximoLoteInativo,
   vendasPermitemAtivacao,
   eventoPermiteAbrirVendas,
   ativacaoLoteBloqueada,
@@ -158,4 +159,17 @@ test('mapearLoteParaFormulario sem ativacao_em deixa data/hora vazias', () => {
   const form = mapearLoteParaFormulario({ ...loteBase, tipoAtivacao: 'MANUAL', ativacaoEm: null })
   assert.equal(form.dataAtivacao, '')
   assert.equal(form.horaAtivacao, '')
+})
+
+test('proximoLoteInativo escolhe o INATIVO de menor ordem acima do lote encerrado', () => {
+  const atual: LotListItem = { ...loteBase, id: 'a', ordem: 2, status: 'ATIVO' }
+  const lotes: LotListItem[] = [
+    { ...loteBase, id: 'antigo', ordem: 1, status: 'INATIVO' },
+    atual,
+    { ...loteBase, id: 'l4', ordem: 4, status: 'INATIVO' },
+    { ...loteBase, id: 'l3', ordem: 3, status: 'INATIVO' },
+    { ...loteBase, id: 'enc', ordem: 5, status: 'ENCERRADO' }
+  ]
+  assert.equal(proximoLoteInativo(lotes, atual)?.id, 'l3')
+  assert.equal(proximoLoteInativo([atual], atual), null)
 })

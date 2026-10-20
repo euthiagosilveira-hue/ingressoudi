@@ -70,6 +70,22 @@ function diaMes(iso: string): { dia: string; mes: string } {
   return { dia, mes }
 }
 
+const BADGE_EVENTO: Record<string, string> = {
+  EM_ANDAMENTO: 'AO VIVO',
+  AGENDADO: 'PRÓXIMO',
+  REALIZADO: 'REALIZADO',
+  CANCELADO: 'CANCELADO'
+}
+
+/** "Hoje" quando a entrada foi no dia atual (Sao Paulo); senao a data dd/mm. */
+export function rotuloDiaEntrada(iso: string, agora: Date = new Date()): string {
+  const data = new Date(iso)
+  if (Number.isNaN(data.getTime())) return ''
+  const dia = (d: Date) =>
+    new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' }).format(d)
+  return dia(data) === dia(agora) ? 'Hoje' : dia(data)
+}
+
 /**
  * Converte o evento real (EM_ANDAMENTO ou proximo AGENDADO) no view-model do
  * card. A capa usa imagem_url real validada; sem imagem, usa o fallback atual.
@@ -93,7 +109,7 @@ export function mapearDashboardEvento(evento: AdminDashboardEvento | null): Toda
   const semana = nomeDiaSemana(evento.inicio_em)
   return {
     hasEvent: true,
-    badge: evento.status === 'EM_ANDAMENTO' ? 'AO VIVO' : 'PRÓXIMO',
+    badge: BADGE_EVENTO[evento.status] ?? 'PRÓXIMO',
     title: evento.nome,
     date: formatData(evento.inicio_em),
     time: formatHora(evento.inicio_em),
@@ -147,9 +163,9 @@ export function mapearEntradasRecentes(
     name: entry.name,
     ticket: `Ingresso ${entry.codigo}`,
     time: formatHora(entry.entrada_em),
-    dateLabel: 'Hoje',
+    dateLabel: rotuloDiaEntrada(entry.entrada_em),
     ok: true,
-    statusLabel: 'Hoje'
+    statusLabel: rotuloDiaEntrada(entry.entrada_em)
   }))
 }
 
