@@ -16,7 +16,7 @@ import {
   type OrganizacaoPlataforma
 } from '~/services/admin/organizacoes'
 import { rotaOrganizacao } from '~/utils/rotasPublicas'
-import { definirTaxaOrganizacao, obterStatusMercadoPago } from '~/services/admin/mercadoPago'
+import { definirTaxaOrganizacao } from '~/services/admin/mercadoPago'
 
 definePageMeta({
   title: 'Organizações',
@@ -51,39 +51,6 @@ async function criar() {
   }
 }
 
-// Taxa de servico da organizacao ativa (somente super admin)
-const taxa = ref('')
-const salvandoTaxa = ref(false)
-
-async function carregarTaxa() {
-  if (!ehSuperAdmin.value || !operador.value?.organizacao?.id) return
-  try {
-    const status = await obterStatusMercadoPago()
-    taxa.value = status.taxaServico.toFixed(2)
-  } catch {
-    taxa.value = ''
-  }
-}
-
-async function salvarTaxa() {
-  const organizacaoId = operador.value?.organizacao?.id
-  const valor = Number(String(taxa.value).replace(',', '.'))
-  if (!organizacaoId || String(taxa.value).trim() === '' || Number.isNaN(valor) || valor < 0 || valor > 100) {
-    toast.error('Informe uma taxa entre 0 e 100.')
-    return
-  }
-  salvandoTaxa.value = true
-  try {
-    await definirTaxaOrganizacao(organizacaoId, valor)
-    taxa.value = valor.toFixed(2)
-    toast.success('Taxa atualizada.')
-  } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Não foi possível salvar a taxa.')
-  } finally {
-    salvandoTaxa.value = false
-  }
-}
-
 // Casas da plataforma: aprovacao de cadastros (somente super admin)
 const casas = ref<OrganizacaoPlataforma[]>([])
 const carregandoCasas = ref(false)
@@ -95,6 +62,7 @@ async function carregarCasas() {
   carregandoCasas.value = true
   try {
     casas.value = await listarOrganizacoesPlataforma()
+    taxas.value = Object.fromEntries(casas.value.map((c) => [c.id, c.taxaServico.toFixed(2)]))
   } catch (e) {
     toast.error(e instanceof Error ? e.message : 'Não foi possível carregar as casas.')
   } finally {
@@ -128,13 +96,35 @@ async function alterarListaVip(casa: OrganizacaoPlataforma, ativa: boolean) {
   }
 }
 
+// Taxa de servico por casa: controle exclusivo do super admin
+const taxas = ref<Record<string, string>>({})
+
+async function salvarTaxaCasa(casa: OrganizacaoPlataforma) {
+  const texto = String(taxas.value[casa.id] ?? '').trim()
+  const valor = Number(texto.replace(',', '.'))
+  if (texto === '' || Number.isNaN(valor) || valor < 0 || valor > 100) {
+    toast.error('Informe uma taxa entre 0 e 100.')
+    return
+  }
+  alterandoId.value = casa.id
+  try {
+    await definirTaxaOrganizacao(casa.id, valor)
+    casa.taxaServico = valor
+    taxas.value[casa.id] = valor.toFixed(2)
+    toast.success(`Taxa de ${casa.nome} atualizada.`)
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Não foi possível salvar a taxa.')
+  } finally {
+    alterandoId.value = ''
+  }
+}
+
 function dataCurta(iso: string): string {
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('pt-BR')
 }
 
 onMounted(() => {
-  void carregarTaxa()
   void carregarCasas()
 })
 
@@ -173,6 +163,7 @@ async function acessar(id: string) {
         </div>
         <p class="mt-1 text-xs text-zinc-500">
           Casas cadastradas pelo site entram em análise: não publicam eventos nem aparecem no site até a aprovação.
+          A taxa de serviço (por ingresso vendido online) só pode ser alterada por você e vale para os próximos pedidos.
         </p>
         <p v-if="carregandoCasas" class="mt-4 text-sm text-zinc-500">Carregando...</p>
         <ul v-else class="mt-4 divide-y divide-zinc-800">
@@ -217,6 +208,23 @@ async function acessar(id: string) {
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+              <form class="flex items-center gap-2" @submit.prevent="salvarTaxaCasa(casa)">
+                <label :for="`taxa-${casa.id}`" class="text-xs text-zinc-400">Taxa R$</label>
+                <input
+                  :id="`taxa-${casa.id}`"
+                  v-model="taxas[casa.id]"
+                  inputmode="decimal"
+                  class="w-20 rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm text-white focus:border-amber-400 focus:outline-none"
+                />
+                <AppButton
+                  type="submit"
+                  size="sm"
+                  variant="ghost"
+                  :disabled="alterandoId === casa.id || taxas[casa.id] === casa.taxaServico.toFixed(2)"
+                >
+                  Salvar
+                </AppButton>
+              </form>
               <AppButton
                 size="sm"
                 variant="ghost"
@@ -267,21 +275,6 @@ async function acessar(id: string) {
             </AppButton>
             <p v-if="erro" class="text-xs text-red-400">{{ erro }}</p>
           </div>
-        </form>
-      </BaseCard>
-
-      <BaseCard v-if="operador?.organizacao">
-        <h2 class="text-sm font-semibold text-white">
-          Taxa de serviço — {{ operador.organizacao.nome }}
-        </h2>
-        <p class="mt-1 text-xs text-zinc-500">
-          Valor por ingresso vendido online nesta organização (padrão R$ 1,00). Vale para os próximos pedidos.
-        </p>
-        <form class="mt-4 flex flex-wrap items-end gap-3" @submit.prevent="salvarTaxa">
-          <BaseInput v-model="taxa" label="Taxa (R$)" placeholder="1.00" />
-          <AppButton type="submit" variant="primary" :disabled="salvandoTaxa">
-            {{ salvandoTaxa ? 'Salvando...' : 'Salvar taxa' }}
-          </AppButton>
         </form>
       </BaseCard>
 

@@ -19,6 +19,7 @@ export interface OrganizacaoPlataforma {
   ativo: boolean
   aprovada: boolean
   listaVip: boolean
+  taxaServico: number
   criadoEm: string
   mercadoPagoConectado: boolean
   administradores: string
@@ -37,6 +38,7 @@ export async function listarOrganizacoesPlataforma(): Promise<OrganizacaoPlatafo
     ativo: Boolean(o.ativo),
     aprovada: Boolean(o.aprovada),
     listaVip: Boolean(o.lista_vip_ativa),
+    taxaServico: Number(o.taxa_servico ?? 0),
     criadoEm: String(o.criado_em ?? ''),
     mercadoPagoConectado: Boolean(o.mercado_pago_conectado),
     administradores: String(o.administradores ?? ''),
