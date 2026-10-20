@@ -6,6 +6,7 @@ import type {
   EventListItem
 } from '~/types/evento'
 import { imagemValida } from './imagem.ts'
+import { precoMeia } from './meiaEntrada.ts'
 
 /** Adapta o item administrativo real para o shape usado pelos cards. */
 export function mapearEventoAdminParaListItem(evento: AdminEventListItem): EventListItem {
@@ -20,7 +21,12 @@ export function mapearEventoAdminParaListItem(evento: AdminEventListItem): Event
     vendasStatus: evento.vendasStatus,
     publicacaoStatus: evento.publicacaoStatus,
     loteAtual: evento.loteAtivo
-      ? { id: evento.loteAtivo.id, nome: evento.loteAtivo.nome, preco: evento.loteAtivo.preco }
+      ? {
+          id: evento.loteAtivo.id,
+          nome: evento.loteAtivo.nome,
+          preco: evento.loteAtivo.preco,
+          precoMeia: evento.meiaEntradaAtiva ? precoMeia(evento.loteAtivo.preco) : null
+        }
       : null,
     vendidos: evento.ingressosCount,
     disponiveis: 0

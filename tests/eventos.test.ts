@@ -32,7 +32,31 @@ test('mapearEventoAdminParaListItem adapta o item real para o shape dos cards', 
   assert.equal(item.vendasStatus, 'ENCERRADAS')
   assert.equal(item.vendidos, 9)
   assert.equal(item.imagemUrl, 'https://cdn.exemplo.com/capa.jpg')
-  assert.deepEqual(item.loteAtual, { id: 'lote-1', nome: 'Lote 1', preco: 40 })
+  assert.deepEqual(item.loteAtual, { id: 'lote-1', nome: 'Lote 1', preco: 40, precoMeia: null })
+})
+
+test('mapearEventoAdminParaListItem calcula a meia do lote atual quando o evento tem meia-entrada', () => {
+  const item = mapearEventoAdminParaListItem({
+    eventoId: 'evento-meia',
+    nome: 'Evento com meia',
+    slug: 'evento-meia',
+    inicioEm: '2026-11-15T17:00:00Z',
+    local: 'Chacara',
+    status: 'AGENDADO',
+    vendasStatus: 'ABERTAS',
+    publicacaoStatus: 'PUBLICADO',
+    capacidadeTotal: 100,
+    estoqueAntecipado: 100,
+    publicadoEm: null,
+    imagemUrl: null,
+    meiaEntradaAtiva: true,
+    loteAtivo: { id: 'lote-1', nome: 'Lote promocional', ordem: 1, preco: 25.01, quantidade: 10, vendidos: 1, disponiveis: 9 },
+    lotesCount: 1,
+    pedidosCount: 1,
+    ingressosCount: 1
+  })
+
+  assert.deepEqual(item.loteAtual, { id: 'lote-1', nome: 'Lote promocional', preco: 25.01, precoMeia: 12.51 })
 })
 
 test('mapearEventoAdminParaListItem mantem "sem lote" quando nao ha ativo', () => {

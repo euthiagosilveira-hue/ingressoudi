@@ -102,9 +102,22 @@ const vendasAbertas = computed(() => props.event.vendasStatus === 'ABERTAS')
             <span class="truncate text-sm text-zinc-200">
               {{ props.event.loteAtual.nome }}
             </span>
-            <span class="shrink-0 text-sm font-semibold text-amber-400">
+            <span
+              v-if="props.event.loteAtual.precoMeia == null"
+              class="shrink-0 text-sm font-semibold text-amber-400"
+            >
               {{ formatMoeda(props.event.loteAtual.preco) }}
             </span>
+          </div>
+          <div v-if="props.event.loteAtual.precoMeia != null" class="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+            <p class="text-sm">
+              <span class="text-zinc-500">Inteira</span>
+              <span class="ml-1.5 font-semibold text-amber-400">{{ formatMoeda(props.event.loteAtual.preco) }}</span>
+            </p>
+            <p class="text-sm">
+              <span class="text-zinc-500">Meia</span>
+              <span class="ml-1.5 font-semibold text-amber-400">{{ formatMoeda(props.event.loteAtual.precoMeia) }}</span>
+            </p>
           </div>
         </template>
         <p v-else class="text-sm text-zinc-500">Sem lote ativo</p>
