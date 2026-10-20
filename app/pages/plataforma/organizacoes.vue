@@ -7,6 +7,7 @@ import AppButton from '~/components/AppButton.vue'
 import BaseCard from '~/components/BaseCard.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import PageHeader from '~/components/PageHeader.vue'
+import PushNotificacoesCard from '~/components/plataforma/PushNotificacoesCard.vue'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import {
   criarOrganizacao,
@@ -151,6 +152,8 @@ async function acessar(id: string) {
     </BaseCard>
 
     <template v-else>
+      <PushNotificacoesCard />
+
       <BaseCard>
         <div class="flex items-center justify-between gap-3">
           <h2 class="text-sm font-semibold text-white">Casas da plataforma</h2>
