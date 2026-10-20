@@ -27,6 +27,7 @@ interface AdminEventRow {
   estoque_antecipado: number
   publicado_em: string | null
   imagem_url: string | null
+  meia_entrada_ativa?: boolean | null
   lote_ativo_id: string | null
   lote_ativo_nome: string | null
   lote_ativo_ordem: number | null
@@ -53,6 +54,7 @@ function mapear(row: AdminEventRow): AdminEventListItem {
     estoqueAntecipado: row.estoque_antecipado,
     publicadoEm: row.publicado_em,
     imagemUrl: row.imagem_url,
+    meiaEntradaAtiva: row.meia_entrada_ativa === true,
     loteAtivo: row.lote_ativo_id
       ? {
           id: row.lote_ativo_id,

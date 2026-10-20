@@ -16,6 +16,8 @@ export interface EventLoteAtual {
   id: string
   nome: string
   preco: number
+  /** Preco da meia quando o evento tem meia-entrada ligada; null quando nao tem. */
+  precoMeia?: number | null
 }
 
 export interface EventListItem {
@@ -107,6 +109,7 @@ export interface AdminEventListItem {
   estoqueAntecipado: number
   publicadoEm: string | null
   imagemUrl: string | null
+  meiaEntradaAtiva?: boolean
   loteAtivo: AdminEventLoteAtivo | null
   lotesCount: number
   pedidosCount: number
