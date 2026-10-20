@@ -55,6 +55,19 @@ export interface AdminDashboardData {
   entradasRecentes: AdminDashboardEntry[]
 }
 
+/** Dados extras do dashboard de um evento (obter_painel_evento_admin). */
+export interface AdminPainelEventoExtras {
+  reservasAtivas: number
+  valorReembolsado: number
+  vendasStatus: string
+  capacidadeTotal: number
+  loteAtual: { nome: string; preco: number; disponiveis: number } | null
+}
+
+export interface AdminPainelEventoData extends AdminDashboardData {
+  extras: AdminPainelEventoExtras | null
+}
+
 /** View-models usados pelos componentes visuais do dashboard. */
 export interface EntryByHour {
   hora: string

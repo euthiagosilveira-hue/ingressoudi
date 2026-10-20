@@ -23,7 +23,39 @@ interface Metric {
   subtitleClass?: string
 }
 
-const { viewModel } = useAdminDashboard()
+const props = defineProps<{
+  /** Quando informado, o dashboard mostra so este evento. */
+  eventoId?: string
+}>()
+
+const { viewModel, extras, erro } = useAdminDashboard(props.eventoId)
+
+const resumoEvento = computed(() => {
+  const x = extras.value
+  if (!x) return []
+  return [
+    {
+      label: 'Lote atual',
+      value: x.loteAtual ? `${x.loteAtual.nome} · ${formatMoeda(Number(x.loteAtual.preco))}` : 'Nenhum lote ativo',
+      detail: x.loteAtual ? `${x.loteAtual.disponiveis} ingressos disponíveis` : 'Ative um lote em Lotes'
+    },
+    {
+      label: 'Vendas',
+      value: x.vendasStatus === 'ABERTAS' ? 'Abertas' : 'Encerradas',
+      detail: `Capacidade de ${x.capacidadeTotal} pessoas`
+    },
+    {
+      label: 'Reservas em aberto',
+      value: `${x.reservasAtivas}`,
+      detail: 'Pedidos aguardando pagamento'
+    },
+    {
+      label: 'Reembolsado',
+      value: formatMoeda(Number(x.valorReembolsado)),
+      detail: 'Devolvido aos compradores'
+    }
+  ]
+})
 
 function percentual(valor: number, total: number): string {
   if (total <= 0) return '0% do total'
@@ -80,6 +112,14 @@ const metrics = computed<Metric[]>(() => {
 </script>
 
 <template>
+  <div
+    v-if="erro && props.eventoId"
+    role="alert"
+    class="rounded-2xl border border-red-500/40 bg-red-500/5 p-6 text-center text-sm font-semibold text-red-300"
+  >
+    {{ erro }}
+  </div>
+
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
     <DashboardMetricCard
       v-for="metric in metrics"
@@ -93,6 +133,18 @@ const metrics = computed<Metric[]>(() => {
       :value-class="metric.valueClass"
       :subtitle-class="metric.subtitleClass"
     />
+  </div>
+
+  <div v-if="resumoEvento.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div
+      v-for="item in resumoEvento"
+      :key="item.label"
+      class="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4"
+    >
+      <p class="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">{{ item.label }}</p>
+      <p class="mt-1 text-lg font-semibold text-white">{{ item.value }}</p>
+      <p class="mt-0.5 text-xs text-zinc-400">{{ item.detail }}</p>
+    </div>
   </div>
 
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-12">

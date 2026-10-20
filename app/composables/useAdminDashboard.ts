@@ -1,7 +1,7 @@
 import { computed, onMounted, ref } from 'vue'
 
-import { obterDashboardAdmin } from '~/services/admin/dashboard'
-import type { AdminDashboardData } from '~/types/dashboard'
+import { obterDashboardAdmin, obterPainelEventoAdmin } from '~/services/admin/dashboard'
+import type { AdminDashboardData, AdminPainelEventoExtras } from '~/types/dashboard'
 import { mapearDashboard } from '~/utils/dashboard'
 
 const VAZIO: AdminDashboardData = {
@@ -13,9 +13,13 @@ const VAZIO: AdminDashboardData = {
   entradasRecentes: []
 }
 
-/** Dashboard administrativo: dados reais via RPC + view-models prontos. */
-export function useAdminDashboard() {
+/**
+ * Dashboard administrativo: dados reais via RPC + view-models prontos.
+ * Com eventoId, mostra so aquele evento (com dados extras do evento).
+ */
+export function useAdminDashboard(eventoId?: string) {
   const data = ref<AdminDashboardData>(VAZIO)
+  const extras = ref<AdminPainelEventoExtras | null>(null)
   const carregando = ref(true)
   const erro = ref('')
 
@@ -25,10 +29,17 @@ export function useAdminDashboard() {
     carregando.value = true
     erro.value = ''
     try {
-      data.value = await obterDashboardAdmin()
-    } catch {
-      erro.value = 'Não foi possível carregar o dashboard.'
+      if (eventoId) {
+        const painel = await obterPainelEventoAdmin(eventoId)
+        data.value = painel
+        extras.value = painel.extras
+      } else {
+        data.value = await obterDashboardAdmin()
+      }
+    } catch (e) {
+      erro.value = eventoId && e instanceof Error ? e.message : 'Não foi possível carregar o dashboard.'
       data.value = VAZIO
+      extras.value = null
     } finally {
       carregando.value = false
     }
@@ -40,6 +51,7 @@ export function useAdminDashboard() {
 
   return {
     data,
+    extras,
     viewModel,
     carregando,
     erro,

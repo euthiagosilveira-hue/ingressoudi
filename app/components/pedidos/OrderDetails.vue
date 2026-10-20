@@ -97,8 +97,8 @@ async function confirmarSolicitacaoReembolso() {
   }
 }
 
-function visualizarIngresso() {
-  toast.info('Visualização do ingresso será implementada na próxima etapa.')
+function visualizarIngresso(id: string) {
+  navigateTo(`/ingressos/${id}`)
 }
 
 onMounted(() => {

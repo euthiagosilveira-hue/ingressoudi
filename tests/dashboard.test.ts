@@ -7,7 +7,8 @@ import {
   mapearDashboardEvento,
   mapearPedidosRecentes,
   mapearPagamentosPorStatus,
-  mapearEntradasPorHora
+  mapearEntradasPorHora,
+  rotuloDiaEntrada
 } from '../app/utils/dashboard.ts'
 
 const card = readFileSync(
@@ -172,4 +173,15 @@ test('mapearPedidosRecentes formata codigo/total/pagamento', () => {
   assert.equal(r[0].entranceUsed, 1)
   assert.equal(r[0].entranceTotal, 2)
   assert.match(r[0].total, /^R\$\s?80,00$/)
+})
+
+test('rotuloDiaEntrada mostra Hoje no mesmo dia em Sao Paulo e a data nos outros', () => {
+  const agora = new Date('2026-11-02T02:00:00Z') // 01/11 23h em Sao Paulo
+  assert.equal(rotuloDiaEntrada('2026-11-01T23:30:00Z', agora), 'Hoje')
+  assert.equal(rotuloDiaEntrada('2026-10-25T23:30:00Z', agora), '25/10')
+})
+
+test('mapearDashboardEvento usa selo de evento realizado', () => {
+  assert.equal(mapearDashboardEvento({ ...EVENTO_BASE, status: 'REALIZADO' }).badge, 'REALIZADO')
+  assert.equal(mapearDashboardEvento({ ...EVENTO_BASE, status: 'EM_ANDAMENTO' }).badge, 'AO VIVO')
 })

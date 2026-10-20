@@ -1,4 +1,4 @@
-import type { AdminDashboardData } from '~/types/dashboard'
+import type { AdminDashboardData, AdminPainelEventoData } from '~/types/dashboard'
 
 /** Dashboard administrativo real (RPC segura, ADMINISTRADOR). */
 export async function obterDashboardAdmin(): Promise<AdminDashboardData> {
@@ -7,6 +7,10 @@ export async function obterDashboardAdmin(): Promise<AdminDashboardData> {
   if (error) {
     throw new Error('Não foi possível carregar o dashboard.')
   }
+  return normalizarDashboard(data)
+}
+
+function normalizarDashboard(data: unknown): AdminDashboardData {
   const d = (data ?? {}) as Partial<AdminDashboardData>
   return {
     metricas: d.metricas ?? {
@@ -22,4 +26,19 @@ export async function obterDashboardAdmin(): Promise<AdminDashboardData> {
     pedidosRecentes: d.pedidosRecentes ?? [],
     entradasRecentes: d.entradasRecentes ?? []
   }
+}
+
+/** Dashboard de um evento da organizacao ativa (RPC segura, ADMINISTRADOR). */
+export async function obterPainelEventoAdmin(eventoId: string): Promise<AdminPainelEventoData> {
+  const client = useSupabaseClient()
+  const { data, error } = await client.rpc('obter_painel_evento_admin', { p_evento_id: eventoId })
+  if (error) {
+    throw new Error(
+      (error.message ?? '').toLowerCase().includes('nao encontrado')
+        ? 'Evento não encontrado.'
+        : 'Não foi possível carregar o dashboard do evento.'
+    )
+  }
+  const extras = ((data ?? {}) as { extras?: AdminPainelEventoData['extras'] }).extras ?? null
+  return { ...normalizarDashboard(data), extras }
 }
