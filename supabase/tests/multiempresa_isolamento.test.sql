@@ -22,8 +22,8 @@ declare
   v_res jsonb; v_txt text;
 
 begin
-  insert into public.organizacoes (nome, slug) values ('Org A', 'iso-a-' || replace(gen_random_uuid()::text,'-','')) returning id into v_org_a;
-  insert into public.organizacoes (nome, slug) values ('Org B', 'iso-b-' || replace(gen_random_uuid()::text,'-','')) returning id into v_org_b;
+  insert into public.organizacoes (nome, slug, lista_vip_ativa) values ('Org A', 'iso-a-' || replace(gen_random_uuid()::text,'-',''), true) returning id into v_org_a;
+  insert into public.organizacoes (nome, slug, lista_vip_ativa) values ('Org B', 'iso-b-' || replace(gen_random_uuid()::text,'-',''), true) returning id into v_org_b;
 
   insert into auth.users (id) values (v_admin_a), (v_port_a), (v_admin_b), (v_port_b);
   insert into public.usuarios (id, nome, email, perfil, ativo) values

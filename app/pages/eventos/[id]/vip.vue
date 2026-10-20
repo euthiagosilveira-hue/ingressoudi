@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { toast } from 'vue3-toastify'
+
+import BaseCard from '~/components/BaseCard.vue'
 
 import VipManager from '~/components/vip/VipManager.vue'
 import { useAdminVip } from '~/composables/useAdminVip'
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import type { VipPayload } from '~/types/vip'
+import { listaVipLiberada } from '~/utils/navegacao'
 
 definePageMeta({
   title: 'Lista VIP',
@@ -14,6 +19,8 @@ definePageMeta({
 })
 
 const route = useRoute()
+const { operador } = useOperatorAuth()
+const liberada = computed(() => listaVipLiberada(operador.value))
 const { eventoNome, vips, carregando, erro, processando, criar, criarLote, atualizar, remover, refresh } =
   useAdminVip(String(route.params.id))
 
@@ -55,7 +62,13 @@ async function aoRemover(vipId: string) {
 </script>
 
 <template>
-  <div v-if="carregando" class="space-y-6" aria-busy="true">
+  <BaseCard v-if="!liberada">
+    <p class="text-sm text-zinc-400">
+      A Lista VIP não está liberada para esta organização. Fale com a equipe do Ingressoudi para ativá-la.
+    </p>
+  </BaseCard>
+
+  <div v-else-if="carregando" class="space-y-6" aria-busy="true">
     <div class="h-8 w-48 animate-pulse rounded-lg bg-zinc-800" />
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div v-for="n in 3" :key="n" class="h-24 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900" />

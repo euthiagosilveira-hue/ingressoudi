@@ -6,6 +6,8 @@ export interface OrganizacaoResumo {
   slug: string
   /** false = casa cadastrada pelo produtor aguardando aprovacao da plataforma. */
   aprovada?: boolean
+  /** Lista VIP liberada pela plataforma para esta organizacao. */
+  listaVip?: boolean
 }
 
 export interface OrganizacaoDoOperador extends OrganizacaoResumo {

@@ -7,7 +7,7 @@ interface SessaoRpc {
   perfil: string | null
   ativo: boolean
   super_admin: boolean
-  organizacao: OrganizacaoResumo | null
+  organizacao: (OrganizacaoResumo & { lista_vip?: boolean }) | null
   organizacoes: Array<OrganizacaoResumo & { perfil: string }>
 }
 
@@ -22,7 +22,15 @@ function mapearSessao(data: unknown): OperadorProfile | null {
     perfil: (s.perfil ?? '') as PerfilOperador,
     ativo: Boolean(s.ativo),
     superAdmin: Boolean(s.super_admin),
-    organizacao: s.organizacao ?? null,
+    organizacao: s.organizacao
+      ? {
+          id: s.organizacao.id,
+          nome: s.organizacao.nome,
+          slug: s.organizacao.slug,
+          aprovada: s.organizacao.aprovada,
+          listaVip: Boolean(s.organizacao.lista_vip)
+        }
+      : null,
     organizacoes: (s.organizacoes ?? []).map((o) => ({
       id: o.id,
       nome: o.nome,

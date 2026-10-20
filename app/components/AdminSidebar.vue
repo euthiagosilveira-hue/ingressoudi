@@ -26,6 +26,7 @@ import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import {
   PERFIS_ADMIN,
   PERFIS_ADMIN_PORTARIA,
+  listaVipLiberada,
   podeVerItemSidebar,
   type PerfilSidebar
 } from '~/utils/navegacao'
@@ -122,7 +123,10 @@ const perfil = computed<PerfilSidebar | null>(() => operador.value?.perfil ?? nu
 const perfilResolvido = computed(() => carregado.value && perfil.value !== null)
 const items = computed(() => {
   if (!perfilResolvido.value) return []
-  const visiveis = itens.filter((item) => podeVerItemSidebar(item, perfil.value))
+  const visiveis = itens.filter(
+    (item) =>
+      podeVerItemSidebar(item, perfil.value) && (item.to !== '/lista-vip' || listaVipLiberada(operador.value))
+  )
   if (operador.value?.superAdmin) {
     visiveis.push({
       to: '/plataforma/organizacoes',

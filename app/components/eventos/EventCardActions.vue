@@ -15,6 +15,7 @@ import {
 
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import type { EventStatus } from '~/types/evento'
+import { listaVipLiberada } from '~/utils/navegacao'
 
 const props = withDefaults(defineProps<{ status?: EventStatus | null }>(), { status: null })
 
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<{ status?: EventStatus | null }>(), { sta
 const { operador } = useOperatorAuth()
 const podeIniciar = computed(() => Boolean(operador.value?.superAdmin) && props.status === 'AGENDADO')
 const podeReabrir = computed(() => Boolean(operador.value?.superAdmin) && props.status === 'EM_ANDAMENTO')
+const mostrarVip = computed(() => listaVipLiberada(operador.value))
 
 const emit = defineEmits<{
   action: [action: string]
@@ -101,6 +103,7 @@ onBeforeUnmount(() => document.removeEventListener('click', aoClicarFora))
         Gerenciar lotes
       </button>
       <button
+        v-if="mostrarVip"
         type="button"
         class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
         @click.stop="selecionar('vip')"

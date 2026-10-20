@@ -11,6 +11,7 @@ import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import {
   criarOrganizacao,
   definirAprovacaoOrganizacao,
+  definirListaVipOrganizacao,
   listarOrganizacoesPlataforma,
   type OrganizacaoPlataforma
 } from '~/services/admin/organizacoes'
@@ -114,6 +115,19 @@ async function alterarAprovacao(casa: OrganizacaoPlataforma, aprovada: boolean) 
   }
 }
 
+async function alterarListaVip(casa: OrganizacaoPlataforma, ativa: boolean) {
+  alterandoId.value = casa.id
+  try {
+    await definirListaVipOrganizacao(casa.id, ativa)
+    casa.listaVip = ativa
+    toast.success(ativa ? `Lista VIP liberada para ${casa.nome}.` : `Lista VIP desligada para ${casa.nome}.`)
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Não foi possível atualizar a Lista VIP.')
+  } finally {
+    alterandoId.value = ''
+  }
+}
+
 function dataCurta(iso: string): string {
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('pt-BR')
@@ -186,6 +200,12 @@ async function acessar(id: string) {
                 >
                   Inativa
                 </span>
+                <span
+                  v-if="casa.listaVip"
+                  class="rounded-full border border-sky-400/30 bg-sky-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-300"
+                >
+                  Lista VIP
+                </span>
               </p>
               <p class="truncate text-xs text-zinc-500">
                 <a :href="rotaOrganizacao(casa.slug)" target="_blank" class="hover:text-amber-400">/{{ casa.slug }}</a>
@@ -196,24 +216,34 @@ async function acessar(id: string) {
                 {{ casa.mercadoPagoConectado ? 'conectado' : 'não conectado' }}
               </p>
             </div>
-            <AppButton
-              v-if="!casa.aprovada"
-              size="sm"
-              variant="primary"
-              :disabled="alterandoId === casa.id"
-              @click="alterarAprovacao(casa, true)"
-            >
-              Aprovar
-            </AppButton>
-            <AppButton
-              v-else
-              size="sm"
-              variant="ghost"
-              :disabled="alterandoId === casa.id"
-              @click="alterarAprovacao(casa, false)"
-            >
-              Voltar para análise
-            </AppButton>
+            <div class="flex flex-wrap items-center gap-2">
+              <AppButton
+                size="sm"
+                variant="ghost"
+                :disabled="alterandoId === casa.id"
+                @click="alterarListaVip(casa, !casa.listaVip)"
+              >
+                {{ casa.listaVip ? 'Desligar Lista VIP' : 'Liberar Lista VIP' }}
+              </AppButton>
+              <AppButton
+                v-if="!casa.aprovada"
+                size="sm"
+                variant="primary"
+                :disabled="alterandoId === casa.id"
+                @click="alterarAprovacao(casa, true)"
+              >
+                Aprovar
+              </AppButton>
+              <AppButton
+                v-else
+                size="sm"
+                variant="ghost"
+                :disabled="alterandoId === casa.id"
+                @click="alterarAprovacao(casa, false)"
+              >
+                Voltar para análise
+              </AppButton>
+            </div>
           </li>
         </ul>
       </BaseCard>

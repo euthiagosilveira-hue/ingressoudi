@@ -18,6 +18,7 @@ export interface OrganizacaoPlataforma {
   slug: string
   ativo: boolean
   aprovada: boolean
+  listaVip: boolean
   criadoEm: string
   mercadoPagoConectado: boolean
   administradores: string
@@ -35,6 +36,7 @@ export async function listarOrganizacoesPlataforma(): Promise<OrganizacaoPlatafo
     slug: String(o.slug ?? ''),
     ativo: Boolean(o.ativo),
     aprovada: Boolean(o.aprovada),
+    listaVip: Boolean(o.lista_vip_ativa),
     criadoEm: String(o.criado_em ?? ''),
     mercadoPagoConectado: Boolean(o.mercado_pago_conectado),
     administradores: String(o.administradores ?? ''),
@@ -50,6 +52,16 @@ export async function definirAprovacaoOrganizacao(organizacaoId: string, aprovad
     p_aprovada: aprovada
   })
   if (error) throw new Error('Não foi possível atualizar a aprovação.')
+}
+
+/** Liga (true) ou desliga (false) a Lista VIP de uma casa (somente super admin). */
+export async function definirListaVipOrganizacao(organizacaoId: string, ativa: boolean): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('definir_lista_vip_organizacao', {
+    p_organizacao_id: organizacaoId,
+    p_ativa: ativa
+  })
+  if (error) throw new Error('Não foi possível atualizar a Lista VIP.')
 }
 
 /** Cria uma organizacao (somente super admin). Quem cria vira ADMINISTRADOR dela. */

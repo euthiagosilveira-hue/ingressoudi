@@ -33,3 +33,14 @@ export function podeVerItemSidebar(
 export function podeVerListaVip(perfil: PerfilNavegacao): boolean {
   return perfil === 'ADMINISTRADOR'
 }
+
+/**
+ * A Lista VIP e liberada por organizacao pela plataforma. O super admin
+ * enxerga sempre; as demais organizacoes so quando liberada.
+ */
+export function listaVipLiberada(
+  operador: { superAdmin?: boolean; organizacao?: { listaVip?: boolean } | null } | null | undefined
+): boolean {
+  if (!operador) return false
+  return Boolean(operador.superAdmin) || operador.organizacao?.listaVip === true
+}

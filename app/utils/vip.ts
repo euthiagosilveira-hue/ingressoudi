@@ -107,6 +107,9 @@ export function mensagemLoteVip(error: RpcErrorLike | null): string {
   const e = error ?? {}
   const mensagem = (e.message ?? '').toLowerCase()
 
+  if (mensagem.includes('nao liberada')) {
+    return 'A Lista VIP não está liberada para esta organização.'
+  }
   if (e.code === '42501' || mensagem.includes('permiss')) {
     return 'Você não tem permissão para gerenciar a lista VIP.'
   }
@@ -138,6 +141,9 @@ export function mensagemErroVip(error: RpcErrorLike | null): string {
   const e = error ?? {}
   const mensagem = (e.message ?? '').toLowerCase()
 
+  if (mensagem.includes('nao liberada')) {
+    return 'A Lista VIP não está liberada para esta organização.'
+  }
   if (e.code === '42501' || mensagem.includes('permiss')) {
     return 'Você não tem permissão para gerenciar a lista VIP.'
   }

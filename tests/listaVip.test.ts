@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { classificarEventosVip, rotaVipEvento } from '../app/utils/listaVip.ts'
-import { podeVerListaVip } from '../app/utils/navegacao.ts'
+import { listaVipLiberada, podeVerListaVip } from '../app/utils/navegacao.ts'
 import type { AdminEventListItem } from '../app/types/evento.ts'
 
 function ler(caminho: string): string {
@@ -103,4 +103,12 @@ test('/lista-vip possui empty state com acao para eventos', () => {
 test('gestao canonica /eventos/[id]/vip permanece', () => {
   const page = ler('../app/pages/eventos/[id]/vip.vue')
   assert.ok(page.includes("middleware: ['admin-auth']"))
+})
+
+test('listaVipLiberada: super admin sempre; demais so com a lista liberada', () => {
+  assert.equal(listaVipLiberada(null), false)
+  assert.equal(listaVipLiberada({ superAdmin: true, organizacao: { listaVip: false } }), true)
+  assert.equal(listaVipLiberada({ superAdmin: false, organizacao: { listaVip: true } }), true)
+  assert.equal(listaVipLiberada({ superAdmin: false, organizacao: { listaVip: false } }), false)
+  assert.equal(listaVipLiberada({ superAdmin: false, organizacao: null }), false)
 })

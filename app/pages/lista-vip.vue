@@ -9,7 +9,9 @@ import PageHeader from '~/components/PageHeader.vue'
 import { listarEventosAdmin } from '~/services/admin/eventos'
 import type { AdminEventListItem } from '~/types/evento'
 import { formatDataHora } from '~/utils/format'
+import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import { classificarEventosVip, rotaVipEvento } from '~/utils/listaVip'
+import { listaVipLiberada } from '~/utils/navegacao'
 
 definePageMeta({
   title: 'Lista VIP',
@@ -18,6 +20,9 @@ definePageMeta({
   sidebarActive: 'Lista VIP',
   middleware: ['admin-auth']
 })
+
+const { operador } = useOperatorAuth()
+const liberada = computed(() => listaVipLiberada(operador.value))
 
 const eventos = ref<AdminEventListItem[]>([])
 const carregando = ref(true)
@@ -48,7 +53,13 @@ const semEventos = computed(() => operacionais.value.length === 0 && historicos.
   <div class="space-y-6">
     <PageHeader title="Lista VIP" subtitle="Gerencie os convidados VIP dos seus eventos." />
 
-    <div v-if="carregando" class="space-y-3" aria-busy="true">
+    <BaseCard v-if="!liberada">
+      <p class="text-sm text-zinc-400">
+        A Lista VIP não está liberada para esta organização. Fale com a equipe do Ingressoudi para ativá-la.
+      </p>
+    </BaseCard>
+
+    <div v-else-if="carregando" class="space-y-3" aria-busy="true">
       <div v-for="n in 3" :key="n" class="h-24 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900" />
     </div>
 
