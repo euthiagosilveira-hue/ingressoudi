@@ -4,7 +4,13 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 
 import type { Gz1PaymentStatus, PixCharge } from './payment-provider'
 import { verificarCredencialDeTeste } from './mercado-pago/mercado-pago-client'
-import { MercadoPagoPaymentsProvider, montarNotificationUrl, valorConfere } from './mercado-pago/mercado-pago-payments'
+import {
+  fimReservaParaPix,
+  MercadoPagoPaymentsProvider,
+  minutosValidadePix,
+  montarNotificationUrl,
+  valorConfere
+} from './mercado-pago/mercado-pago-payments'
 import { obterAccessTokenOrganizacao } from './mercado-pago/mercado-pago-conexao'
 import { deveAutoAprovarPixTeste, deveConfirmarPagamento, deveExpirarReserva, deveIgnorarFalhaConfirmacao } from './mercado-pago/mercado-pago-mapper'
 import { serializarLogErroMercadoPago } from './mercado-pago/mercado-pago-error'
@@ -117,6 +123,30 @@ async function garantirPagamentoLogico(
   return atualizado
 }
 
+/**
+ * Estende a reserva (e o prazo exibido ao comprador) ate o fim do Pix. Falha
+ * aqui nao impede o pagamento: se o Pix for pago depois da reserva, a
+ * confirmacao ainda emite os ingressos (confirmar_pagamento).
+ */
+async function estenderReservaAtePix(
+  event: H3Event,
+  pagamentoId: string,
+  fimIso: string,
+  expiraAtual: string | null
+): Promise<string | null> {
+  const client = serverSupabaseServiceRole(event)
+  const { data, error } = await client.rpc('estender_reserva_pix', {
+    p_pagamento_id: pagamentoId,
+    p_expira_em: fimIso
+  })
+  if (error) {
+    console.error('[pagamentos] estender_reserva_pix falhou', { pagamentoId, erro: error.message })
+    return expiraAtual
+  }
+  const resultado = data as { reserva_expira_em?: string | null } | null
+  return resultado?.reserva_expira_em ?? expiraAtual
+}
+
 function minutosAte(iso: string): number {
   const alvo = Date.parse(iso)
   if (Number.isNaN(alvo)) return 30
@@ -180,6 +210,11 @@ export async function criarPix(
     ? await verificarCredencialDeTeste(accessToken)
     : false
 
+  // O Pix vale no minimo 30 minutos (regra do Mercado Pago), entao a reserva
+  // e estendida ate o fim da validade do Pix logo apos registrar a cobranca.
+  const inicioPixMs = Date.now()
+  const minutosPix = minutosValidadePix(minutosAte(checkout.reserva_expira_em))
+
   let charge: PixCharge
   try {
     charge = await provider.createPixCharge({
@@ -189,7 +224,7 @@ export async function criarPix(
       notificationUrl: montarNotificationUrl(String(config.public.siteUrl ?? ''), checkout.organizacao_id),
       externalReference: checkout.pagamento_id as string,
       payerEmail: email,
-      expirationMinutes: minutosAte(checkout.reserva_expira_em),
+      expirationMinutes: minutosPix,
       idempotencyKey: checkout.pagamento_id as string,
       autoApproveTestPix: deveAutoAprovarPixTeste(autoApproveTestEnabled, credencialDeTeste)
     })
@@ -221,13 +256,20 @@ export async function criarPix(
   })
   if (error) throw new PaymentServiceError('ERRO_INESPERADO', error.message, 500)
 
+  const expiresAt = await estenderReservaAtePix(
+    event,
+    checkout.pagamento_id as string,
+    fimReservaParaPix(inicioPixMs, minutosPix),
+    checkout.expira_em
+  )
+
   return {
     paymentId: checkout.pagamento_id as string,
     provider: 'MERCADO_PAGO',
     status: charge.status,
     pixCopyPaste: charge.pixCopyPaste,
     pixQrCode: charge.pixQrCode,
-    expiresAt: checkout.expira_em
+    expiresAt
   }
 }
 
@@ -280,6 +322,21 @@ export async function consultarStatus(
     (checkout.pedido_status === 'EXPIRADO' || checkout.pedido_status === 'CANCELADO') &&
     checkout.pagamento_status !== 'APROVADO'
   ) {
+    // Pix pago depois de a reserva vencer: confirma mesmo assim (o comprador pagou).
+    if (checkout.pedido_status === 'EXPIRADO' && checkout.cobranca_id) {
+      try {
+        const accessToken = await tokenDaOrganizacao(event, checkout)
+        if (accessToken) {
+          const charge = await new MercadoPagoPaymentsProvider(accessToken).getCharge(checkout.cobranca_id)
+          if (await confirmarPagamentoOficial(event, checkoutToken, checkout, charge)) {
+            const atualizado = await obterCheckoutBackend(event, checkoutToken)
+            if (atualizado?.pagamento_status === 'APROVADO') return { status: 'APROVADO' }
+          }
+        }
+      } catch {
+        // Provedor indisponivel: mantem expirado; o webhook ainda pode confirmar.
+      }
+    }
     return { status: checkout.pedido_status === 'CANCELADO' ? 'CANCELADO' : 'EXPIRADO' }
   }
 

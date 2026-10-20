@@ -49,8 +49,22 @@ export function isoBrasilia(ms: number): string {
   return deslocado.toISOString().replace('Z', '-03:00')
 }
 
+/** Validade do Pix em minutos: nunca abaixo do minimo aceito pelo Mercado Pago. */
+export function minutosValidadePix(expirationMinutes: number): number {
+  return Math.max(MINUTOS_MINIMOS, Math.ceil(expirationMinutes))
+}
+
+/**
+ * Ate quando a reserva precisa valer para cobrir o Pix gerado a partir de
+ * `inicioMs`: a validade do Pix mais uma folga para a latencia da chamada.
+ * Assim o comprador nunca consegue pagar um Pix cuja reserva ja venceu.
+ */
+export function fimReservaParaPix(inicioMs: number, minutosPix: number, folgaSegundos = 60): string {
+  return new Date(inicioMs + minutosPix * 60 * 1000 + folgaSegundos * 1000).toISOString()
+}
+
 export function montarPayloadPagamentoPix(input: CreatePixChargeInput, agoraMs: number): MpCreatePaymentRequest {
-  const minutos = Math.max(MINUTOS_MINIMOS, Math.ceil(input.expirationMinutes))
+  const minutos = minutosValidadePix(input.expirationMinutes)
   const payer: MpCreatePaymentRequest['payer'] = { email: input.payerEmail }
   if (input.autoApproveTestPix) payer.first_name = 'APRO'
 

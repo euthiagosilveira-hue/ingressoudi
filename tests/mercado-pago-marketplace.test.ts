@@ -9,9 +9,11 @@ import {
 } from '../server/utils/mercado-pago-cripto.ts'
 import { montarUrlAutorizacao, precisaRenovar } from '../server/services/payments/mercado-pago/mercado-pago-oauth.ts'
 import {
+  fimReservaParaPix,
   isoBrasilia,
   mapMpPaymentStatus,
   mapMpPaymentToCharge,
+  minutosValidadePix,
   montarNotificationUrl,
   montarPayloadPagamentoPix,
   valorConfere
@@ -183,4 +185,16 @@ test('valorConfere compara em centavos', () => {
   assert.equal(valorConfere(52.99, '53.00'), false)
   assert.equal(valorConfere(null, 53), false)
   assert.equal(valorConfere(53, 'abc'), false)
+})
+
+test('validade do Pix nunca fica abaixo de 30 minutos', () => {
+  assert.equal(minutosValidadePix(5), 30)
+  assert.equal(minutosValidadePix(29.2), 30)
+  assert.equal(minutosValidadePix(45.1), 46)
+})
+
+test('reserva termina depois do Pix, com folga', () => {
+  const inicio = Date.parse('2026-10-20T12:00:00.000Z')
+  assert.equal(fimReservaParaPix(inicio, 30), '2026-10-20T12:31:00.000Z')
+  assert.equal(fimReservaParaPix(inicio, 30, 0), '2026-10-20T12:30:00.000Z')
 })

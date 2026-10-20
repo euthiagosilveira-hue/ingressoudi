@@ -204,9 +204,9 @@ function acaoLote(payload: { id: string; action: string }) {
 
     <ConfirmDialog
       :open="loteParaAtivar !== null"
-      :title="`Ativar ${loteParaAtivar?.nome ?? ''}?`"
+      :title="`${loteParaAtivar?.status === 'ENCERRADO' ? 'Reativar' : 'Ativar'} ${loteParaAtivar?.nome ?? ''}?`"
       description="O lote atualmente ativo será encerrado e este passará a ser o lote vigente."
-      confirm-label="Ativar lote"
+      :confirm-label="loteParaAtivar?.status === 'ENCERRADO' ? 'Reativar lote' : 'Ativar lote'"
       @confirm="confirmarAtivacao"
       @cancel="loteParaAtivar = null"
     />
@@ -215,7 +215,7 @@ function acaoLote(payload: { id: string; action: string }) {
       :open="loteParaEncerrar !== null"
       tone="danger"
       :title="`Encerrar ${loteParaEncerrar?.nome ?? ''}?`"
-      description="O lote será encerrado e não poderá ser reaberto."
+      description="O lote para de vender agora. Se ainda tiver ingressos disponíveis, você pode reativá-lo depois."
       confirm-label="Encerrar lote"
       @confirm="confirmarEncerramento"
       @cancel="loteParaEncerrar = null"

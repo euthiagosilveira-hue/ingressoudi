@@ -82,6 +82,7 @@ const esgotado = computed(() => props.lote.disponiveis === 0)
         <LotActions
           :status="props.lote.status"
           :vendas-abertas="props.vendasAbertas"
+          :disponiveis="props.lote.disponiveis"
           @action="emit('action', $event)"
         />
       </div>

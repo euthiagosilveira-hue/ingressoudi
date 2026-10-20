@@ -45,6 +45,9 @@ function mensagemErroLote(error: RpcErrorLike | null, padrao: string): string {
   if (mensagem.includes('lotes encerrados')) {
     return 'Lotes encerrados não podem ser editados.'
   }
+  if (mensagem.includes('sem ingressos disponiveis')) {
+    return 'Este lote está encerrado e não tem mais ingressos disponíveis.'
+  }
   if (mensagem.includes('encerrado e nao pode ser reaberto')) {
     return 'Este lote está encerrado e não pode ser reaberto.'
   }

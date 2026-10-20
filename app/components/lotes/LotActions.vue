@@ -7,6 +7,7 @@ import type { LotStatus } from '~/types/lote'
 const props = defineProps<{
   status: LotStatus
   vendasAbertas: boolean
+  disponiveis?: number
 }>()
 
 const emit = defineEmits<{
@@ -14,9 +15,11 @@ const emit = defineEmits<{
 }>()
 
 const podeEditar = computed(() => props.status !== 'ENCERRADO')
-const podeAtivar = computed(() => props.status === 'INATIVO')
+// Lote encerrado com ingressos sobrando (ex.: reservas que venceram) pode voltar a vender.
+const podeReativar = computed(() => props.status === 'ENCERRADO' && (props.disponiveis ?? 0) > 0)
+const podeAtivar = computed(() => props.status === 'INATIVO' || podeReativar.value)
 const podeEncerrar = computed(() => props.status === 'ATIVO')
-const ativacaoBloqueada = computed(() => props.status === 'INATIVO' && !props.vendasAbertas)
+const ativacaoBloqueada = computed(() => podeAtivar.value && !props.vendasAbertas)
 
 const base =
   'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50'
@@ -47,7 +50,7 @@ const base =
       @click="emit('action', ativacaoBloqueada ? 'ativar-bloqueado' : 'ativar')"
     >
       <PlayIcon class="h-4 w-4" />
-      Ativar lote
+      {{ podeReativar ? 'Reativar lote' : 'Ativar lote' }}
     </button>
 
     <button
