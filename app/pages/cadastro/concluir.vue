@@ -5,6 +5,7 @@ import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 import AppButton from '~/components/AppButton.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import FormField from '~/components/FormField.vue'
+import { avisarNovaOrganizacao } from '~/services/admin/push'
 import { concluirCadastroProdutor, lerMetadadosCadastro } from '~/services/auth/cadastro'
 import { TERMOS_VERSAO, gerarSlug, mensagemErroCadastro, slugValido } from '~/utils/cadastro'
 import { extrairErroConvite } from '~/utils/convite'
@@ -45,7 +46,8 @@ async function concluir(meta: { nome: string; casa_nome: string; casa_slug: stri
   estado.value = 'processando'
   mensagem.value = ''
   try {
-    await concluirCadastroProdutor(meta)
+    const cadastro = await concluirCadastroProdutor(meta)
+    if (!cadastro.jaExistente && cadastro.organizacaoId) await avisarNovaOrganizacao(cadastro.organizacaoId)
     // Recarrega a aplicacao ja na casa nova (painel com aviso de analise).
     window.location.assign('/painel')
   } catch (e) {

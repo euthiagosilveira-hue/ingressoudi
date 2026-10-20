@@ -42,7 +42,12 @@ export default defineNuxtConfig({
     mercadoPagoWebhookSecret: process.env.MERCADO_PAGO_WEBHOOK_SECRET || '',
     // Somente testes: auto-aprovacao Pix (first_name=APRO). Default false.
     mercadoPagoTestAutoApprovePix: process.env.MERCADO_PAGO_TEST_AUTO_APPROVE_PIX || 'false',
+    // Notificacao push (Web Push / VAPID). Chave privada so no backend.
+    vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+    vapidSubject: process.env.VAPID_SUBJECT || '',
     public: {
+      // Chave publica VAPID: o navegador usa para assinar as notificacoes.
+      vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
       // URL publica canonica da aplicacao (usada em redirects de Auth, ex.: convite).
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || ''
     }
