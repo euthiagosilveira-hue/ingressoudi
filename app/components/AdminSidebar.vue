@@ -8,6 +8,7 @@ import {
   CalendarDaysIcon,
   ChartBarIcon,
   GlobeAltIcon,
+  IdentificationIcon,
   PresentationChartLineIcon,
   Cog6ToothIcon,
   QrCodeIcon,
@@ -132,6 +133,12 @@ const items = computed(() => {
       to: '/plataforma/organizacoes',
       icon: BuildingOffice2Icon,
       label: 'Organizações',
+      allowedProfiles: PERFIS_ADMIN_PORTARIA
+    })
+    visiveis.push({
+      to: '/plataforma/donos',
+      icon: IdentificationIcon,
+      label: 'Donos das casas',
       allowedProfiles: PERFIS_ADMIN_PORTARIA
     })
     visiveis.push({
