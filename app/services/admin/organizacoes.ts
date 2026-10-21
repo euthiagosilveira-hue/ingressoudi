@@ -1,3 +1,5 @@
+import { mapearDetalheCasa, type DetalheCasa } from '~/utils/organizacaoPlataforma'
+
 export interface OrganizacaoCriada {
   organizacao_id: string
   nome: string
@@ -44,6 +46,19 @@ export async function listarOrganizacoesPlataforma(): Promise<OrganizacaoPlatafo
     administradores: String(o.administradores ?? ''),
     eventos: Number(o.eventos ?? 0)
   }))
+}
+
+/** Dados, equipe, metricas e eventos de uma casa (somente super admin). */
+export async function obterOrganizacaoPlataforma(organizacaoId: string): Promise<DetalheCasa> {
+  const client = useSupabaseClient()
+  const { data, error } = await client.rpc('obter_organizacao_plataforma', { p_organizacao_id: organizacaoId })
+  if (error || !data) {
+    const m = (error?.message ?? '').toLowerCase()
+    if (m.includes('permiss')) throw new Error('Apenas o super administrador vê os detalhes das casas.')
+    if (m.includes('nao encontrada')) throw new Error('Casa não encontrada.')
+    throw new Error('Não foi possível carregar a casa.')
+  }
+  return mapearDetalheCasa(data as Record<string, unknown>)
 }
 
 /** Aprova (true) ou devolve para analise (false) uma casa (somente super admin). */
