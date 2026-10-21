@@ -42,7 +42,6 @@ import {
 import { listarOrganizacoesPlataforma, type OrganizacaoPlataforma } from '~/services/admin/organizacoes'
 import {
   ETAPAS_CRM,
-  conversaoEntreEtapas,
   csvProdutores,
   diasNaEtapa,
   filtrarProdutores,
@@ -138,8 +137,6 @@ onMounted(async () => {
 })
 
 const resumo = computed(() => (indicadores.value ? resumoIndicadores(indicadores.value) : null))
-const conversoes = computed(() => (indicadores.value ? conversaoEntreEtapas(indicadores.value) : []))
-const maiorFunil = computed(() => Math.max(1, ...(indicadores.value?.funil.map((f) => f.alcancaram) ?? [0])))
 
 // Filtros ----------------------------------------------------------------------------
 const filtro = ref<FiltroCrm>('TODOS')
@@ -150,10 +147,6 @@ const opcoesFiltro = [
   ...ETAPAS_CRM.map((e) => ({ value: e.value, label: `${ordemEtapa(e.value)}. ${e.label}` }))
 ]
 const filtrados = computed(() => filtrarProdutores(produtores.value, filtro.value, busca.value, hoje))
-
-function filtrarEtapa(etapa: EtapaCrm) {
-  filtro.value = filtro.value === etapa ? 'TODOS' : etapa
-}
 
 // Visualizacao: kanban (padrao) ou lista. Lembrada neste navegador.
 type Visao = 'KANBAN' | 'LISTA'
@@ -403,42 +396,6 @@ const corSituacao: Record<string, string> = {
         />
       </div>
 
-      <!-- Funil -->
-      <BaseCard v-if="indicadores">
-        <h2 class="text-sm font-semibold text-white">Funil comercial</h2>
-        <p class="mt-1 text-xs text-zinc-500">
-          Barra: quantos chegaram a cada etapa no período. Percentual: quantos passaram da etapa anterior para esta.
-          Toque numa etapa para ver os produtores que estão nela agora.
-        </p>
-        <ol class="mt-4 space-y-2">
-          <li v-for="(f, i) in indicadores.funil" :key="f.etapa">
-            <button
-              type="button"
-              class="group w-full rounded-lg p-2 text-left transition-colors hover:bg-zinc-800/60"
-              :class="filtro === f.etapa ? 'bg-zinc-800/80 ring-1 ring-amber-400/40' : ''"
-              @click="filtrarEtapa(f.etapa)"
-            >
-              <div class="flex items-center justify-between gap-3 text-xs">
-                <span class="text-zinc-200">{{ i + 1 }}. {{ rotuloEtapa(f.etapa) }}</span>
-                <span class="shrink-0 text-zinc-500">
-                  <strong class="text-zinc-200">{{ formatNumero(f.alcancaram) }}</strong>
-                  <template v-if="i > 0 && conversoes[i - 1]?.percentual !== null">
-                    · {{ conversoes[i - 1]?.percentual }}%
-                  </template>
-                  · {{ formatNumero(f.atual) }} agora
-                </span>
-              </div>
-              <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-zinc-800">
-                <div
-                  class="h-full rounded-full bg-amber-400 transition-all"
-                  :style="{ width: `${Math.round((f.alcancaram / maiorFunil) * 100)}%` }"
-                />
-              </div>
-            </button>
-          </li>
-        </ol>
-      </BaseCard>
-
       <!-- Produtores -->
       <BaseCard :padded="false" class="overflow-hidden">
         <div class="space-y-3 px-5 pt-5">
@@ -569,7 +526,7 @@ const corSituacao: Record<string, string> = {
 
       <p class="text-xs leading-relaxed text-zinc-500">
         No kanban, arraste o cartão para outra coluna ou use "Mover para". Leads em azul estão há 7 dias ou mais na mesma etapa.
-        Pular etapas conta as anteriores no funil. Eventos, ingressos e receita vêm dos dados reais da casa ligada ao produtor;
+        Nos indicadores, pular etapas conta as anteriores. Eventos, ingressos e receita vêm dos dados reais da casa ligada ao produtor;
         sem casa, ficam em zero. Receita gerada é o total vendido pelo produtor; a receita líquida da plataforma são as taxas
         das vendas online.
       </p>
