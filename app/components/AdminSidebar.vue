@@ -7,6 +7,7 @@ import {
   BuildingOffice2Icon,
   CalendarDaysIcon,
   ChartBarIcon,
+  FunnelIcon,
   GlobeAltIcon,
   PresentationChartLineIcon,
   Cog6ToothIcon,
@@ -144,6 +145,12 @@ const items = computed(() => {
       to: '/plataforma/financeiro',
       icon: PresentationChartLineIcon,
       label: 'Receita da plataforma',
+      allowedProfiles: PERFIS_ADMIN_PORTARIA
+    })
+    visiveis.push({
+      to: '/plataforma/crm',
+      icon: FunnelIcon,
+      label: 'CRM comercial',
       allowedProfiles: PERFIS_ADMIN_PORTARIA
     })
   }
