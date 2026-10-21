@@ -106,6 +106,10 @@ begin
   end if;
 
   -- T4) historico do lead -------------------------------------------------------------
+  -- Dentro de uma transacao now() e fixo, entao os registros de etapa saem com o
+  -- mesmo horario; afasta a entrada no CRM para testar a ordem (mais recente primeiro).
+  update public.crm_historico set em = em - interval '1 hour'
+   where produtor_id = v_p and etapa_anterior is null;
   v_d := public.crm_obter_produtor(v_p);
   if jsonb_array_length(v_d->'historico') <> 2 or v_d->'historico'->0->>'etapa_nova' <> 'DEMO_AGENDADA'
      or v_d->'historico'->0->>'etapa_anterior' <> 'CONTATADO' or v_d->'historico'->0->>'por' <> 'Super KB' then
