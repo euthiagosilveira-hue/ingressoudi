@@ -8,6 +8,7 @@ import {
 
 import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { PLATAFORMA_NOME } from '~/utils/marca'
+import { DESCRICAO_PLATAFORMA, dadosEstruturadosPlataforma } from '~/utils/seo'
 
 definePageMeta({
   layout: 'public-layout',
@@ -18,10 +19,20 @@ definePageMeta({
 // Pagina geral da plataforma: sem marca de casa no topo.
 useOrganizacaoPublica().limpar()
 
+const tituloInicio = `${PLATAFORMA_NOME} | Venda ingressos com Pix e controle sua portaria`
 useSeoMeta({
-  title: `${PLATAFORMA_NOME} | Venda ingressos com Pix e controle sua portaria`,
-  description:
-    'Venda ingressos online com Pix direto na sua conta Mercado Pago, controle a entrada com QR Code no celular e gerencie lista VIP e vendas na porta.'
+  title: tituloInicio,
+  description: DESCRICAO_PLATAFORMA,
+  ogTitle: tituloInicio,
+  ogDescription: DESCRICAO_PLATAFORMA
+})
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify(dadosEstruturadosPlataforma(String(useRuntimeConfig().public.siteUrl ?? '')))
+    }
+  ]
 })
 
 const recursos = [
