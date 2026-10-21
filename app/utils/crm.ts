@@ -418,3 +418,18 @@ export function validarContato(c: { data: string; canal: string; resumo: string 
   if (!c.resumo.trim()) return 'Escreva o que foi conversado.'
   return ''
 }
+
+/**
+ * Ordem dos cartoes dentro da coluna: acoes atrasadas, depois as de hoje, depois
+ * as futuras (pela data) e por fim os leads sem proxima acao.
+ */
+export function ordenarCartoes(lista: ProdutorCrm[], hojeIso: string): ProdutorCrm[] {
+  const peso: Record<SituacaoAcao, number> = { ATRASADA: 0, HOJE: 1, FUTURA: 2, SEM_DATA: 3 }
+  return [...lista].sort((a, b) => {
+    const pa = peso[situacaoAcao(a.proximaAcaoEm, hojeIso)]
+    const pb = peso[situacaoAcao(b.proximaAcaoEm, hojeIso)]
+    if (pa !== pb) return pa - pb
+    if (a.proximaAcaoEm !== b.proximaAcaoEm) return a.proximaAcaoEm < b.proximaAcaoEm ? -1 : 1
+    return a.nomeProdutor.localeCompare(b.nomeProdutor, 'pt-BR')
+  })
+}
