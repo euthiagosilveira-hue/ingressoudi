@@ -141,11 +141,14 @@ const resumo = computed(() => (indicadores.value ? resumoIndicadores(indicadores
 // Filtros ----------------------------------------------------------------------------
 const filtro = ref<FiltroCrm>('TODOS')
 const busca = ref('')
-const opcoesFiltro = [
-  { value: 'TODOS', label: 'Todas as etapas' },
+// No kanban cada etapa ja e uma coluna, entao o filtro so oferece "acoes".
+const opcoesFiltro = computed(() => [
+  { value: 'TODOS', label: visao.value === 'KANBAN' ? 'Todos os leads' : 'Todas as etapas' },
   { value: 'ACOES', label: 'Ações atrasadas ou para hoje' },
-  ...ETAPAS_CRM.map((e) => ({ value: e.value, label: `${ordemEtapa(e.value)}. ${e.label}` }))
-]
+  ...(visao.value === 'KANBAN'
+    ? []
+    : ETAPAS_CRM.map((e) => ({ value: e.value, label: `${ordemEtapa(e.value)}. ${e.label}` })))
+])
 const filtrados = computed(() => filtrarProdutores(produtores.value, filtro.value, busca.value, hoje))
 
 // Visualizacao: kanban (padrao) ou lista. Lembrada neste navegador.
@@ -164,6 +167,7 @@ onMounted(() => {
   }
 })
 watch(visao, (v) => {
+  if (v === 'KANBAN' && filtro.value !== 'TODOS' && filtro.value !== 'ACOES') filtro.value = 'TODOS'
   try {
     localStorage.setItem(CHAVE_VISAO, v)
   } catch {
@@ -194,9 +198,9 @@ const opcoesCasa = computed(() => {
   ]
 })
 
-function novo() {
+function novo(etapa: EtapaCrm = 'MAPEADO') {
   editandoId.value = null
-  form.value = { ...formVazio(), ultimoContato: hoje }
+  form.value = { ...formVazio(), etapa, ultimoContato: hoje }
   erroForm.value = ''
   modalAberto.value = true
 }
@@ -226,13 +230,16 @@ async function salvar() {
 /** Muda a etapa (kanban, "Mover para" ou botao de avancar); fica no historico. */
 async function avancar(p: ProdutorCrm, para: EtapaCrm) {
   erro.value = ''
-  const anterior = p.etapa
+  const anterior = { etapa: p.etapa, etapaDesde: p.etapaDesde }
+  // Atualiza na hora; o banco confirma em segundo plano.
   p.etapa = para
+  p.etapaDesde = new Date().toISOString()
   try {
     await moverEtapaCrm(p.id, para)
-    await carregar()
+    void carregarIndicadores().catch(() => {})
   } catch (e) {
-    p.etapa = anterior
+    p.etapa = anterior.etapa
+    p.etapaDesde = anterior.etapaDesde
     erro.value = e instanceof Error ? e.message : 'Não foi possível mudar a etapa.'
   }
 }
@@ -402,7 +409,7 @@ const corSituacao: Record<string, string> = {
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-sm font-semibold text-white">Produtores ({{ filtrados.length }} de {{ produtores.length }})</h2>
             <div class="flex flex-wrap gap-2">
-              <AppButton size="sm" variant="primary" @click="novo">
+              <AppButton size="sm" variant="primary" @click="novo()">
                 <PlusIcon class="h-4 w-4" />
                 Novo produtor
               </AppButton>
@@ -430,14 +437,17 @@ const corSituacao: Record<string, string> = {
           </div>
         </div>
 
-        <p v-if="!carregando && produtores.length === 0" class="p-5 text-sm text-zinc-500">
+        <div v-if="visao === 'KANBAN'" class="mt-4 px-5 pb-5">
+          <p v-if="!carregando && produtores.length === 0" class="mb-3 text-sm text-zinc-500">
+            Nenhum lead ainda. Toque em + numa coluna, em "Novo produtor" ou importe as casas da plataforma.
+          </p>
+          <CrmKanban :produtores="filtrados" :hoje="hoje" @abrir="editar" @mover="avancar" @novo="novo" />
+        </div>
+
+        <p v-else-if="!carregando && produtores.length === 0" class="p-5 text-sm text-zinc-500">
           Nenhum produtor ainda. Cadastre o primeiro ou importe as casas que já estão na plataforma.
         </p>
         <p v-else-if="filtrados.length === 0" class="p-5 text-sm text-zinc-500">Nenhum produtor neste filtro.</p>
-
-        <div v-else-if="visao === 'KANBAN'" class="mt-4 px-5 pb-5">
-          <CrmKanban :produtores="filtrados" :hoje="hoje" @abrir="editar" @mover="avancar" />
-        </div>
 
         <ul v-else class="mt-4 divide-y divide-zinc-800">
           <li v-for="p in filtrados" :key="p.id" class="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-start">

@@ -211,8 +211,10 @@ test('kanban e historico ligados na tela e no banco so para super admin', () => 
   assert.match(pagina, /<CrmLeadHistorico/)
   assert.match(pagina, /moverEtapaCrm/)
   const kanban = readFileSync(new URL('../app/components/plataforma/crm/CrmKanban.vue', import.meta.url), 'utf8')
-  assert.match(kanban, /draggable="true"/)
+  assert.match(kanban, /Sortable\.create/)
+  assert.match(kanban, /delayOnTouchOnly: true/)
   assert.match(kanban, /Mover para/)
+  assert.match(kanban, /emit\('novo', col\.etapa\)/)
   const migracao = readFileSync(new URL('../supabase/migrations/20261021040000_crm_kanban_contatos.sql', import.meta.url), 'utf8')
   assert.match(migracao, /revoke all on table public\.crm_contatos from public, anon, authenticated/)
   for (const fn of ['crm_registrar_contato', 'crm_excluir_contato', 'crm_mover_etapa', 'crm_obter_produtor', 'crm_listar_produtores']) {
@@ -224,4 +226,16 @@ test('tela do CRM sem o bloco do funil, com o kanban logo apos os indicadores', 
   const pagina = readFileSync(new URL('../app/pages/plataforma/crm.vue', import.meta.url), 'utf8')
   assert.doesNotMatch(pagina, /Funil comercial/)
   assert.ok(pagina.indexOf('Receita líquida da plataforma') < pagina.indexOf('<CrmKanban'))
+})
+
+test('cartoes do kanban: atrasadas primeiro, depois hoje, futuras e sem data', async () => {
+  const { ordenarCartoes } = await import('../app/utils/crm.ts')
+  const lista = [
+    mapearProdutorCrm(linha({ id: 'sem', proxima_acao_em: null })),
+    mapearProdutorCrm(linha({ id: 'fut2', proxima_acao_em: '2026-10-30' })),
+    mapearProdutorCrm(linha({ id: 'hoje', proxima_acao_em: '2026-10-21' })),
+    mapearProdutorCrm(linha({ id: 'fut1', proxima_acao_em: '2026-10-25' })),
+    mapearProdutorCrm(linha({ id: 'atr', proxima_acao_em: '2026-10-19' }))
+  ]
+  assert.deepEqual(ordenarCartoes(lista, '2026-10-21').map((p) => p.id), ['atr', 'hoje', 'fut1', 'fut2', 'sem'])
 })
