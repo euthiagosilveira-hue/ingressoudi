@@ -1,2 +1,30 @@
-User-Agent: *
-Disallow:
+User-agent: *
+Allow: /
+# Areas logadas e paginas de pedido: nada para indexar.
+Disallow: /painel$
+Disallow: /painel/
+Disallow: /plataforma$
+Disallow: /plataforma/
+Disallow: /pedidos$
+Disallow: /pedidos/
+Disallow: /configuracoes$
+Disallow: /configuracoes/
+Disallow: /financeiro$
+Disallow: /financeiro/
+Disallow: /portaria$
+Disallow: /portaria/
+Disallow: /entradas$
+Disallow: /entradas/
+Disallow: /lista-vip$
+Disallow: /lista-vip/
+Disallow: /ingressos$
+Disallow: /ingressos/
+Disallow: /ingresso/
+Disallow: /meus-ingressos
+Disallow: /auth/
+Disallow: /cadastro/concluir
+Disallow: /dashboard-teste
+Disallow: /app$
+Disallow: /*/comprar
+
+Sitemap: https://www.ingressoudi.com.br/sitemap.xml

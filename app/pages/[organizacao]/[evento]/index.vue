@@ -33,7 +33,10 @@ watch(organizacao, (valor) => definir(valor), { immediate: true })
 
 useSeoMeta({
   title: () => tituloPublico(evento.value?.nome ?? 'Evento', organizacao.value?.nome),
-  description: () => (evento.value ? evento.value.descricao.slice(0, 155) : 'Evento não encontrado.')
+  description: () => (evento.value ? evento.value.descricao.slice(0, 155) : 'Evento não encontrado.'),
+  ogTitle: () => tituloPublico(evento.value?.nome ?? 'Evento', organizacao.value?.nome),
+  ogDescription: () => (evento.value ? evento.value.descricao.slice(0, 155) : undefined),
+  ogImage: () => evento.value?.imagemUrl || undefined
 })
 </script>
 
