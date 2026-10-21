@@ -219,3 +219,9 @@ test('kanban e historico ligados na tela e no banco so para super admin', () => 
     assert.match(migracao, new RegExp(`create or replace function private\\.${fn}\\([^)]*\\)[\\s\\S]*?perform private\\.crm_exigir_super_admin\\(\\)`))
   }
 })
+
+test('tela do CRM sem o bloco do funil, com o kanban logo apos os indicadores', () => {
+  const pagina = readFileSync(new URL('../app/pages/plataforma/crm.vue', import.meta.url), 'utf8')
+  assert.doesNotMatch(pagina, /Funil comercial/)
+  assert.ok(pagina.indexOf('Receita líquida da plataforma') < pagina.indexOf('<CrmKanban'))
+})
