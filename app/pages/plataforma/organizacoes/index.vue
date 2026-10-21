@@ -211,6 +211,9 @@ async function acessar(id: string) {
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+              <AppButton size="sm" variant="outline" :to="`/plataforma/organizacoes/${casa.id}`">
+                Ver detalhes
+              </AppButton>
               <form class="flex items-center gap-2" @submit.prevent="salvarTaxaCasa(casa)">
                 <label :for="`taxa-${casa.id}`" class="text-xs text-zinc-400">Taxa R$</label>
                 <input
