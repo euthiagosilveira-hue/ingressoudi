@@ -159,3 +159,63 @@ test('CRM so para o super admin', () => {
     assert.match(migracao, new RegExp(`create or replace function private\\.${fn}[\\s\\S]*?crm_exigir_super_admin\\(\\)`))
   }
 })
+
+test('dias na etapa e lead esfriando', async () => {
+  const { diasNaEtapa, leadEsfriando } = await import('../app/utils/crm.ts')
+  const agora = new Date('2026-10-21T15:00:00-03:00')
+  assert.equal(diasNaEtapa('2026-10-21T09:00:00-03:00', agora), 0)
+  assert.equal(diasNaEtapa('2026-10-18T15:00:00-03:00', agora), 3)
+  assert.equal(diasNaEtapa('', agora), null)
+  assert.equal(leadEsfriando({ etapa: 'CONTATADO', etapaDesde: '2026-10-10T12:00:00-03:00' }, agora), true)
+  assert.equal(leadEsfriando({ etapa: 'CONTATADO', etapaDesde: '2026-10-19T12:00:00-03:00' }, agora), false)
+  assert.equal(leadEsfriando({ etapa: 'CLIENTE_RECORRENTE', etapaDesde: '2026-09-01T12:00:00-03:00' }, agora), false)
+})
+
+test('colunas do kanban na ordem do funil', async () => {
+  const { colunasKanban } = await import('../app/utils/crm.ts')
+  const cols = colunasKanban([
+    mapearProdutorCrm(linha({ id: 'a', etapa: 'INTERESSADO' })),
+    mapearProdutorCrm(linha({ id: 'b', etapa: 'MAPEADO' })),
+    mapearProdutorCrm(linha({ id: 'c', etapa: 'INTERESSADO' }))
+  ])
+  assert.equal(cols.length, 9)
+  assert.deepEqual(cols[0]?.produtores.map((p) => p.id), ['b'])
+  assert.deepEqual(cols[2]?.produtores.map((p) => p.id), ['a', 'c'])
+  assert.equal(cols[8]?.produtores.length, 0)
+})
+
+test('linha do tempo junta etapas e contatos, mais recente primeiro', async () => {
+  const { linhaDoTempo, mapearDetalheLeadCrm, validarContato } = await import('../app/utils/crm.ts')
+  const d = mapearDetalheLeadCrm({
+    historico: [
+      { id: 'h2', etapa_anterior: 'CONTATADO', etapa_nova: 'INTERESSADO', em: '2026-10-22T10:00:00-03:00', por: 'Thiago' },
+      { id: 'h1', etapa_anterior: null, etapa_nova: 'CONTATADO', em: '2026-10-20T10:00:00-03:00', por: 'Thiago' }
+    ],
+    contatos: [{ id: 'k1', data: '2026-10-21', canal: 'WHATSAPP', resumo: 'Mandei o vídeo', criado_em: '2026-10-21T20:00:00Z', por: 'Thiago' }]
+  })
+  const t = linhaDoTempo(d)
+  assert.deepEqual(t.map((e) => e.id), ['h2', 'k1', 'h1'])
+  assert.equal(t[0]?.titulo, 'Contatado → Interessado')
+  assert.equal(t[1]?.titulo, 'Contato por WhatsApp')
+  assert.equal(t[1]?.detalhe, 'Mandei o vídeo')
+  assert.equal(t[2]?.titulo, 'Entrou no CRM em Contatado')
+  assert.equal(validarContato({ data: '2026-10-21', canal: 'WHATSAPP', resumo: 'ok' }), '')
+  assert.equal(validarContato({ data: '', canal: 'WHATSAPP', resumo: 'ok' }), 'Informe a data do contato.')
+  assert.equal(validarContato({ data: '2026-10-21', canal: 'FAX', resumo: 'ok' }), 'Escolha o canal.')
+  assert.equal(validarContato({ data: '2026-10-21', canal: 'REUNIAO', resumo: ' ' }), 'Escreva o que foi conversado.')
+})
+
+test('kanban e historico ligados na tela e no banco so para super admin', () => {
+  const pagina = readFileSync(new URL('../app/pages/plataforma/crm.vue', import.meta.url), 'utf8')
+  assert.match(pagina, /<CrmKanban/)
+  assert.match(pagina, /<CrmLeadHistorico/)
+  assert.match(pagina, /moverEtapaCrm/)
+  const kanban = readFileSync(new URL('../app/components/plataforma/crm/CrmKanban.vue', import.meta.url), 'utf8')
+  assert.match(kanban, /draggable="true"/)
+  assert.match(kanban, /Mover para/)
+  const migracao = readFileSync(new URL('../supabase/migrations/20261021040000_crm_kanban_contatos.sql', import.meta.url), 'utf8')
+  assert.match(migracao, /revoke all on table public\.crm_contatos from public, anon, authenticated/)
+  for (const fn of ['crm_registrar_contato', 'crm_excluir_contato', 'crm_mover_etapa', 'crm_obter_produtor', 'crm_listar_produtores']) {
+    assert.match(migracao, new RegExp(`create or replace function private\\.${fn}\\([^)]*\\)[\\s\\S]*?perform private\\.crm_exigir_super_admin\\(\\)`))
+  }
+})

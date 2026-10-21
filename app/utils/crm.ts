@@ -45,6 +45,9 @@ export interface ProdutorCrm {
   tipoEvento: string
   ultimoContato: string
   etapa: EtapaCrm
+  /** Quando entrou na etapa atual (ISO). */
+  etapaDesde: string
+  totalContatos: number
   proximaAcao: string
   proximaAcaoEm: string
   observacoes: string
@@ -90,6 +93,8 @@ export function mapearProdutorCrm(row: Linha): ProdutorCrm {
     tipoEvento: s(row.tipo_evento),
     ultimoContato: s(row.ultimo_contato).slice(0, 10),
     etapa,
+    etapaDesde: s(row.etapa_desde),
+    totalContatos: n(row.contatos),
     proximaAcao: s(row.proxima_acao),
     proximaAcaoEm: s(row.proxima_acao_em).slice(0, 10),
     observacoes: s(row.observacoes),
@@ -306,4 +311,110 @@ export function csvProdutores(lista: ProdutorCrm[]): string {
     ].map(celulaCsv).join(';')
   )
   return `﻿${[cab.join(';'), ...linhas].join('\r\n')}`
+}
+
+/** Dias inteiros desde que o lead entrou na etapa atual (0 = hoje). */
+export function diasNaEtapa(etapaDesdeIso: string, agora: Date = new Date()): number | null {
+  const desde = Date.parse(etapaDesdeIso)
+  if (Number.isNaN(desde)) return null
+  return Math.max(0, Math.floor((agora.getTime() - desde) / 86_400_000))
+}
+
+/** Lead parado ha muito tempo na mesma etapa (antes de virar cliente). */
+export function leadEsfriando(p: Pick<ProdutorCrm, 'etapa' | 'etapaDesde'>, agora: Date = new Date(), limiteDias = 7): boolean {
+  if (ordemEtapa(p.etapa) >= ordemEtapa('PRIMEIRA_VENDA')) return false
+  const dias = diasNaEtapa(p.etapaDesde, agora)
+  return dias !== null && dias >= limiteDias
+}
+
+/** Colunas do kanban: uma por etapa, na ordem do funil. */
+export function colunasKanban(lista: ProdutorCrm[]): Array<{ etapa: EtapaCrm; label: string; produtores: ProdutorCrm[] }> {
+  return ETAPAS_CRM.map((e) => ({
+    etapa: e.value,
+    label: e.label,
+    produtores: lista.filter((p) => p.etapa === e.value)
+  }))
+}
+
+export type CanalContato = 'WHATSAPP' | 'INSTAGRAM' | 'LIGACAO' | 'REUNIAO' | 'EMAIL' | 'OUTRO'
+
+export const CANAIS_CONTATO: Array<{ value: CanalContato; label: string }> = [
+  { value: 'WHATSAPP', label: 'WhatsApp' },
+  { value: 'INSTAGRAM', label: 'Instagram' },
+  { value: 'LIGACAO', label: 'Ligação' },
+  { value: 'REUNIAO', label: 'Reunião' },
+  { value: 'EMAIL', label: 'E-mail' },
+  { value: 'OUTRO', label: 'Outro' }
+]
+
+export function rotuloCanal(canal: string): string {
+  return CANAIS_CONTATO.find((c) => c.value === canal)?.label ?? canal
+}
+
+export interface EventoLeadCrm {
+  tipo: 'ETAPA' | 'CONTATO'
+  id: string
+  /** Data para ordenar (ISO ou YYYY-MM-DD). */
+  quando: string
+  titulo: string
+  detalhe: string
+  por: string
+}
+
+export interface DetalheLeadCrm {
+  historico: Array<{ id: string; etapaAnterior: string; etapaNova: EtapaCrm; em: string; por: string }>
+  contatos: Array<{ id: string; data: string; canal: CanalContato; resumo: string; criadoEm: string; por: string }>
+}
+
+export function mapearDetalheLeadCrm(row: Linha): DetalheLeadCrm {
+  const hist = Array.isArray(row.historico) ? (row.historico as Linha[]) : []
+  const cont = Array.isArray(row.contatos) ? (row.contatos as Linha[]) : []
+  return {
+    historico: hist.map((h) => ({
+      id: s(h.id),
+      etapaAnterior: s(h.etapa_anterior),
+      etapaNova: s(h.etapa_nova) as EtapaCrm,
+      em: s(h.em),
+      por: s(h.por)
+    })),
+    contatos: cont.map((k) => ({
+      id: s(k.id),
+      data: s(k.data).slice(0, 10),
+      canal: s(k.canal) as CanalContato,
+      resumo: s(k.resumo),
+      criadoEm: s(k.criado_em),
+      por: s(k.por)
+    }))
+  }
+}
+
+/**
+ * Linha do tempo do lead: mudancas de etapa e contatos juntos, do mais recente
+ * para o mais antigo. Contato usa a data informada (meio-dia, para cair no dia certo).
+ */
+export function linhaDoTempo(d: DetalheLeadCrm): EventoLeadCrm[] {
+  const etapas: EventoLeadCrm[] = d.historico.map((h) => ({
+    tipo: 'ETAPA',
+    id: h.id,
+    quando: h.em,
+    titulo: h.etapaAnterior ? `${rotuloEtapa(h.etapaAnterior)} → ${rotuloEtapa(h.etapaNova)}` : `Entrou no CRM em ${rotuloEtapa(h.etapaNova)}`,
+    detalhe: '',
+    por: h.por
+  }))
+  const contatos: EventoLeadCrm[] = d.contatos.map((k) => ({
+    tipo: 'CONTATO',
+    id: k.id,
+    quando: k.data ? `${k.data}T12:00:00-03:00` : k.criadoEm,
+    titulo: `Contato por ${rotuloCanal(k.canal)}`,
+    detalhe: k.resumo,
+    por: k.por
+  }))
+  return [...etapas, ...contatos].sort((a, b) => Date.parse(b.quando) - Date.parse(a.quando))
+}
+
+export function validarContato(c: { data: string; canal: string; resumo: string }): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(c.data)) return 'Informe a data do contato.'
+  if (!CANAIS_CONTATO.some((x) => x.value === c.canal)) return 'Escolha o canal.'
+  if (!c.resumo.trim()) return 'Escreva o que foi conversado.'
+  return ''
 }

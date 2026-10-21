@@ -28,11 +28,14 @@ import ConfirmDialog from '~/components/ConfirmDialog.vue'
 import DashboardMetricCard from '~/components/DashboardMetricCard.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import SegmentedControl from '~/components/SegmentedControl.vue'
+import CrmKanban from '~/components/plataforma/crm/CrmKanban.vue'
+import CrmLeadHistorico from '~/components/plataforma/crm/CrmLeadHistorico.vue'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import {
   excluirProdutorCrm,
   importarCasasCrm,
   listarProdutoresCrm,
+  moverEtapaCrm,
   obterIndicadoresCrm,
   salvarProdutorCrm
 } from '~/services/admin/crm'
@@ -41,9 +44,11 @@ import {
   ETAPAS_CRM,
   conversaoEntreEtapas,
   csvProdutores,
+  diasNaEtapa,
   filtrarProdutores,
   formDoProdutor,
   formVazio,
+  leadEsfriando,
   linkInstagram,
   linkWhatsapp,
   ordemEtapa,
@@ -150,6 +155,36 @@ function filtrarEtapa(etapa: EtapaCrm) {
   filtro.value = filtro.value === etapa ? 'TODOS' : etapa
 }
 
+// Visualizacao: kanban (padrao) ou lista. Lembrada neste navegador.
+type Visao = 'KANBAN' | 'LISTA'
+const CHAVE_VISAO = 'crm-visao'
+const visao = ref<Visao>('KANBAN')
+const opcoesVisao = [
+  { value: 'KANBAN', label: 'Kanban' },
+  { value: 'LISTA', label: 'Lista' }
+]
+onMounted(() => {
+  try {
+    if (localStorage.getItem(CHAVE_VISAO) === 'LISTA') visao.value = 'LISTA'
+  } catch {
+    // sem armazenamento local: fica no kanban
+  }
+})
+watch(visao, (v) => {
+  try {
+    localStorage.setItem(CHAVE_VISAO, v)
+  } catch {
+    // ignora
+  }
+})
+
+function textoDias(p: ProdutorCrm): string {
+  const d = diasNaEtapa(p.etapaDesde)
+  if (d === null) return ''
+  if (d === 0) return 'nesta etapa desde hoje'
+  return d === 1 ? 'há 1 dia nesta etapa' : `há ${d} dias nesta etapa`
+}
+
 // Formulario -------------------------------------------------------------------------
 const modalAberto = ref(false)
 const editandoId = ref<string | null>(null)
@@ -195,15 +230,25 @@ async function salvar() {
   }
 }
 
-/** Avanca o produtor uma etapa (ou ate a etapa sugerida) e marca o contato de hoje. */
+/** Muda a etapa (kanban, "Mover para" ou botao de avancar); fica no historico. */
 async function avancar(p: ProdutorCrm, para: EtapaCrm) {
   erro.value = ''
+  const anterior = p.etapa
+  p.etapa = para
   try {
-    await salvarProdutorCrm(p.id, { ...formDoProdutor(p), etapa: para, ultimoContato: hoje })
+    await moverEtapaCrm(p.id, para)
     await carregar()
   } catch (e) {
-    erro.value = e instanceof Error ? e.message : 'Não foi possível avançar a etapa.'
+    p.etapa = anterior
+    erro.value = e instanceof Error ? e.message : 'Não foi possível mudar a etapa.'
   }
+}
+
+/** Contato registrado no historico: recarrega e mantem o formulario em dia. */
+async function aoAlterarHistorico() {
+  await carregar()
+  const p = produtores.value.find((x) => x.id === editandoId.value)
+  if (p) form.value.ultimoContato = p.ultimoContato
 }
 
 function proximaEtapa(etapa: EtapaCrm): EtapaCrm | null {
@@ -413,6 +458,7 @@ const corSituacao: Record<string, string> = {
               </AppButton>
             </div>
           </div>
+          <SegmentedControl v-model="visao" :options="opcoesVisao" />
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <BaseSelect v-model="filtro" :options="opcoesFiltro" />
             <label class="relative block">
@@ -431,6 +477,10 @@ const corSituacao: Record<string, string> = {
           Nenhum produtor ainda. Cadastre o primeiro ou importe as casas que já estão na plataforma.
         </p>
         <p v-else-if="filtrados.length === 0" class="p-5 text-sm text-zinc-500">Nenhum produtor neste filtro.</p>
+
+        <div v-else-if="visao === 'KANBAN'" class="mt-4 px-5 pb-5">
+          <CrmKanban :produtores="filtrados" :hoje="hoje" @abrir="editar" @mover="avancar" />
+        </div>
 
         <ul v-else class="mt-4 divide-y divide-zinc-800">
           <li v-for="p in filtrados" :key="p.id" class="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-start">
@@ -458,7 +508,9 @@ const corSituacao: Record<string, string> = {
                 <template v-else>Sem próxima ação definida</template>
               </p>
               <p class="mt-0.5 text-xs text-zinc-600">
-                Último contato: {{ p.ultimoContato ? formatarDiaIso(p.ultimoContato) : '—' }}
+                <span :class="leadEsfriando(p) ? 'text-sky-300' : ''">{{ textoDias(p) }}</span>
+                · Último contato: {{ p.ultimoContato ? formatarDiaIso(p.ultimoContato) : '—' }}
+                <template v-if="p.totalContatos"> · {{ p.totalContatos }} contato(s)</template>
                 <template v-if="p.organizacaoNome"> · Casa: {{ p.organizacaoNome }}</template>
               </p>
               <div class="mt-2 flex flex-wrap gap-3 text-xs">
@@ -516,6 +568,7 @@ const corSituacao: Record<string, string> = {
       </BaseCard>
 
       <p class="text-xs leading-relaxed text-zinc-500">
+        No kanban, arraste o cartão para outra coluna ou use "Mover para". Leads em azul estão há 7 dias ou mais na mesma etapa.
         Pular etapas conta as anteriores no funil. Eventos, ingressos e receita vêm dos dados reais da casa ligada ao produtor;
         sem casa, ficam em zero. Receita gerada é o total vendido pelo produtor; a receita líquida da plataforma são as taxas
         das vendas online.
@@ -549,6 +602,10 @@ const corSituacao: Record<string, string> = {
         </div>
         <p v-if="erroForm" role="alert" class="text-sm text-red-300 sm:col-span-2">{{ erroForm }}</p>
       </form>
+
+      <div v-if="editandoId" class="mt-6 border-t border-zinc-800 pt-5">
+        <CrmLeadHistorico :produtor-id="editandoId" :hoje="hoje" @alterado="aoAlterarHistorico" />
+      </div>
 
       <template #footer>
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
