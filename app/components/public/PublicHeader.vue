@@ -19,19 +19,8 @@ const inicio = computed(() => (organizacao.value ? `/${organizacao.value.slug}` 
         :to="inicio"
         class="flex min-w-0 items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
       >
-        <img
-          v-if="organizacao?.logoUrl"
-          :src="organizacao.logoUrl"
-          :alt="organizacao.nome"
-          class="h-8 w-auto"
-        />
-        <span v-else-if="organizacao" class="truncate text-lg font-bold text-white">
-          {{ organizacao.nome }}
-        </span>
-        <span
-          v-else
-          class="text-2xl font-extrabold tracking-tight text-white drop-shadow-[0_0_16px_rgba(217,177,56,0.35)]"
-        >
+        <!-- Marca da plataforma em todas as casas; o nome da casa fica no conteudo da pagina. -->
+        <span class="text-2xl font-extrabold tracking-tight text-white drop-shadow-[0_0_16px_rgba(217,177,56,0.35)]">
           {{ PLATAFORMA_NOME }}<span class="text-[#E8C24A]">.</span>
         </span>
       </NuxtLink>

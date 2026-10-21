@@ -60,3 +60,9 @@ test('I) header e footer nao tem marca de casa fixa no codigo', () => {
   assert.ok(!footer.includes('Galeria Zero'))
   assert.ok(!header.includes('Logo horizontal'))
 })
+
+test('J) cabecalho publico mostra a marca Ingressoudi em todas as casas, nao o nome ou a logo da casa', () => {
+  assert.ok(header.includes('{{ PLATAFORMA_NOME }}'))
+  assert.ok(!header.includes('organizacao.logoUrl'))
+  assert.ok(!header.includes('{{ organizacao.nome }}'))
+})
