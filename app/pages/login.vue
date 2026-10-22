@@ -60,6 +60,10 @@ async function entrar() {
       await navigateTo(destino)
       return
     }
+    if (perfil.superAdmin && perfil.perfil === 'ADMINISTRADOR') {
+      await navigateTo('/plataforma/painel')
+      return
+    }
     await navigateTo(perfil.perfil === 'PORTARIA' ? '/portaria' : '/painel')
   } catch (e) {
     erro.value = e instanceof AuthError ? e.message : mensagemLoginErro('ERRO_TEMPORARIO')

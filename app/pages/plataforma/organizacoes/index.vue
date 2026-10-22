@@ -27,7 +27,7 @@ definePageMeta({
   middleware: ['operator-auth']
 })
 
-const { operador, trocarOrganizacao } = useOperatorAuth()
+const { operador, trocarOrganizacao, entrarNaCasa } = useOperatorAuth()
 
 const ehSuperAdmin = computed(() => Boolean(operador.value?.superAdmin))
 const nome = ref('')
@@ -129,6 +129,18 @@ onMounted(() => {
   void carregarCasas()
 })
 
+/** Entra na casa (modo suporte quando nao e membro) e abre o dashboard dela. */
+async function acessarCasa(id: string) {
+  alterandoId.value = id
+  erro.value = ''
+  try {
+    await entrarNaCasa(id, '/painel')
+  } catch {
+    erro.value = 'Não foi possível acessar a organização.'
+    alterandoId.value = ''
+  }
+}
+
 async function acessar(id: string) {
   erro.value = ''
   try {
@@ -213,6 +225,15 @@ async function acessar(id: string) {
             <div class="flex flex-wrap items-center gap-2">
               <AppButton size="sm" variant="outline" :to="`/plataforma/organizacoes/${casa.id}`">
                 Ver detalhes
+              </AppButton>
+              <AppButton
+                v-if="casa.ativo"
+                size="sm"
+                variant="outlineAccent"
+                :disabled="alterandoId === casa.id"
+                @click="acessarCasa(casa.id)"
+              >
+                Acessar
               </AppButton>
               <form class="flex items-center gap-2" @submit.prevent="salvarTaxaCasa(casa)">
                 <label :for="`taxa-${casa.id}`" class="text-xs text-zinc-400">Taxa R$</label>

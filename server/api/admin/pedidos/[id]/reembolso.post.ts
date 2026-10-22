@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<{ motivo?: string }>(event).catch(() => ({}) as { motivo?: string })
   const motivo = String(body?.motivo ?? '').trim().slice(0, 300)
 
-  const admin = await exigirAdminOrganizacaoAtiva(event)
+  const admin = await exigirAdminOrganizacaoAtiva(event, { permitirSuporte: true })
   const client = serverSupabaseServiceRole(event)
 
   const { data: preparo, error: erroPreparo } = await client.rpc('preparar_reembolso_pedido', {

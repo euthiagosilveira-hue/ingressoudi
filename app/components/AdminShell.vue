@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from '#imports'
-import { ClockIcon } from '@heroicons/vue/24/outline'
+import { ClockIcon, LifebuoyIcon } from '@heroicons/vue/24/outline'
 
 import AdminMobileHeader from '~/components/AdminMobileHeader.vue'
 import AdminSidebar from '~/components/AdminSidebar.vue'
@@ -16,10 +16,22 @@ const props = withDefaults(
 
 const route = useRoute()
 const sidebarOpen = ref(false)
-const { operador } = useOperatorAuth()
+const { operador, sairModoSuporte } = useOperatorAuth()
 
+// Super admin dentro de uma casa da qual nao e membro.
+const modoSuporte = computed(() => Boolean(operador.value?.modoSuporte))
 // Casa cadastrada pelo produtor aguardando aprovacao da plataforma.
-const casaEmAnalise = computed(() => operador.value?.organizacao?.aprovada === false)
+const casaEmAnalise = computed(() => !modoSuporte.value && operador.value?.organizacao?.aprovada === false)
+
+const saindo = ref(false)
+async function aoSairModoSuporte() {
+  saindo.value = true
+  try {
+    await sairModoSuporte()
+  } catch {
+    saindo.value = false
+  }
+}
 
 const titulo = computed(() => props.title || String(route.meta.title ?? ''))
 
@@ -78,6 +90,26 @@ onBeforeUnmount(() => {
 
     <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
       <AdminMobileHeader :title="titulo" :expanded="sidebarOpen" @open-menu="abrirMenu" />
+
+      <div
+        v-if="modoSuporte"
+        role="status"
+        class="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-amber-400/40 bg-amber-400 px-5 py-2.5 text-sm text-zinc-950 sm:px-8"
+      >
+        <LifebuoyIcon class="h-5 w-5 shrink-0" />
+        <p class="min-w-0 flex-1">
+          <strong>Modo suporte:</strong> você está em <strong>{{ operador?.organizacao?.nome }}</strong>.
+          Tudo o que fizer aqui é real para o produtor.
+        </p>
+        <button
+          type="button"
+          class="rounded-lg border border-zinc-950/30 px-3 py-1 text-xs font-semibold hover:bg-zinc-950/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950/50"
+          :disabled="saindo"
+          @click="aoSairModoSuporte"
+        >
+          {{ saindo ? 'Saindo...' : 'Sair do modo suporte' }}
+        </button>
+      </div>
 
       <header v-if="$slots.header" class="hidden shrink-0 lg:block">
         <slot name="header" />

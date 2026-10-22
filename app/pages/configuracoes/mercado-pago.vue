@@ -18,7 +18,7 @@ definePageMeta({
   description: 'Conecte a conta Mercado Pago que recebe as vendas Pix.',
   layout: 'admin-layout',
   sidebarActive: 'Configurações',
-  middleware: ['admin-auth']
+  middleware: ['admin-auth', 'sem-modo-suporte']
 })
 
 const route = useRoute()

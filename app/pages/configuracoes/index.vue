@@ -15,6 +15,8 @@ definePageMeta({
 })
 
 const { operador } = useOperatorAuth()
+// No modo suporte, Mercado Pago e Usuarios sao do produtor e ficam bloqueados.
+const modoSuporte = computed(() => Boolean(operador.value?.modoSuporte))
 const linkPublico = computed(() => {
   const slug = operador.value?.organizacao?.slug
   return slug ? `/${slug}` : null
@@ -25,8 +27,16 @@ const linkPublico = computed(() => {
   <div class="space-y-6">
     <PageHeader title="Configurações" subtitle="Gerencie as configurações do sistema." />
 
+    <p
+      v-if="modoSuporte"
+      role="status"
+      class="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100"
+    >
+      No modo suporte, a conta do Mercado Pago e os usuários da equipe ficam bloqueados: são do produtor.
+    </p>
+
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <NuxtLink to="/configuracoes/usuarios" class="group">
+      <NuxtLink v-if="!modoSuporte" to="/configuracoes/usuarios" class="group">
         <BaseCard class="h-full transition-colors duration-200 group-hover:border-amber-400/40">
           <div class="flex items-start gap-3">
             <span
@@ -65,7 +75,7 @@ const linkPublico = computed(() => {
         </BaseCard>
       </NuxtLink>
 
-      <NuxtLink to="/configuracoes/mercado-pago" class="group">
+      <NuxtLink v-if="!modoSuporte" to="/configuracoes/mercado-pago" class="group">
         <BaseCard class="h-full transition-colors duration-200 group-hover:border-amber-400/40">
           <div class="flex items-start gap-3">
             <span

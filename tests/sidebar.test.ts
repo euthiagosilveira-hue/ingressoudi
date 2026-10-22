@@ -115,7 +115,7 @@ test('rotas admin continuam protegidas por admin-auth', () => {
   ]
   for (const pagina of paginas) {
     assert.ok(
-      ler(pagina).includes("middleware: ['admin-auth']"),
+      /middleware: \['admin-auth'[\],]/.test(ler(pagina)),
       `${pagina} deveria exigir admin-auth`
     )
   }

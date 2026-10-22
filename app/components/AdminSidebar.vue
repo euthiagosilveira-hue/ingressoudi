@@ -8,6 +8,7 @@ import {
   CalendarDaysIcon,
   FunnelIcon,
   GlobeAltIcon,
+  PresentationChartBarIcon,
   PresentationChartLineIcon,
   Cog6ToothIcon,
   QrCodeIcon,
@@ -51,7 +52,7 @@ interface NavItem {
 
 const route = useRoute()
 
-const { user, operador, carregado, carregarOperador, trocarOrganizacao, logout } = useOperatorAuth()
+const { user, operador, carregado, carregarOperador, trocarOrganizacao, sairModoSuporte, logout } = useOperatorAuth()
 
 const trocando = ref(false)
 const erroTroca = ref('')
@@ -67,6 +68,17 @@ async function aoTrocarOrganizacao(evento: Event) {
     window.location.assign(perfil?.perfil === 'PORTARIA' ? '/portaria' : '/painel')
   } catch {
     erroTroca.value = 'Não foi possível trocar de organização.'
+    trocando.value = false
+  }
+}
+
+async function aoSairModoSuporte() {
+  trocando.value = true
+  erroTroca.value = ''
+  try {
+    await sairModoSuporte()
+  } catch {
+    erroTroca.value = 'Não foi possível sair do modo suporte.'
     trocando.value = false
   }
 }
@@ -120,37 +132,51 @@ const perfil = computed<PerfilSidebar | null>(() => operador.value?.perfil ?? nu
 const perfilResolvido = computed(() => carregado.value && perfil.value !== null)
 const items = computed(() => {
   if (!perfilResolvido.value) return []
-  const visiveis = itens.filter(
+  return itens.filter(
     (item) =>
       podeVerItemSidebar(item, perfil.value) && (item.to !== '/lista-vip' || listaVipLiberada(operador.value))
   )
-  if (operador.value?.superAdmin) {
-    visiveis.push({
-      to: '/plataforma/organizacoes',
-      icon: BuildingOffice2Icon,
-      label: 'Organizações',
-      allowedProfiles: PERFIS_ADMIN_PORTARIA
-    })
-    visiveis.push({
-      to: '/plataforma/eventos',
-      icon: GlobeAltIcon,
-      label: 'Todos os eventos',
-      allowedProfiles: PERFIS_ADMIN_PORTARIA
-    })
-    visiveis.push({
-      to: '/plataforma/financeiro',
-      icon: PresentationChartLineIcon,
-      label: 'Receita da plataforma',
-      allowedProfiles: PERFIS_ADMIN_PORTARIA
-    })
-    visiveis.push({
-      to: '/plataforma/crm',
-      icon: FunnelIcon,
-      label: 'CRM comercial',
-      allowedProfiles: PERFIS_ADMIN_PORTARIA
-    })
-  }
-  return visiveis
+})
+
+const itensPlataforma: NavItem[] = [
+  {
+    to: '/plataforma/painel',
+    icon: PresentationChartBarIcon,
+    label: 'Painel da plataforma',
+    allowedProfiles: PERFIS_ADMIN_PORTARIA
+  },
+  {
+    to: '/plataforma/organizacoes',
+    icon: BuildingOffice2Icon,
+    label: 'Organizações',
+    allowedProfiles: PERFIS_ADMIN_PORTARIA
+  },
+  { to: '/plataforma/eventos', icon: GlobeAltIcon, label: 'Todos os eventos', allowedProfiles: PERFIS_ADMIN_PORTARIA },
+  {
+    to: '/plataforma/financeiro',
+    icon: PresentationChartLineIcon,
+    label: 'Receita da plataforma',
+    allowedProfiles: PERFIS_ADMIN_PORTARIA
+  },
+  { to: '/plataforma/crm', icon: FunnelIcon, label: 'CRM comercial', allowedProfiles: PERFIS_ADMIN_PORTARIA }
+]
+
+interface GrupoNav {
+  titulo: string
+  itens: NavItem[]
+}
+
+// Super admin ve o menu em duas secoes: a plataforma e a casa ativa.
+const grupos = computed<GrupoNav[]>(() => {
+  if (!perfilResolvido.value) return []
+  if (!operador.value?.superAdmin) return [{ titulo: '', itens: items.value }]
+  const tituloCasa = operador.value.modoSuporte
+    ? `Suporte · ${operador.value.organizacao?.nome ?? 'casa'}`
+    : 'Minha organização'
+  return [
+    { titulo: 'Plataforma', itens: itensPlataforma },
+    { titulo: tituloCasa, itens: items.value }
+  ]
 })
 
 const raizClasses = computed(() =>
@@ -176,16 +202,26 @@ const raizClasses = computed(() =>
     </div>
 
     <nav class="flex flex-1 flex-col gap-1.5">
-      <SidebarItem
-        v-for="item in items"
-        :key="item.label"
-        :to="item.to"
-        :icon="item.icon"
-        :label="item.label"
-        :active="item.label === activeLabel"
-        size="lg"
-        @click="emit('navigate')"
-      />
+      <template v-for="(grupo, g) in grupos" :key="grupo.titulo || g">
+        <div v-if="g > 0" class="mx-2 my-2 h-px bg-zinc-800" />
+        <p
+          v-if="grupo.titulo"
+          class="truncate px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em]"
+          :class="grupo.titulo.startsWith('Suporte') ? 'text-amber-400' : 'text-zinc-500'"
+        >
+          {{ grupo.titulo }}
+        </p>
+        <SidebarItem
+          v-for="item in grupo.itens"
+          :key="item.label"
+          :to="item.to"
+          :icon="item.icon"
+          :label="item.label"
+          :active="item.label === activeLabel"
+          size="lg"
+          @click="emit('navigate')"
+        />
+      </template>
       <InstalarAppBotao variante="sidebar" />
     </nav>
 
@@ -195,7 +231,7 @@ const raizClasses = computed(() =>
       <div v-if="operador.organizacao" class="mt-3">
         <p class="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">Organização</p>
         <select
-          v-if="operador.organizacoes.length > 1"
+          v-if="!operador.modoSuporte && operador.organizacoes.length > 1"
           :value="operador.organizacao.id"
           :disabled="trocando"
           aria-label="Trocar de organização"
@@ -209,6 +245,15 @@ const raizClasses = computed(() =>
         <p v-else class="mt-0.5 truncate text-xs font-semibold text-zinc-200">
           {{ operador.organizacao.nome }}
         </p>
+        <button
+          v-if="operador.modoSuporte"
+          type="button"
+          class="mt-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300"
+          :disabled="trocando"
+          @click="aoSairModoSuporte"
+        >
+          Sair do modo suporte
+        </button>
         <p v-if="erroTroca" class="mt-1 text-xs text-red-400">{{ erroTroca }}</p>
       </div>
       <span

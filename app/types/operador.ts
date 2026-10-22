@@ -25,6 +25,8 @@ export interface OperadorProfile {
   perfil: PerfilOperador
   ativo: boolean
   superAdmin: boolean
+  /** Super admin numa casa da qual nao e membro (entrou para dar suporte). */
+  modoSuporte: boolean
   organizacao: OrganizacaoResumo | null
   organizacoes: OrganizacaoDoOperador[]
 }

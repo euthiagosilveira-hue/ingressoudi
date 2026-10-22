@@ -7,6 +7,7 @@ interface SessaoRpc {
   perfil: string | null
   ativo: boolean
   super_admin: boolean
+  modo_suporte?: boolean
   organizacao: (OrganizacaoResumo & { lista_vip?: boolean }) | null
   organizacoes: Array<OrganizacaoResumo & { perfil: string }>
 }
@@ -22,6 +23,7 @@ function mapearSessao(data: unknown): OperadorProfile | null {
     perfil: (s.perfil ?? '') as PerfilOperador,
     ativo: Boolean(s.ativo),
     superAdmin: Boolean(s.super_admin),
+    modoSuporte: Boolean(s.modo_suporte),
     organizacao: s.organizacao
       ? {
           id: s.organizacao.id,
@@ -62,6 +64,16 @@ export async function definirOrganizacaoAtiva(organizacaoId: string): Promise<Op
   })
   if (error) {
     throw new Error('Não foi possível trocar de organização.')
+  }
+  return mapearSessao(data)
+}
+
+/** Sai do modo suporte: volta para a primeira casa da qual o usuario e membro. */
+export async function sairModoSuporte(): Promise<OperadorProfile | null> {
+  const client = useSupabaseClient()
+  const { data, error } = await client.rpc('sair_modo_suporte')
+  if (error) {
+    throw new Error('Não foi possível sair do modo suporte.')
   }
   return mapearSessao(data)
 }
