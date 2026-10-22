@@ -15,12 +15,12 @@ const props = defineProps<{
       <h3 class="text-sm font-semibold uppercase tracking-[0.15em] text-zinc-400">
         Acessos recentes (portaria)
       </h3>
-      <button
-        type="button"
+      <NuxtLink
+        to="/entradas"
         class="cursor-pointer text-xs font-medium text-amber-400 transition-colors duration-150 hover:text-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
       >
         Ver todos
-      </button>
+      </NuxtLink>
     </div>
 
     <div class="mt-5 flex-1 space-y-4">

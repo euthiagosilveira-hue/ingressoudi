@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 
 import type { EntryByHour } from '~/types/dashboard'
 
@@ -58,13 +57,6 @@ const gridLines = computed(() =>
       <h3 class="text-sm font-semibold uppercase tracking-[0.15em] text-zinc-400">
         Entradas por hora
       </h3>
-      <button
-        type="button"
-        class="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm text-zinc-300 transition-colors duration-150 hover:border-zinc-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
-      >
-        Hoje
-        <ChevronDownIcon class="h-4 w-4 text-zinc-500" />
-      </button>
     </div>
 
     <div class="mt-5 flex-1 overflow-x-auto">
