@@ -126,7 +126,7 @@ test('mensagemErroConvite cobre codigos do endpoint', () => {
 
 test('pagina /configuracoes/usuarios exige admin-auth', () => {
   const pagina = ler('../app/pages/configuracoes/usuarios.vue')
-  assert.ok(pagina.includes("middleware: ['admin-auth']"))
+  assert.ok(pagina.includes("middleware: ['admin-auth', 'sem-modo-suporte']"))
   assert.ok(pagina.includes("sidebarActive: 'Configurações'"))
 })
 

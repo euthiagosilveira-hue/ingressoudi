@@ -150,8 +150,10 @@ test('CRM so para o super admin', () => {
   const pagina = readFileSync(new URL('../app/pages/plataforma/crm.vue', import.meta.url), 'utf8')
   assert.match(pagina, /ehSuperAdmin/)
   const sidebar = readFileSync(new URL('../app/components/AdminSidebar.vue', import.meta.url), 'utf8')
-  const bloco = sidebar.slice(sidebar.indexOf('if (operador.value?.superAdmin)'))
-  assert.ok(bloco.indexOf("'/plataforma/crm'") > 0)
+  // Itens da plataforma so entram nos grupos do menu quando o operador e super admin
+  const itensPlataforma = sidebar.slice(sidebar.indexOf('const itensPlataforma'), sidebar.indexOf('interface GrupoNav'))
+  assert.ok(itensPlataforma.includes("'/plataforma/crm'"))
+  assert.match(sidebar, /if \(!operador\.value\?\.superAdmin\) return \[\{ titulo: '', itens: items\.value \}\]/)
   const migracao = readFileSync(new URL('../supabase/migrations/20261021030000_crm_comercial.sql', import.meta.url), 'utf8')
   assert.match(migracao, /revoke all on table public\.crm_produtores from public, anon, authenticated/)
   assert.match(migracao, /usuario_e_super_admin\(\)/)

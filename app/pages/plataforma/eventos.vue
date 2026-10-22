@@ -8,6 +8,7 @@ import {
   CalendarDaysIcon,
   CurrencyDollarIcon,
   MagnifyingGlassIcon,
+  PresentationChartBarIcon,
   TicketIcon
 } from '@heroicons/vue/24/outline'
 
@@ -39,7 +40,21 @@ definePageMeta({
   middleware: ['operator-auth']
 })
 
-const { operador } = useOperatorAuth()
+const { operador, entrarNaCasa } = useOperatorAuth()
+const abrindoId = ref('')
+
+/** Abre o dashboard do evento em modo suporte (entra na casa dele). */
+async function abrirDashboard(e: EventoPlataforma) {
+  if (abrindoId.value) return
+  abrindoId.value = e.id
+  erro.value = ''
+  try {
+    await entrarNaCasa(e.organizacaoId, `/eventos/${e.id}/dashboard`)
+  } catch {
+    erro.value = 'Não foi possível entrar na casa deste evento.'
+    abrindoId.value = ''
+  }
+}
 const ehSuperAdmin = computed(() => Boolean(operador.value?.superAdmin))
 
 const eventos = ref<EventoPlataforma[]>([])
@@ -230,6 +245,16 @@ onMounted(() => void carregar())
               </div>
             </div>
 
+            <div class="flex shrink-0 flex-wrap gap-2">
+            <button
+              type="button"
+              class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-amber-400/60 px-3 py-2 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-400/10 disabled:opacity-50"
+              :disabled="abrindoId !== ''"
+              @click="abrirDashboard(e)"
+            >
+              <PresentationChartBarIcon class="h-4 w-4" />
+              {{ abrindoId === e.id ? 'Abrindo...' : 'Abrir dashboard' }}
+            </button>
             <a
               :href="linkPublico(e)"
               target="_blank"
@@ -239,12 +264,13 @@ onMounted(() => void carregar())
               <ArrowTopRightOnSquareIcon class="h-4 w-4" />
               Ver página
             </a>
+            </div>
           </li>
         </ul>
       </BaseCard>
 
       <p class="text-xs leading-relaxed text-zinc-500">
-        Visão somente de leitura. Para editar um evento, entre na casa dele pela troca de organização no menu.
+        "Abrir dashboard" entra na casa do evento em modo suporte, com as mesmas opções do produtor.
         Eventos em rascunho não abrem para o público.
       </p>
     </template>

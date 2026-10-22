@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-import { definirOrganizacaoAtiva, obterOperadorAtual } from '~/services/auth/operador'
+import { definirOrganizacaoAtiva, obterOperadorAtual, sairModoSuporte as sairModoSuporteRpc } from '~/services/auth/operador'
 import type { AuthErrorCode, OperadorProfile } from '~/types/operador'
 import { codigoErroPerfil, mensagemLoginErro, perfilPermitido, resolverUid, uidDoUsuario } from '~/utils/auth'
 
@@ -85,6 +85,24 @@ export function useOperatorAuth() {
     return perfil
   }
 
+  /**
+   * Super admin: entra numa casa (modo suporte se nao for membro) e abre o
+   * destino com recarga completa, para nao manter dados da casa anterior.
+   */
+  async function entrarNaCasa(organizacaoId: string, destino = '/painel'): Promise<void> {
+    if (operador.value?.organizacao?.id !== organizacaoId) {
+      await trocarOrganizacao(organizacaoId)
+    }
+    window.location.assign(destino)
+  }
+
+  /** Sai do modo suporte e volta para o Painel da plataforma. */
+  async function sairModoSuporte(): Promise<void> {
+    operador.value = await sairModoSuporteRpc()
+    carregado.value = true
+    window.location.assign('/plataforma/painel')
+  }
+
   async function logout(): Promise<void> {
     await supabase.auth.signOut()
     operador.value = null
@@ -101,6 +119,8 @@ export function useOperatorAuth() {
     logout,
     carregarOperador,
     trocarOrganizacao,
+    entrarNaCasa,
+    sairModoSuporte,
     refreshProfile: carregarOperador
   }
 }

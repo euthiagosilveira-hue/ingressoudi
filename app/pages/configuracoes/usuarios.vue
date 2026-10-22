@@ -6,7 +6,7 @@ definePageMeta({
   description: 'Gerencie quem pode acessar o administrativo e a portaria.',
   layout: 'admin-layout',
   sidebarActive: 'Configurações',
-  middleware: ['admin-auth']
+  middleware: ['admin-auth', 'sem-modo-suporte']
 })
 </script>
 
