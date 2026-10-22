@@ -56,13 +56,13 @@ function entranceLabel(order: RecentOrder) {
               <StatusBadge :status="entranceStatus(order)" :label="entranceLabel(order)" />
             </td>
             <td class="py-4 align-middle">
-              <button
-                type="button"
+              <NuxtLink
+                :to="`/pedidos/${order.pedidoId}`"
                 :aria-label="`Visualizar pedido ${order.id}`"
                 class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-amber-400/60 text-amber-400 transition-colors duration-150 hover:bg-amber-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
               >
                 <EyeIcon class="h-[18px] w-[18px]" />
-              </button>
+              </NuxtLink>
             </td>
           </tr>
         </tbody>
@@ -70,7 +70,7 @@ function entranceLabel(order: RecentOrder) {
     </div>
 
     <div class="mt-6 flex justify-center pt-1">
-      <AppButton variant="outline">Ver todos os pedidos</AppButton>
+      <AppButton variant="outline" to="/pedidos">Ver todos os pedidos</AppButton>
     </div>
   </BaseCard>
 </template>

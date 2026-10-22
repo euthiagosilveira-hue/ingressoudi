@@ -167,6 +167,7 @@ test('mapearPedidosRecentes formata codigo/total/pagamento', () => {
     }
   ])
   assert.equal(r[0].id, '#GZ100700')
+  assert.equal(r[0].pedidoId, 'p1')
   assert.equal(r[0].buyer, 'Comprador Real')
   assert.equal(r[0].tickets, 2)
   assert.equal(r[0].payment, 'Pago')

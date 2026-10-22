@@ -83,6 +83,7 @@ export interface PaymentSlice {
 
 export interface RecentOrder {
   id: string
+  pedidoId: string
   buyer: string
   tickets: number
   total: string

@@ -6,7 +6,6 @@ import {
   BanknotesIcon,
   BuildingOffice2Icon,
   CalendarDaysIcon,
-  ChartBarIcon,
   FunnelIcon,
   GlobeAltIcon,
   PresentationChartLineIcon,
@@ -16,7 +15,6 @@ import {
   Squares2X2Icon,
   TicketIcon,
   UserGroupIcon,
-  UsersIcon,
   XMarkIcon
 } from '@heroicons/vue/24/outline'
 import { useRoute } from '#imports'
@@ -107,9 +105,7 @@ const itens: NavItem[] = [
     label: 'Portaria',
     allowedProfiles: PERFIS_ADMIN_PORTARIA
   },
-  { to: '#', icon: UsersIcon, label: 'Participantes', allowedProfiles: PERFIS_ADMIN },
   { to: '/financeiro', icon: BanknotesIcon, label: 'Financeiro', allowedProfiles: PERFIS_ADMIN },
-  { to: '#', icon: ChartBarIcon, label: 'Relatórios', allowedProfiles: PERFIS_ADMIN },
   {
     to: '/configuracoes',
     icon: Cog6ToothIcon,

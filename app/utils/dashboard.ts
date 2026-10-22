@@ -146,6 +146,7 @@ export function mapearPagamentosPorStatus(
 export function mapearPedidosRecentes(orders: AdminDashboardOrder[]): RecentOrder[] {
   return orders.map((order) => ({
     id: `#${order.codigo}`,
+    pedidoId: order.pedido_id,
     buyer: order.buyer,
     tickets: Number(order.tickets),
     total: formatMoeda(Number(order.total)),
