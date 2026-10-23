@@ -9,6 +9,7 @@ import {
   reembolsarPagamentoMp,
   reembolsoAceito
 } from '../../../../services/payments/mercado-pago/mercado-pago-reembolso'
+import { alertarErroPagamento } from '../../../../utils/alerta-pagamento'
 import { exigirAdminOrganizacaoAtiva } from '../../../../utils/organizacao-admin'
 
 /**
@@ -64,7 +65,14 @@ export default defineEventHandler(async (event) => {
     return { ok: true, valor: Number(op.valor), manual: true }
   }
 
-  const falhar = async (mensagem: string, status = 502) => {
+  const falhar = async (mensagem: string, status = 502, detalhe: Record<string, unknown> | null = null) => {
+    await alertarErroPagamento(event, {
+      tipo: 'REEMBOLSO',
+      organizacaoId: admin.organizacaoId,
+      mensagem: `Reembolso de R$ ${Number(op.valor).toFixed(2).replace('.', ',')} falhou: ${mensagem}`,
+      detalhe,
+      referencia: pedidoId
+    })
     await client.rpc('concluir_reembolso_pedido', {
       p_operacao_id: op.operacao_id,
       p_organizacao_id: admin.organizacaoId,
@@ -124,6 +132,9 @@ export default defineEventHandler(async (event) => {
       transacaoId: op.transacao_id,
       detalhe: detalheErroMp(erro)
     })
-    return falhar(mensagemErroReembolsoMp(erro))
+    return falhar(mensagemErroReembolsoMp(erro), 502, {
+      httpStatus: (erro as { status?: number })?.status ?? null,
+      detalhe: detalheErroMp(erro)
+    })
   }
 })

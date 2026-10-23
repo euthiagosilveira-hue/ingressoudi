@@ -6,6 +6,7 @@ import {
   BanknotesIcon,
   BuildingOffice2Icon,
   CalendarDaysIcon,
+  ExclamationTriangleIcon,
   FunnelIcon,
   GlobeAltIcon,
   PresentationChartBarIcon,
@@ -158,7 +159,13 @@ const itensPlataforma: NavItem[] = [
     label: 'Receita da plataforma',
     allowedProfiles: PERFIS_ADMIN_PORTARIA
   },
-  { to: '/plataforma/crm', icon: FunnelIcon, label: 'CRM comercial', allowedProfiles: PERFIS_ADMIN_PORTARIA }
+  { to: '/plataforma/crm', icon: FunnelIcon, label: 'CRM comercial', allowedProfiles: PERFIS_ADMIN_PORTARIA },
+  {
+    to: '/plataforma/erros-pagamento',
+    icon: ExclamationTriangleIcon,
+    label: 'Erros de pagamento',
+    allowedProfiles: PERFIS_ADMIN_PORTARIA
+  }
 ]
 
 interface GrupoNav {

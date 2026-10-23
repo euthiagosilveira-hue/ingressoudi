@@ -4,6 +4,8 @@ import { ehUuid } from '../../services/payments/payment-service'
 import { MercadoPagoPaymentsProvider, valorConfere } from '../../services/payments/mercado-pago/mercado-pago-payments'
 import { obterAccessTokenOrganizacao } from '../../services/payments/mercado-pago/mercado-pago-conexao'
 import { validarAssinaturaMp } from '../../services/payments/mercado-pago/mercado-pago-signature'
+import { sanitizarErroMercadoPago } from '../../services/payments/mercado-pago/mercado-pago-error'
+import { alertarErroPagamento } from '../../utils/alerta-pagamento'
 
 /**
  * Webhook de pagamentos (multiempresa).
@@ -31,6 +33,12 @@ export default defineEventHandler(async (event) => {
 
   if (secret && xSignature) {
     if (!validarAssinaturaMp({ xSignature, xRequestId, dataId }, secret)) {
+      await alertarErroPagamento(event, {
+        tipo: 'WEBHOOK',
+        mensagem: 'Aviso do Mercado Pago recusado por assinatura inválida. Confira o MERCADO_PAGO_WEBHOOK_SECRET.',
+        detalhe: { tipo, requestId: xRequestId },
+        referencia: dataId
+      })
       setResponseStatus(event, 401)
       return { error: 'ASSINATURA_INVALIDA' }
     }
@@ -56,22 +64,53 @@ export default defineEventHandler(async (event) => {
       organizacaoId = data?.organizacao_id ? String(data.organizacao_id) : ''
     }
   }
-  if (!organizacaoId) return { ok: true, ignorado: true }
+  if (!organizacaoId) {
+    await alertarErroPagamento(event, {
+      tipo: 'WEBHOOK',
+      mensagem: 'Aviso de pagamento do Mercado Pago sem casa identificada; foi ignorado.',
+      detalhe: { mpUserId: body?.user_id ?? null },
+      referencia: dataId
+    })
+    return { ok: true, ignorado: true }
+  }
 
   let accessToken: string | null
   try {
     accessToken = await obterAccessTokenOrganizacao(event, organizacaoId)
-  } catch {
+  } catch (erro) {
+    await alertarErroPagamento(event, {
+      tipo: 'TOKEN_MP',
+      organizacaoId,
+      mensagem: 'Aviso do Mercado Pago chegou, mas não foi possível ler a conexão da casa.',
+      detalhe: { erro: erro instanceof Error ? erro.message : 'erro' },
+      referencia: dataId
+    })
     setResponseStatus(event, 503)
     return { error: 'PAGAMENTO_INDISPONIVEL' }
   }
-  if (!accessToken) return { ok: true, ignorado: true }
+  if (!accessToken) {
+    await alertarErroPagamento(event, {
+      tipo: 'CONTA_MP_DESCONECTADA',
+      organizacaoId,
+      mensagem: 'Aviso de pagamento do Mercado Pago chegou para uma casa sem conta conectada.',
+      referencia: dataId
+    })
+    return { ok: true, ignorado: true }
+  }
 
   let charge
   try {
     charge = await new MercadoPagoPaymentsProvider(accessToken).getCharge(dataId)
-  } catch {
+  } catch (erro) {
     // Pagamento nao pertence a esta conta ou provedor indisponivel: o MP reenviara.
+    const mp = sanitizarErroMercadoPago(erro)
+    await alertarErroPagamento(event, {
+      tipo: 'WEBHOOK',
+      organizacaoId,
+      mensagem: `Não foi possível consultar no Mercado Pago o pagamento avisado${mp.httpStatus ? ` (HTTP ${mp.httpStatus})` : ''}. O Mercado Pago vai reenviar.`,
+      detalhe: { ...mp },
+      referencia: dataId
+    })
     setResponseStatus(event, 502)
     return { error: 'CONSULTA_FALHOU' }
   }
@@ -96,6 +135,13 @@ export default defineEventHandler(async (event) => {
       pagamentoId: pagamento.id,
       organizacaoId
     })
+    await alertarErroPagamento(event, {
+      tipo: 'VALOR_DIVERGENTE',
+      organizacaoId,
+      mensagem: 'Pix aprovado com valor diferente do pedido; não foi confirmado.',
+      detalhe: { valorMp: charge.amount, valorPedido: Number(pagamento.valor) },
+      referencia: String(pagamento.id)
+    })
     return { ok: true, ignorado: true }
   }
 
@@ -105,6 +151,13 @@ export default defineEventHandler(async (event) => {
     p_referencia_externa: charge.externalReference
   })
   if (error) {
+    await alertarErroPagamento(event, {
+      tipo: 'CONFIRMACAO',
+      organizacaoId,
+      mensagem: 'Pix aprovado no Mercado Pago, mas a confirmação no sistema falhou. O Mercado Pago vai reenviar.',
+      detalhe: { erro: error.message },
+      referencia: charge.externalReference
+    })
     setResponseStatus(event, 500)
     return { error: 'ERRO_CONFIRMACAO' }
   }

@@ -19,9 +19,9 @@ export function precisaInstalarNoIphone(userAgent: string, standalone: boolean):
 export function textoSituacaoPush(situacao: SituacaoPush): string {
   switch (situacao) {
     case 'ativado':
-      return 'Este aparelho recebe um aviso quando uma casa nova se cadastrar.'
+      return 'Este aparelho recebe um aviso quando uma casa nova se cadastrar ou houver erro em pagamentos.'
     case 'desativado':
-      return 'Ative para receber um aviso neste aparelho quando uma casa nova se cadastrar.'
+      return 'Ative para receber um aviso neste aparelho quando uma casa nova se cadastrar ou houver erro em pagamentos.'
     case 'bloqueado':
       return 'As notificações estão bloqueadas para este site. Libere nas configurações do navegador e tente de novo.'
     case 'instalar-iphone':
