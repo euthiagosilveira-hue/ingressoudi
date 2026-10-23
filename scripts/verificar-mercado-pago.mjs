@@ -3,7 +3,8 @@
 //   1. lista as casas conectadas (organizacoes_mercado_pago) e a validade do token;
 //   2. testa o token de cada casa no Mercado Pago (GET /users/me);
 //   3. testa o token da plataforma (MERCADO_PAGO_ACCESS_TOKEN), se existir;
-//   4. mostra os ultimos Pix do Mercado Pago gravados no banco.
+//   4. mostra os ultimos Pix do Mercado Pago gravados no banco;
+//   5. confere no Mercado Pago o status real dos Pix que seguem PENDENTE com reserva vencida.
 // Uso:
 //   node --env-file=.env scripts/verificar-mercado-pago.mjs
 // Requer no .env: SUPABASE_DB_URL, INGRESSOUDI_PROJECT_REF e MERCADO_PAGO_TOKEN_KEY.
@@ -103,6 +104,33 @@ try {
   for (const p of pagamentos) {
     console.log(`- ${dataBr(p.criado_em)}  ${p.slug}  R$ ${Number(p.valor).toFixed(2)}  ${p.status}` +
       (p.confirmado_em ? `  (confirmado ${dataBr(p.confirmado_em)})` : ''))
+  }
+
+  console.log('\n=== Pix PENDENTE com reserva vencida (status real no Mercado Pago) ===')
+  const { rows: pendentes } = await client.query(`
+    select o.slug, p.valor, p.cobranca_id, p.criado_em, pe.codigo, pe.status as pedido_status,
+           m.access_token_cifrado
+      from public.pagamentos p
+      join public.pedidos pe on pe.id = p.pedido_id
+      join public.organizacoes o on o.id = p.organizacao_id
+      left join public.organizacoes_mercado_pago m on m.organizacao_id = p.organizacao_id
+     where p.provedor = 'MERCADO_PAGO' and p.status = 'PENDENTE'
+       and pe.reserva_expira_em < now()
+     order by p.criado_em desc`)
+  if (!pendentes.length) console.log('Nenhum.')
+  for (const p of pendentes) {
+    let real = 'nao consultado'
+    try {
+      if (!p.cobranca_id || !p.access_token_cifrado) throw new Error('sem cobranca_id ou sem conexao')
+      const resposta = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(p.cobranca_id)}`, {
+        headers: { Authorization: `Bearer ${decifrarToken(p.access_token_cifrado)}` }
+      })
+      real = resposta.ok ? (await resposta.json()).status : `HTTP ${resposta.status}`
+    } catch (erro) {
+      real = `nao consultado (${erro instanceof Error ? erro.message : 'erro'})`
+    }
+    console.log(`- ${dataBr(p.criado_em)}  ${p.slug}  pedido ${p.codigo} (${p.pedido_status})  ` +
+      `R$ ${Number(p.valor).toFixed(2)}  -> no Mercado Pago: ${real}`)
   }
   console.log('')
 } finally {
