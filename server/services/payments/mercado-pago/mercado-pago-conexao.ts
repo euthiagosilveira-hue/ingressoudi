@@ -2,6 +2,7 @@ import type { H3Event } from 'h3'
 
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+import { alertarErroPagamento } from '../../../utils/alerta-pagamento'
 import { cifrarToken, decifrarToken } from '../../../utils/mercado-pago-cripto'
 import { precisaRenovar, renovarToken, type MpTokenResposta } from './mercado-pago-oauth'
 
@@ -111,6 +112,12 @@ export async function obterAccessTokenOrganizacao(
     console.error('[mercado-pago] renovacao de token falhou', {
       organizacaoId,
       mensagem: erro instanceof Error ? erro.message : 'erro'
+    })
+    await alertarErroPagamento(event, {
+      tipo: 'TOKEN_MP',
+      organizacaoId,
+      mensagem: 'A renovação do token do Mercado Pago falhou. Se continuar, a casa precisa reconectar a conta.',
+      detalhe: { erro: erro instanceof Error ? erro.message.slice(0, 300) : 'erro' }
     })
     return accessToken
   }

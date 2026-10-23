@@ -13,7 +13,8 @@ import {
 } from './mercado-pago/mercado-pago-payments'
 import { obterAccessTokenOrganizacao } from './mercado-pago/mercado-pago-conexao'
 import { deveAutoAprovarPixTeste, deveConfirmarPagamento, deveExpirarReserva, deveIgnorarFalhaConfirmacao } from './mercado-pago/mercado-pago-mapper'
-import { serializarLogErroMercadoPago } from './mercado-pago/mercado-pago-error'
+import { sanitizarErroMercadoPago, serializarLogErroMercadoPago } from './mercado-pago/mercado-pago-error'
+import { alertarErroPagamento } from '../../utils/alerta-pagamento'
 
 export type PaymentServiceErrorCode =
   | 'PAGAMENTO_INDISPONIVEL'
@@ -82,7 +83,14 @@ async function tokenDaOrganizacao(event: H3Event, checkout: CheckoutBackend): Pr
   if (!checkout.organizacao_id) return null
   try {
     return await obterAccessTokenOrganizacao(event, checkout.organizacao_id)
-  } catch {
+  } catch (erro) {
+    await alertarErroPagamento(event, {
+      tipo: 'TOKEN_MP',
+      organizacaoId: checkout.organizacao_id,
+      mensagem: 'Não foi possível ler a conexão Mercado Pago da casa.',
+      detalhe: { erro: erro instanceof Error ? erro.message : 'erro' },
+      referencia: checkout.codigo_pedido
+    })
     throw new PaymentServiceError('PAGAMENTO_INDISPONIVEL', 'Pagamento Pix temporariamente indisponível.', 503)
   }
 }
@@ -183,6 +191,12 @@ export async function criarPix(
 
   const accessToken = await tokenDaOrganizacao(event, checkout)
   if (!accessToken) {
+    await alertarErroPagamento(event, {
+      tipo: 'CONTA_MP_DESCONECTADA',
+      organizacaoId: checkout.organizacao_id,
+      mensagem: 'Um comprador tentou pagar com Pix, mas a casa não tem Mercado Pago conectado.',
+      referencia: checkout.codigo_pedido
+    })
     throw new PaymentServiceError('PAGAMENTO_INDISPONIVEL', MSG_SEM_CONTA, 503)
   }
 
@@ -241,6 +255,14 @@ export async function criarPix(
         erro
       )
     )
+    const mp = sanitizarErroMercadoPago(erro)
+    await alertarErroPagamento(event, {
+      tipo: 'PIX_CRIACAO',
+      organizacaoId: checkout.organizacao_id,
+      mensagem: `Mercado Pago recusou o Pix do pedido ${checkout.codigo_pedido}${mp.httpStatus ? ` (HTTP ${mp.httpStatus})` : ''}${mp.message ? `: ${mp.message}` : '.'}`,
+      detalhe: { ...mp },
+      referencia: checkout.pagamento_id
+    })
     throw new PaymentServiceError('PAGAMENTO_INDISPONIVEL', 'Não foi possível gerar o Pix. Tente novamente.', 502)
   }
 
@@ -254,7 +276,16 @@ export async function criarPix(
     p_pix_copia_cola: charge.pixCopyPaste,
     p_pix_qr_code: charge.pixQrCode
   })
-  if (error) throw new PaymentServiceError('ERRO_INESPERADO', error.message, 500)
+  if (error) {
+    await alertarErroPagamento(event, {
+      tipo: 'PIX_CRIACAO',
+      organizacaoId: checkout.organizacao_id,
+      mensagem: `Pix do pedido ${checkout.codigo_pedido} foi criado no Mercado Pago, mas não foi gravado no sistema.`,
+      detalhe: { erro: error.message, cobrancaId: charge.chargeId },
+      referencia: checkout.pagamento_id
+    })
+    throw new PaymentServiceError('ERRO_INESPERADO', error.message, 500)
+  }
 
   const expiresAt = await estenderReservaAtePix(
     event,
@@ -290,6 +321,13 @@ async function confirmarPagamentoOficial(
       pagamentoId: checkout.pagamento_id,
       pedidoCodigo: checkout.codigo_pedido
     })
+    await alertarErroPagamento(event, {
+      tipo: 'VALOR_DIVERGENTE',
+      organizacaoId: checkout.organizacao_id,
+      mensagem: `Pix aprovado do pedido ${checkout.codigo_pedido} com valor diferente do pedido; não foi confirmado.`,
+      detalhe: { valorMp: charge.amount, valorPedido: Number(checkout.valor_total) },
+      referencia: checkout.pagamento_id
+    })
     return false
   }
 
@@ -303,6 +341,13 @@ async function confirmarPagamentoOficial(
   if (error) {
     const atual = await obterCheckoutBackend(event, checkoutToken)
     if (deveIgnorarFalhaConfirmacao(atual?.pagamento_status)) return true
+    await alertarErroPagamento(event, {
+      tipo: 'CONFIRMACAO',
+      organizacaoId: checkout.organizacao_id,
+      mensagem: `Pix do pedido ${checkout.codigo_pedido} está aprovado no Mercado Pago, mas não foi confirmado no sistema.`,
+      detalhe: { erro: error.message },
+      referencia: checkout.pagamento_id
+    })
     throw new PaymentServiceError('ERRO_INESPERADO', 'Não foi possível confirmar o pagamento.', 500)
   }
 

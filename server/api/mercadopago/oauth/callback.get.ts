@@ -1,5 +1,6 @@
 import { serverSupabaseUser } from '#supabase/server'
 
+import { alertarErroPagamento } from '../../../utils/alerta-pagamento'
 import { verificarEstado } from '../../../utils/mercado-pago-cripto'
 import { exigirAdminOrganizacaoAtiva } from '../../../utils/organizacao-admin'
 import { trocarCodigoPorToken } from '../../../services/payments/mercado-pago/mercado-pago-oauth'
@@ -23,6 +24,12 @@ export default defineEventHandler(async (event) => {
   const state = String(query.state ?? '').trim()
   const tokenKey = String(config.mercadoPagoTokenKey ?? '')
 
+  if (tokenKey.length < 32) {
+    await alertarErroPagamento(event, {
+      tipo: 'CONFIGURACAO',
+      mensagem: 'MERCADO_PAGO_TOKEN_KEY ausente ou curta na Vercel: casas não conseguem conectar o Mercado Pago.'
+    })
+  }
   if (query.error || !code || !state || tokenKey.length < 32) {
     return sendRedirect(event, `${DESTINO}?status=erro`, 302)
   }
@@ -60,6 +67,12 @@ export default defineEventHandler(async (event) => {
     console.error('[mercado-pago] callback OAuth falhou', {
       organizacaoId: estado.o,
       mensagem: erro instanceof Error ? erro.message : 'erro'
+    })
+    await alertarErroPagamento(event, {
+      tipo: 'OAUTH_MP',
+      organizacaoId: estado.o,
+      mensagem: 'A casa tentou conectar o Mercado Pago e a troca do código pelo token falhou.',
+      detalhe: { erro: erro instanceof Error ? erro.message.slice(0, 300) : 'erro' }
     })
     return sendRedirect(event, `${DESTINO}?status=erro`, 302)
   }
