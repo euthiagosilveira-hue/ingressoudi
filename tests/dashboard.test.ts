@@ -186,3 +186,18 @@ test('mapearDashboardEvento usa selo de evento realizado', () => {
   assert.equal(mapearDashboardEvento({ ...EVENTO_BASE, status: 'REALIZADO' }).badge, 'REALIZADO')
   assert.equal(mapearDashboardEvento({ ...EVENTO_BASE, status: 'EM_ANDAMENTO' }).badge, 'AO VIVO')
 })
+
+test('mapearDashboardEvento expoe o slug para o link de venda', () => {
+  assert.equal(mapearDashboardEvento({ ...EVENTO_BASE }).slug, 'festa-gz1')
+  assert.equal(mapearDashboardEvento(null).slug, '')
+})
+
+test('cards do dashboard e da lista de eventos mostram o link de venda com Copiar', () => {
+  const ler = (caminho: string) => readFileSync(fileURLToPath(new URL(caminho, import.meta.url)), 'utf8')
+  const campo = ler('../app/components/eventos/EventSaleLink.vue')
+  assert.ok(campo.includes('Link de venda'))
+  assert.ok(campo.includes('copiarTexto'))
+  assert.ok(campo.includes('linkEvento(props.slug)'))
+  assert.ok(card.includes('<EventSaleLink :slug="props.event.slug"'))
+  assert.ok(ler('../app/components/eventos/EventCard.vue').includes('<EventSaleLink :slug="props.event.slug"'))
+})
