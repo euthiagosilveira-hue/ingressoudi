@@ -31,23 +31,29 @@ export default defineEventHandler(async (event) => {
   const xSignature = getHeader(event, 'x-signature') ?? null
   const xRequestId = getHeader(event, 'x-request-id') ?? null
 
+  // Outros topicos (merchant_order, etc.) sao ignorados antes da assinatura:
+  // nao confirmam nada e nao devem gerar alerta.
+  if (tipo && tipo !== 'payment') return { ok: true, ignorado: true }
+
+  if (!dataId) return { ok: true, ignorado: true }
+
   if (secret && xSignature) {
     if (!validarAssinaturaMp({ xSignature, xRequestId, dataId }, secret)) {
       await alertarErroPagamento(event, {
         tipo: 'WEBHOOK',
         mensagem: 'Aviso do Mercado Pago recusado por assinatura inválida. Confira o MERCADO_PAGO_WEBHOOK_SECRET.',
-        detalhe: { tipo, requestId: xRequestId },
+        detalhe: {
+          tipo,
+          formato: query.topic ? 'IPN' : 'WEBHOOK',
+          comOrg: Boolean(query.org),
+          requestId: xRequestId
+        },
         referencia: dataId
       })
       setResponseStatus(event, 401)
       return { error: 'ASSINATURA_INVALIDA' }
     }
   }
-
-  // Outros topicos (merchant_order, etc.) sao ignorados.
-  if (tipo && tipo !== 'payment') return { ok: true, ignorado: true }
-
-  if (!dataId) return { ok: true, ignorado: true }
 
   const client = serverSupabaseServiceRole(event)
 

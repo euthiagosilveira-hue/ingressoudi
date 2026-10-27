@@ -173,7 +173,7 @@ test('mapMpPaymentToCharge normaliza o pagamento Pix', () => {
 test('montarNotificationUrl so com https', () => {
   assert.equal(
     montarNotificationUrl('https://app.exemplo.com/', ORG),
-    `https://app.exemplo.com/api/webhooks/mercadopago?org=${ORG}`
+    `https://app.exemplo.com/api/webhooks/mercadopago?org=${ORG}&source_news=webhooks`
   )
   assert.equal(montarNotificationUrl('http://localhost:3000', ORG), undefined)
   assert.equal(montarNotificationUrl('', ORG), undefined)
