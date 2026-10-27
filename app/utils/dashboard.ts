@@ -101,6 +101,7 @@ export function mapearDashboardEvento(evento: AdminDashboardEvento | null): Toda
       venue: '—',
       imageUrl: null,
       href: '',
+      slug: '',
       poster: { weekday: '', day: '--', month: '', label: 'EVENTO', name: '—' }
     }
   }
@@ -116,6 +117,7 @@ export function mapearDashboardEvento(evento: AdminDashboardEvento | null): Toda
     venue: evento.local ?? '—',
     imageUrl: imagemValida(evento.imagem_url),
     href: `/eventos/${evento.slug}`,
+    slug: evento.slug,
     poster: {
       weekday: semana ? semana.slice(0, 3).toUpperCase() : '',
       day: dia,

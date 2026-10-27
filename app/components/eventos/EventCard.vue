@@ -5,6 +5,7 @@ import { CalendarDaysIcon, MapPinIcon, TicketIcon } from '@heroicons/vue/24/outl
 import AppButton from '~/components/AppButton.vue'
 import BaseCard from '~/components/BaseCard.vue'
 import EventCardActions from '~/components/eventos/EventCardActions.vue'
+import EventSaleLink from '~/components/eventos/EventSaleLink.vue'
 import EventPublicationBadge from '~/components/eventos/EventPublicationBadge.vue'
 import EventStatusBadge from '~/components/eventos/EventStatusBadge.vue'
 import { formatDataHora, formatMoeda, formatNumero } from '~/utils/format'
@@ -135,6 +136,8 @@ const vendasAbertas = computed(() => props.event.vendasStatus === 'ABERTAS')
           <span class="text-xs text-zinc-500"> disponíveis</span>
         </div>
       </div>
+
+      <EventSaleLink :slug="props.event.slug" class="mt-4" />
 
       <!-- Rodapé -->
       <div class="mt-5 flex items-center justify-between border-t border-zinc-800 pt-4">

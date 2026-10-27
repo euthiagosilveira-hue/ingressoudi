@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { CalendarDaysIcon, ClockIcon, MapPinIcon } from '@heroicons/vue/24/outline'
 
 import AppButton from '~/components/AppButton.vue'
+import EventSaleLink from '~/components/eventos/EventSaleLink.vue'
 import type { TodayEvent } from '~/types/dashboard'
 
 const props = defineProps<{
@@ -101,6 +102,8 @@ const exibirCapa = computed(() => Boolean(props.event.imageUrl) && imagemOk.valu
             <span class="truncate">{{ props.event.venue }}</span>
           </div>
         </div>
+
+        <EventSaleLink :slug="props.event.slug" class="mt-5" />
 
         <div class="mt-auto pt-6">
           <AppButton

@@ -111,6 +111,8 @@ export interface TodayEvent {
   venue: string
   imageUrl: string | null
   href: string
+  /** Slug do evento, usado para montar o link de venda. */
+  slug: string
   poster: {
     weekday: string
     day: string
