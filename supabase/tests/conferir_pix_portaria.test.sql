@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Ingressoudi - Testes: localizar_pix_portaria (portaria confere o Pix de
--- ingresso expirado). Cenario do GZ1: comprador pagou, o aviso do Mercado Pago
+-- ingresso expirado) e iniciar_conferencia_pix_evento (abertura da portaria). Cenario do GZ1: comprador pagou, o aviso do Mercado Pago
 -- nao confirmou, a reserva expirou e a portaria barrou o ingresso.
 -- Executar como owner. begin/rollback (nao persiste dados).
 -- =============================================================================
@@ -56,6 +56,7 @@ declare
   v_token text;
   v_res jsonb;
   v_pix jsonb;
+  v_lista jsonb;
 begin
   insert into auth.users (id) values (v_op);
   insert into public.usuarios (id, nome, email, perfil, ativo)
@@ -131,6 +132,19 @@ begin
     raise exception 'D: outro evento nao deveria localizar o Pix';
   end if;
 
+  -- F) abrir a portaria lista os Pix do evento uma vez; repetir logo depois nao lista
+  v_lista := public.iniciar_conferencia_pix_evento(v_evento);
+  if jsonb_array_length(v_lista) <> 1 or (v_lista->0->>'cobranca_id') <> 'MP-123' then
+    raise exception 'F: esperado 1 Pix do evento, obtido %', v_lista;
+  end if;
+  if jsonb_array_length(public.iniciar_conferencia_pix_evento(v_evento)) <> 0 then
+    raise exception 'F: segunda abertura em menos de 30 min nao deveria listar';
+  end if;
+  update public.eventos set pix_conferido_em = now() - interval '31 minutes' where id = v_evento;
+  if jsonb_array_length(public.iniciar_conferencia_pix_evento(v_evento)) <> 1 then
+    raise exception 'F: depois de 30 min deveria listar de novo';
+  end if;
+
   -- E) Mercado Pago diz que esta pago: confirma e a entrada e liberada
   perform private.confirmar_pagamento((v_pix->>'pagamento_id')::uuid, 'tx-tardio', null);
   v_res := public.registrar_entrada_qr(v_evento, v_token);
@@ -142,6 +156,10 @@ begin
   end if;
   if public.localizar_pix_portaria(v_evento, v_ingresso) is not null then
     raise exception 'E: depois de pago nao ha Pix a conferir';
+  end if;
+  update public.eventos set pix_conferido_em = null where id = v_evento;
+  if jsonb_array_length(public.iniciar_conferencia_pix_evento(v_evento)) <> 0 then
+    raise exception 'E: depois de pago o evento nao tem Pix a conferir';
   end if;
 end $$;
 

@@ -43,6 +43,15 @@ export async function conferirPixSeNecessario(
 }
 
 /**
+ * Ao abrir o evento na portaria: pede ao servidor a conferencia unica dos Pix
+ * do evento ainda nao aprovados (o banco limita a uma a cada 30 minutos).
+ * Roda em segundo plano; falha aqui nao atrapalha a portaria.
+ */
+export function conferirPixDoEvento(eventoId: string): void {
+  $fetch('/api/portaria/conferir-pix-evento', { method: 'POST', body: { eventoId } }).catch(() => null)
+}
+
+/**
  * Registra a entrada pelo QR (unica via de mutacao de portaria).
  * Nenhuma regra de negocio e decidida no frontend: o resultado vem da RPC.
  */

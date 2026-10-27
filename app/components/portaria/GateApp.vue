@@ -10,6 +10,7 @@ import GateQrScanner from '~/components/portaria/GateQrScanner.vue'
 import { useGate } from '~/composables/useGate'
 import { useGateConectividade } from '~/composables/useGateConectividade'
 import { useGateSession } from '~/composables/useGateSession'
+import { conferirPixDoEvento } from '~/services/gate/entradas'
 import type { EventListItem } from '~/types/evento'
 
 const props = defineProps<{
@@ -23,6 +24,11 @@ const { eventosOperacionais, eventoId, eventoAtual, modo, selecionarEvento, defi
 // Sessao local (contador + ultima entrada). Zera ao trocar de evento.
 const { total, ultima, resetar } = useGateSession()
 watch(eventoId, () => resetar())
+
+// Abriu o evento: confere de uma vez os Pix do evento que ainda nao confirmaram.
+watch(eventoId, (id) => {
+  if (id) conferirPixDoEvento(id)
+})
 
 // Indicador de conectividade (nao dispara retry ao voltar online).
 const { online } = useGateConectividade()
