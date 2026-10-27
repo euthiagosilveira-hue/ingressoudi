@@ -62,3 +62,13 @@ export function validarAssinaturaMp(assinatura: AssinaturaMp, secret: string): b
   if (a.length !== b.length) return false
   return timingSafeEqual(a, b)
 }
+
+/**
+ * Aviso no formato antigo (IPN: ?topic=payment&id=...). O Mercado Pago o envia
+ * para a notification_url mesmo com source_news=webhooks, e ele nao fecha com
+ * a assinatura secreta. Nao precisa: o webhook nunca confia no corpo do aviso,
+ * sempre consulta o pagamento oficial com o token da casa antes de confirmar.
+ */
+export function ehAvisoIpn(query: Record<string, unknown>): boolean {
+  return Boolean(query.topic) && !query['data.id']
+}

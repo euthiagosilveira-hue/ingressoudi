@@ -12,6 +12,7 @@ import {
   montarPayloadOrderPix
 } from '../server/services/payments/mercado-pago/mercado-pago-mapper.ts'
 import {
+  ehAvisoIpn,
   montarManifest,
   validarAssinaturaMp
 } from '../server/services/payments/mercado-pago/mercado-pago-signature.ts'
@@ -334,4 +335,11 @@ test('sanitizarErroMercadoPago nunca inclui headers/tokens/segredos', () => {
   assert.ok(!serializado.includes('"authorization"'))
   assert.ok(!serializado.includes('"access_token"'))
   assert.ok(!serializado.includes('"headers"'))
+})
+
+test('aviso IPN (topic + id) segue sem checar a assinatura; Webhook nao', () => {
+  assert.equal(ehAvisoIpn({ org: 'x', topic: 'payment', id: '186338448182' }), true)
+  assert.equal(ehAvisoIpn({ org: 'x', 'data.id': '186338448182', type: 'payment' }), false)
+  assert.equal(ehAvisoIpn({ topic: 'payment', 'data.id': '1' }), false)
+  assert.equal(ehAvisoIpn({}), false)
 })
