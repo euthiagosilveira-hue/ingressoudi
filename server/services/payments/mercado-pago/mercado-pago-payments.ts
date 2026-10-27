@@ -171,7 +171,9 @@ export class MercadoPagoPaymentsProvider implements PaymentProvider {
 export function montarNotificationUrl(siteUrl: string | null | undefined, organizacaoId: string): string | undefined {
   const base = String(siteUrl ?? '').trim().replace(/\/+$/, '')
   if (!base.startsWith('https://')) return undefined
-  return `${base}/api/webhooks/mercadopago?org=${encodeURIComponent(organizacaoId)}`
+  // source_news=webhooks: so o aviso no formato Webhook (assinado); sem ele o
+  // Mercado Pago tambem manda o formato antigo (IPN), que nao passa na assinatura.
+  return `${base}/api/webhooks/mercadopago?org=${encodeURIComponent(organizacaoId)}&source_news=webhooks`
 }
 
 /** Confere o valor cobrado no provedor com o valor esperado (centavos). */
