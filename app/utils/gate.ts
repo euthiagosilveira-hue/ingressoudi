@@ -64,6 +64,17 @@ export function mapearResultadoEntradaRpc(raw: Record<string, unknown>): Registr
   }
 }
 
+/**
+ * Ingresso barrado por estar expirado ou ainda nao pago (mensagens de
+ * private.processar_entrada): a portaria confere o Pix no Mercado Pago, porque
+ * o comprador pode ter pago sem o sistema ter recebido o aviso.
+ */
+export function resultadoPedeConferenciaPix(r: RegistrarEntradaQrResult): boolean {
+  if (r.resultado !== 'INVALIDO' || !r.ingressoId) return false
+  const m = r.mensagem.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  return m.includes('expirado') || m.includes('nao pago')
+}
+
 /** Chave estavel de um resultado de busca (ingresso ou VIP). */
 export function chaveBuscaPortaria(item: IngressoBuscaNome): string {
   return item.origem === 'VIP'

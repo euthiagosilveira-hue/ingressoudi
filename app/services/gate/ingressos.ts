@@ -1,5 +1,6 @@
 import type { IngressoBuscaNome, RegistrarEntradaQrResult, TipoErroGate } from '~/types/gate'
 import { mapearResultadoEntradaRpc } from '~/utils/gate'
+import { conferirPixSeNecessario } from '~/services/gate/entradas'
 import { classificarErroGate, comTimeout } from '~/utils/portariaErro'
 
 export class GateError extends Error {
@@ -75,7 +76,17 @@ export async function registrarEntradaNome(input: {
     })
   )
   if (error) throw mapearErro(error)
-  return mapearResultadoEntradaRpc(data as Record<string, unknown>)
+  return conferirPixSeNecessario(
+    input.eventoId,
+    mapearResultadoEntradaRpc(data as Record<string, unknown>),
+    async () => {
+      const novo = await comTimeout(
+        client.rpc('registrar_entrada_nome', { p_evento_id: input.eventoId, p_ingresso_id: input.ingressoId })
+      )
+      if (novo.error) throw mapearErro(novo.error)
+      return mapearResultadoEntradaRpc(novo.data as Record<string, unknown>)
+    }
+  )
 }
 
 /** Registra entrada de convidado VIP (RPC registrar_entrada_vip). */
