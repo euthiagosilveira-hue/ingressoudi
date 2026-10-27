@@ -1,5 +1,5 @@
 import type { RegistrarEntradaQrResult, TipoErroGate } from '~/types/gate'
-import { mapearResultadoEntradaRpc } from '~/utils/gate'
+import { mapearResultadoEntradaRpc, resultadoPedeConferenciaPix } from '~/utils/gate'
 import { classificarErroGate, comTimeout } from '~/utils/portariaErro'
 
 export class GateError extends Error {
@@ -14,6 +14,32 @@ export class GateError extends Error {
 
 function mapearErro(error: unknown): GateError {
   return new GateError(classificarErroGate(error), 'Falha na comunicação com o sistema.')
+}
+
+const TIMEOUT_CONFERENCIA_PIX_MS = 8000
+
+/**
+ * Ingresso barrado como expirado ou nao pago: pede ao servidor para conferir o
+ * Pix no Mercado Pago. Se estava pago, o pedido e confirmado e a entrada e
+ * registrada de novo. Qualquer falha devolve o resultado original.
+ */
+export async function conferirPixSeNecessario(
+  eventoId: string,
+  resultado: RegistrarEntradaQrResult,
+  repetir: () => Promise<RegistrarEntradaQrResult>
+): Promise<RegistrarEntradaQrResult> {
+  if (!resultadoPedeConferenciaPix(resultado)) return resultado
+  try {
+    const r = await $fetch<{ confirmado?: boolean }>('/api/portaria/conferir-pix', {
+      method: 'POST',
+      body: { eventoId, ingressoId: resultado.ingressoId },
+      timeout: TIMEOUT_CONFERENCIA_PIX_MS
+    })
+    if (!r?.confirmado) return resultado
+    return await repetir()
+  } catch {
+    return resultado
+  }
 }
 
 /**
@@ -34,5 +60,15 @@ export async function registrarEntradaQr(input: {
 
   if (error) throw mapearErro(error)
 
-  return mapearResultadoEntradaRpc(data as Record<string, unknown>)
+  return conferirPixSeNecessario(
+    input.eventoId,
+    mapearResultadoEntradaRpc(data as Record<string, unknown>),
+    async () => {
+      const novo = await comTimeout(
+        client.rpc('registrar_entrada_qr', { p_evento_id: input.eventoId, p_qr_token: input.qrToken })
+      )
+      if (novo.error) throw mapearErro(novo.error)
+      return mapearResultadoEntradaRpc(novo.data as Record<string, unknown>)
+    }
+  )
 }
