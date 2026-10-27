@@ -3,7 +3,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 import { ehUuid } from '../../services/payments/payment-service'
 import { MercadoPagoPaymentsProvider, valorConfere } from '../../services/payments/mercado-pago/mercado-pago-payments'
 import { obterAccessTokenOrganizacao } from '../../services/payments/mercado-pago/mercado-pago-conexao'
-import { validarAssinaturaMp } from '../../services/payments/mercado-pago/mercado-pago-signature'
+import { ehAvisoIpn, validarAssinaturaMp } from '../../services/payments/mercado-pago/mercado-pago-signature'
 import { sanitizarErroMercadoPago } from '../../services/payments/mercado-pago/mercado-pago-error'
 import { alertarErroPagamento } from '../../utils/alerta-pagamento'
 
@@ -11,7 +11,8 @@ import { alertarErroPagamento } from '../../utils/alerta-pagamento'
  * Webhook de pagamentos (multiempresa).
  *
  *  1. Assinatura: se MERCADO_PAGO_WEBHOOK_SECRET estiver definido e o header
- *     x-signature vier, ela precisa ser valida (senao 401).
+ *     x-signature vier, ela precisa ser valida (senao 401). Avisos IPN nao sao
+ *     assinados com ela e seguem sem essa checagem.
  *  2. Organizacao: pelo parametro `org` da notification_url ou, na falta dele,
  *     pelo `user_id` (conta do vendedor) informado no corpo.
  *  3. Nunca confia no payload: consulta o pagamento oficial com o token da
@@ -37,14 +38,15 @@ export default defineEventHandler(async (event) => {
 
   if (!dataId) return { ok: true, ignorado: true }
 
-  if (secret && xSignature) {
+  // IPN nao e assinado com a assinatura secreta: segue sem checar (seguro,
+  // o pagamento e conferido no Mercado Pago logo abaixo).
+  if (secret && xSignature && !ehAvisoIpn(query)) {
     if (!validarAssinaturaMp({ xSignature, xRequestId, dataId }, secret)) {
       await alertarErroPagamento(event, {
         tipo: 'WEBHOOK',
         mensagem: 'Aviso do Mercado Pago recusado por assinatura inválida. Confira o MERCADO_PAGO_WEBHOOK_SECRET.',
         detalhe: {
           tipo,
-          formato: query.topic ? 'IPN' : 'WEBHOOK',
           comOrg: Boolean(query.org),
           requestId: xRequestId
         },
