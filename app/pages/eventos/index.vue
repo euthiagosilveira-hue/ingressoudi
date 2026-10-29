@@ -9,6 +9,7 @@ import PageHeader from '~/components/PageHeader.vue'
 import EventEmptyState from '~/components/eventos/EventEmptyState.vue'
 import EventFilters from '~/components/eventos/EventFilters.vue'
 import EventGrid from '~/components/eventos/EventGrid.vue'
+import OrganizacaoVitrineLink from '~/components/eventos/OrganizacaoVitrineLink.vue'
 import { useAdminEvents } from '~/composables/useAdminEvents'
 import { useCopiarLinkEvento } from '~/composables/useCopiarLinkEvento'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
@@ -122,6 +123,8 @@ function acaoEvento(payload: { id: string; action: string }) {
       </AppButton>
     </template>
   </PageHeader>
+
+  <OrganizacaoVitrineLink class="mb-5" />
 
   <EventFilters v-model="filtros" />
 
