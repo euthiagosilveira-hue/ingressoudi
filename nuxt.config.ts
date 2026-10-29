@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
   modules: ['@nuxtjs/supabase', '@nuxtjs/tailwindcss'],
+  css: ['~/assets/css/campos-ios.css'],
   app: {
     head: {
       htmlAttrs: { lang: 'pt-BR' },
