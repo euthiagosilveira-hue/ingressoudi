@@ -1,0 +1,14 @@
+/*
+ * iPhone/iPad (Safari e app instalado) dao zoom automatico ao tocar num campo
+ * com fonte menor que 16px, cortando a tela. Nesses aparelhos os campos passam
+ * a ter no minimo 16px. Campos com fonte maior (text-lg em diante) ficam como
+ * estao. O zoom com dois dedos continua funcionando.
+ * O @supports so vale no iOS, entao computador e Android nao mudam.
+ */
+@supports (-webkit-touch-callout: none) {
+  input:not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-4xl),
+  select:not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-4xl),
+  textarea:not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-4xl) {
+    font-size: 16px !important;
+  }
+}
