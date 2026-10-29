@@ -45,6 +45,14 @@ const qrSrc = computed(() => {
 const pixCopiaCola = computed(() => valorQrPix(props.pix))
 const temPix = computed(() => Boolean(pixCopiaCola.value || qrSrc.value))
 const copiado = ref(false)
+// Depois da primeira copia o aviso de voltar fica fixo na tela.
+const jaCopiou = ref(false)
+
+const PASSOS_PIX = [
+  'Copie o código.',
+  'Pague no app do banco.',
+  'Volte aqui, seu ingresso aparece nesta tela.'
+] as const
 
 async function copiar() {
   const codigo = pixCopiaCola.value
@@ -56,6 +64,7 @@ async function copiar() {
       copiaLegado(codigo)
     }
     copiado.value = true
+    jaCopiou.value = true
     setTimeout(() => {
       copiado.value = false
     }, 2000)
@@ -63,6 +72,7 @@ async function copiar() {
     try {
       copiaLegado(codigo)
       copiado.value = true
+      jaCopiou.value = true
       setTimeout(() => {
         copiado.value = false
       }, 2000)
@@ -107,6 +117,24 @@ function copiaLegado(texto: string) {
       <div v-if="temPix" class="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
         <p class="text-sm font-semibold text-zinc-200">Pagamento via Pix</p>
 
+        <ol
+          class="space-y-2 rounded-xl border-2 border-amber-400/60 bg-amber-400/10 p-4"
+          aria-label="Como pagar"
+        >
+          <li
+            v-for="(passo, indice) in PASSOS_PIX"
+            :key="passo"
+            class="flex items-start gap-3 text-sm font-semibold text-amber-100"
+          >
+            <span
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-zinc-950"
+            >
+              {{ indice + 1 }}
+            </span>
+            <span class="pt-0.5">{{ passo }}</span>
+          </li>
+        </ol>
+
         <div v-if="pixCopiaCola" class="mx-auto w-full max-w-[280px] rounded-xl bg-white p-3">
           <QrcodeVue
             :value="pixCopiaCola"
@@ -140,6 +168,13 @@ function copiaLegado(texto: string) {
             <ClipboardDocumentIcon class="h-4 w-4" />
             {{ copiado ? 'Código Pix copiado.' : 'Copiar código Pix' }}
           </button>
+          <p
+            v-if="jaCopiou"
+            role="status"
+            class="rounded-xl border-2 border-green-500/60 bg-green-500/10 p-3 text-center text-sm font-bold text-green-200"
+          >
+            Depois de pagar, volte para esta página!
+          </p>
         </div>
       </div>
 

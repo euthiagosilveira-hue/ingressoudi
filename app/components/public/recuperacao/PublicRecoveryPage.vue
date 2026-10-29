@@ -3,46 +3,90 @@ import { computed, reactive, ref } from 'vue'
 import { ChevronRightIcon, ExclamationTriangleIcon, TicketIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 import { useIngressosSalvos } from '~/composables/useIngressosSalvos'
-import { recuperarIngressos } from '~/services/public/recuperacao'
+import { buscarIngressosPorContato, recuperarIngressos } from '~/services/public/recuperacao'
 import { formatDataHora } from '~/utils/format'
-import { eventoJaPassou } from '~/utils/ingressosSalvos'
-import { normalizarCodigoPedido, normalizarTelefone } from '~/utils/publicIngressos'
+import { eventoJaPassou, salvarPedido } from '~/utils/ingressosSalvos'
+import { emailPareceValido, normalizarCodigoPedido, normalizarTelefone } from '~/utils/publicIngressos'
 import { rotaIngressosPedido } from '~/utils/rotasPublicas'
 
-const { pedidos, remover } = useIngressosSalvos()
+const { pedidos, recarregar, remover } = useIngressosSalvos()
 const temSalvos = computed(() => pedidos.value.length > 0)
 
-const form = reactive({ codigo: '', telefone: '' })
+// "contato" (telefone + e-mail) e o padrao; "codigo" cobre quem tem o codigo do pedido.
+const modo = ref<'contato' | 'codigo'>('contato')
+const form = reactive({ codigo: '', telefone: '', email: '' })
 const carregando = ref(false)
 const erro = ref('')
+const aviso = ref('')
 
-const podeEnviar = computed(
-  () => normalizarCodigoPedido(form.codigo).length >= 3 && normalizarTelefone(form.telefone).length >= 10
-)
+const podeEnviar = computed(() => {
+  if (normalizarTelefone(form.telefone).length < 10) return false
+  return modo.value === 'contato'
+    ? emailPareceValido(form.email)
+    : normalizarCodigoPedido(form.codigo).length >= 3
+})
+
+function trocarModo(novo: 'contato' | 'codigo') {
+  modo.value = novo
+  erro.value = ''
+  aviso.value = ''
+}
 
 async function enviar() {
   erro.value = ''
+  aviso.value = ''
   if (!podeEnviar.value) {
-    erro.value = 'Informe o código do pedido e o telefone usado na compra.'
+    erro.value =
+      modo.value === 'contato'
+        ? 'Informe o telefone e o e-mail usados na compra.'
+        : 'Informe o código do pedido e o telefone usado na compra.'
     return
   }
 
   carregando.value = true
   try {
-    const resultado = await recuperarIngressos({
-      codigo: form.codigo,
-      telefone: form.telefone
-    })
-    if (!resultado.ok || !resultado.token) {
-      erro.value = 'Não foi possível localizar uma compra com os dados informados.'
-      return
+    if (modo.value === 'contato') {
+      await buscarPorContato()
+    } else {
+      await buscarPorCodigo()
     }
-    await navigateTo({ path: '/meus-ingressos', query: { recovery: resultado.token } })
   } catch {
-    erro.value = 'Não foi possível recuperar agora. Tente novamente.'
+    erro.value = 'Não foi possível buscar agora. Tente novamente.'
   } finally {
     carregando.value = false
   }
+}
+
+async function buscarPorContato() {
+  const encontrados = await buscarIngressosPorContato({
+    telefone: form.telefone,
+    email: form.email
+  })
+  if (!encontrados.length) {
+    erro.value = 'Não encontramos ingressos pagos com esse telefone e e-mail.'
+    return
+  }
+  // Guarda no aparelho para a pessoa nao precisar buscar de novo.
+  for (const p of encontrados) salvarPedido(p)
+  recarregar()
+  if (encontrados.length === 1) {
+    const p = encontrados[0]!
+    await navigateTo(rotaIngressosPedido(p.organizacaoSlug, p.eventoSlug, p.checkoutToken))
+    return
+  }
+  aviso.value = `Encontramos ${encontrados.length} pedidos. Eles ficaram salvos neste aparelho.`
+}
+
+async function buscarPorCodigo() {
+  const resultado = await recuperarIngressos({
+    codigo: form.codigo,
+    telefone: form.telefone
+  })
+  if (!resultado.ok || !resultado.token) {
+    erro.value = 'Não foi possível localizar uma compra com os dados informados.'
+    return
+  }
+  await navigateTo({ path: '/meus-ingressos', query: { recovery: resultado.token } })
 }
 </script>
 
@@ -55,7 +99,7 @@ async function enviar() {
         </span>
         <h1 class="text-lg font-bold uppercase tracking-wide text-amber-400">Meus ingressos</h1>
         <p v-if="!temSalvos" class="text-sm text-zinc-400">
-          Informe o código do pedido e o telefone usado na compra para acessar seus ingressos.
+          Informe o telefone e o e-mail usados na compra para acessar seus ingressos.
         </p>
       </header>
 
@@ -94,9 +138,9 @@ async function enviar() {
           </li>
         </ul>
         <div class="border-t border-zinc-800 pt-5">
-          <p class="text-sm font-semibold text-zinc-200">Comprou em outro aparelho?</p>
+          <p class="text-sm font-semibold text-zinc-200">Não achou seu ingresso aqui?</p>
           <p class="mt-1 text-xs text-zinc-500">
-            Informe o código do pedido e o telefone usado na compra.
+            Busque pelo telefone e e-mail usados na compra.
           </p>
         </div>
       </div>
@@ -110,8 +154,16 @@ async function enviar() {
         <span>{{ erro }}</span>
       </p>
 
+      <p
+        v-if="aviso"
+        role="status"
+        class="rounded-xl border border-green-500/40 bg-green-500/5 p-3 text-sm text-green-300"
+      >
+        {{ aviso }}
+      </p>
+
       <form class="space-y-4" @submit.prevent="enviar">
-        <div class="space-y-1.5">
+        <div v-if="modo === 'codigo'" class="space-y-1.5">
           <label for="codigo" class="block text-xs font-semibold uppercase tracking-wide text-zinc-400">
             Código do pedido
           </label>
@@ -139,14 +191,37 @@ async function enviar() {
           />
         </div>
 
+        <div v-if="modo === 'contato'" class="space-y-1.5">
+          <label for="email" class="block text-xs font-semibold uppercase tracking-wide text-zinc-400">
+            E-mail usado na compra
+          </label>
+          <input
+            id="email"
+            v-model="form.email"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-amber-400/60 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+            placeholder="voce@email.com"
+          />
+        </div>
+
         <button
           type="submit"
           :disabled="carregando"
           class="flex w-full items-center justify-center rounded-xl bg-amber-400 px-6 py-4 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors duration-150 hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 disabled:pointer-events-none disabled:opacity-50"
         >
-          {{ carregando ? 'Recuperando...' : 'Recuperar ingressos' }}
+          {{ carregando ? 'Buscando...' : 'Buscar meus ingressos' }}
         </button>
       </form>
+
+      <button
+        type="button"
+        class="block w-full text-center text-xs font-medium text-amber-400 underline-offset-4 transition-colors hover:text-amber-300 hover:underline"
+        @click="trocarModo(modo === 'contato' ? 'codigo' : 'contato')"
+      >
+        {{ modo === 'contato' ? 'Tenho o código do pedido' : 'Buscar por telefone e e-mail' }}
+      </button>
 
       <NuxtLink
         to="/"

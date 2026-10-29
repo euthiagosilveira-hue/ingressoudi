@@ -1,6 +1,8 @@
 export interface PublicNavItem {
   to: string
   label: string
+  /** Mostrado como botao (ex.: "Meus ingressos"). */
+  destaque?: boolean
 }
 
 /**
@@ -8,10 +10,11 @@ export interface PublicNavItem {
  * garantindo os mesmos destinos em desktop e mobile.
  *
  * Nunca incluir tokens (qr, checkout ou recovery): o acesso aos ingressos
- * passa sempre pela validacao de pedido + telefone em /recuperar-ingressos.
+ * passa sempre pelos pedidos salvos no aparelho ou pela busca (telefone +
+ * e-mail, ou codigo do pedido + telefone) em /recuperar-ingressos.
  */
 export const PUBLIC_NAV_ITEMS: readonly PublicNavItem[] = [
-  { to: '/recuperar-ingressos', label: 'Meus ingressos' }
+  { to: '/recuperar-ingressos', label: 'Meus ingressos', destaque: true }
 ]
 
 /** Na pagina de uma casa, "Eventos" leva ao catalogo daquela casa. */

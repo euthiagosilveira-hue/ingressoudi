@@ -275,13 +275,45 @@ export function usePublicPayment() {
     }
   }
 
+  /**
+   * Comprador voltou do app do banco: confere o pagamento na hora, sem esperar
+   * o proximo ciclo do polling (que o celular costuma pausar em segundo plano).
+   */
+  let conferindoVolta = false
+  async function aoVoltarParaPagina() {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+    if (carregando.value || conferindoVolta || estado.value !== 'PENDENTE') return
+    conferindoVolta = true
+    try {
+      recalcular()
+      if (segundos.value <= 0) {
+        await finalizarExpiracao()
+        return
+      }
+      await sincronizarStatus()
+      if (estado.value === 'PENDENTE' && !pollTimer) iniciarPolling()
+    } finally {
+      conferindoVolta = false
+    }
+  }
+
+  function aoMudarVisibilidade() {
+    void aoVoltarParaPagina()
+  }
+
   onMounted(() => {
     void carregar()
+    document.addEventListener('visibilitychange', aoMudarVisibilidade)
+    window.addEventListener('focus', aoMudarVisibilidade)
+    window.addEventListener('pageshow', aoMudarVisibilidade)
   })
 
   onUnmounted(() => {
     pararTimer()
     pararPolling()
+    document.removeEventListener('visibilitychange', aoMudarVisibilidade)
+    window.removeEventListener('focus', aoMudarVisibilidade)
+    window.removeEventListener('pageshow', aoMudarVisibilidade)
   })
 
   return {
@@ -300,6 +332,7 @@ export function usePublicPayment() {
     verificandoExpiracao,
     carregar,
     atualizar,
+    conferirAgora: aoVoltarParaPagina,
     tentarPix: carregarPix
   }
 }
