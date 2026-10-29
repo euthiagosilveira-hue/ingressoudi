@@ -55,11 +55,12 @@ test('textoQuantidadeEventos', () => {
   assert.equal(textoQuantidadeEventos(4), '4 eventos na agenda')
 })
 
-test('vitrine usa a marca da casa, agrupa por mes e permite compartilhar', () => {
+test('vitrine agrupa por mes, permite compartilhar e nao mostra logo da casa', () => {
   const pagina = readFileSync(new URL('../app/pages/[organizacao]/index.vue', import.meta.url), 'utf8')
   assert.match(pagina, /agruparEventosPorMes/)
   assert.match(pagina, /var\(--cor-casa\)/)
-  assert.match(pagina, /organizacao\.logoUrl/)
+  // Decisao do dono: a unica logo na area publica e a do Ingressoudi.
+  assert.doesNotMatch(pagina, /logoUrl|iniciais\(/)
   assert.match(pagina, /Compartilhar/)
 })
 

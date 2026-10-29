@@ -10,7 +10,7 @@ import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { listarEventosPublicosOrganizacao, obterOrganizacaoPublica } from '~/services/public/catalogo'
 import { formatData, formatHora, formatMoeda } from '~/utils/format'
 import { copiarTexto } from '~/utils/linkEvento'
-import { iniciais, tituloPublico } from '~/utils/marca'
+import { tituloPublico } from '~/utils/marca'
 import { rotaEvento } from '~/utils/rotasPublicas'
 import { agruparEventosPorMes, seloSituacaoVitrine, textoQuantidadeEventos, urlVitrine } from '~/utils/vitrine'
 
@@ -93,20 +93,6 @@ useSeoMeta({
   <div v-else class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
     <header class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex min-w-0 items-center gap-4">
-        <img
-          v-if="organizacao.logoUrl"
-          :src="organizacao.logoUrl"
-          :alt="`Logo de ${organizacao.nome}`"
-          class="h-16 w-16 shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900 object-cover sm:h-20 sm:w-20"
-        />
-        <div
-          v-else
-          class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-xl font-extrabold sm:h-20 sm:w-20 sm:text-2xl"
-          style="background: var(--cor-casa); color: var(--cor-casa-texto)"
-          aria-hidden="true"
-        >
-          {{ iniciais(organizacao.nome) }}
-        </div>
         <div class="min-w-0">
           <h1 class="truncate text-2xl font-bold text-white sm:text-3xl">{{ organizacao.nome }}</h1>
           <p class="mt-1 text-sm text-zinc-400">{{ textoQuantidadeEventos(eventos.length) }}</p>
