@@ -79,9 +79,11 @@ begin
   -- D) outro tipo avisa; erro sem casa (ou casa inexistente) tambem
   v_res := public.registrar_erro_pagamento('REEMBOLSO', v_org, 'Reembolso recusado', null, null);
   if (v_res->>'enviar')::boolean is not true then raise exception 'D: outro tipo deveria avisar (%)', v_res; end if;
+  -- o banco real ja pode ter alertas WEBHOOK sem casa: conta so o que este teste gravou
+  select count(*) into v_n from public.erros_pagamento where tipo = 'WEBHOOK' and organizacao_id is null;
   v_res := public.registrar_erro_pagamento('WEBHOOK', gen_random_uuid(), 'Assinatura invalida', null, null);
   if (v_res->>'enviar')::boolean is not true then raise exception 'D: erro sem casa deveria avisar (%)', v_res; end if;
-  select count(*) into v_n from public.erros_pagamento where tipo = 'WEBHOOK' and organizacao_id is null;
+  select count(*) - v_n into v_n from public.erros_pagamento where tipo = 'WEBHOOK' and organizacao_id is null;
   if v_n <> 1 then raise exception 'D: casa inexistente deveria virar null (%)', v_n; end if;
 
   -- E) depois de 15 minutos volta a avisar
