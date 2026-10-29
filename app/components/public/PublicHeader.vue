@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { TicketIcon } from '@heroicons/vue/24/outline'
 
 import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { PLATAFORMA_NOME } from '~/utils/marca'
@@ -30,8 +31,13 @@ const inicio = computed(() => (organizacao.value ? `/${organizacao.value.slug}` 
           v-for="item in navItems"
           :key="item.to"
           :to="item.to"
-          class="text-zinc-300 transition-colors hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+          :class="
+            item.destaque
+              ? 'flex items-center gap-1.5 rounded-full border border-amber-400/70 bg-amber-400/10 px-3 py-1.5 font-semibold text-amber-300 transition-colors hover:bg-amber-400 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50'
+              : 'text-zinc-300 transition-colors hover:text-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50'
+          "
         >
+          <TicketIcon v-if="item.destaque" class="h-4 w-4" />
           {{ item.label }}
         </NuxtLink>
       </nav>

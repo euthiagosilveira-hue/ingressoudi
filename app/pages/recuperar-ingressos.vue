@@ -8,7 +8,7 @@ definePageMeta({
 
 useSeoMeta({
   title: tituloPublico('Recuperar ingressos'),
-  description: 'Recupere seus ingressos usando o código do pedido e o telefone da compra.'
+  description: 'Encontre seus ingressos pelo telefone e e-mail da compra.'
 })
 </script>
 

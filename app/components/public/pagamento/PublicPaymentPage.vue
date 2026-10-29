@@ -11,6 +11,7 @@ import PaymentUnavailableState from '~/components/public/pagamento/PaymentUnavai
 import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { usePublicPayment } from '~/composables/usePublicPayment'
 import { removerPedidoSalvo, salvarPedido } from '~/utils/ingressosSalvos'
+import { rotaIngressosPedido } from '~/utils/rotasPublicas'
 
 const {
   token,
@@ -65,6 +66,23 @@ watch(
       eventoSlug: valor.eventoSlug,
       eventoNome: valor.eventoNome,
       quantidade: valor.quantidade
+    })
+  },
+  { immediate: true }
+)
+
+// Pagamento confirmado (inclusive quando o comprador volta do banco): abre os
+// ingressos sozinho, sem precisar de clique.
+let abriuIngressos = false
+watch(
+  estado,
+  (situacao) => {
+    if (abriuIngressos || situacao !== 'PAGO' || !import.meta.client) return
+    const valor = checkout.value
+    if (!valor || !token.value || !valor.eventoSlug) return
+    abriuIngressos = true
+    void navigateTo(rotaIngressosPedido(valor.organizacaoSlug, valor.eventoSlug, token.value), {
+      replace: true
     })
   },
   { immediate: true }

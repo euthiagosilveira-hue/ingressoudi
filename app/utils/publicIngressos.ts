@@ -26,6 +26,25 @@ export function normalizarTelefone(valor: string): string {
   return (valor ?? '').replace(/\D/g, '')
 }
 
+/** Normaliza e-mail (trim + minusculo). */
+export function normalizarEmail(valor: string): string {
+  return (valor ?? '').trim().toLowerCase()
+}
+
+/** E-mail com formato minimo (algo@algo.algo). */
+export function emailPareceValido(valor: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizarEmail(valor))
+}
+
+/**
+ * Link do WhatsApp com a mensagem pronta para o comprador mandar o link dos
+ * ingressos para ele mesmo (no WhatsApp, "Voce" fica no topo dos contatos).
+ */
+export function linkWhatsappIngressos(input: { url: string; eventoNome: string }): string {
+  const texto = `Meus ingressos para ${input.eventoNome}: ${input.url}`
+  return `https://wa.me/?text=${encodeURIComponent(texto)}`
+}
+
 /** Mensagem amigavel para erros de carregamento dos ingressos. */
 export function mensagemTicketsErro(code: TicketsErrorCode): string {
   const mapa: Record<TicketsErrorCode, string> = {

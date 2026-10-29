@@ -23,7 +23,7 @@ const props = defineProps<{
       <div>
         <p class="text-lg font-bold uppercase tracking-wide text-green-300">Pagamento confirmado</p>
         <p class="text-sm text-zinc-400">
-          Seu pedido foi confirmado e seus ingressos já estão disponíveis.
+          Seu pedido foi confirmado. Abrindo seus ingressos...
         </p>
       </div>
     </div>

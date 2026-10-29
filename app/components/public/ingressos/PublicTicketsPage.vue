@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { ChatBubbleLeftRightIcon } from '@heroicons/vue/24/outline'
 
 import PublicOrderSummary from '~/components/public/ingressos/PublicOrderSummary.vue'
 import PublicTicketCard from '~/components/public/ingressos/PublicTicketCard.vue'
@@ -10,7 +11,8 @@ import PublicTicketsUnavailable from '~/components/public/ingressos/PublicTicket
 import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { usePublicTickets } from '~/composables/usePublicTickets'
 import { removerPedidoSalvo, salvarPedido } from '~/utils/ingressosSalvos'
-import { mensagemTicketsErro } from '~/utils/publicIngressos'
+import { linkWhatsappIngressos, mensagemTicketsErro } from '~/utils/publicIngressos'
+import { rotaIngressosPedido } from '~/utils/rotasPublicas'
 
 const { token, recoveryToken, tickets, carregando, erro, estado, carregar } = usePublicTickets()
 
@@ -52,6 +54,19 @@ watch(
   },
   { immediate: true }
 )
+
+// Link permanente da compra (checkout_token) para o comprador mandar ao proprio
+// WhatsApp. Pelo acesso de recuperacao o link expira, entao o botao nao aparece.
+const origem = ref('')
+onMounted(() => {
+  origem.value = window.location.origin
+})
+const linkWhatsapp = computed(() => {
+  const valor = tickets.value
+  if (!valor || !token.value || !origem.value) return null
+  const url = origem.value + rotaIngressosPedido(valor.organizacaoSlug, valor.eventoSlug, token.value)
+  return linkWhatsappIngressos({ url, eventoNome: valor.eventoNome })
+})
 
 const tituloIndisponivel = computed(() => {
   const status = tickets.value?.pedidoStatus
@@ -101,6 +116,21 @@ const descricaoIndisponivel = computed(() => {
 
       <div class="mt-6 space-y-6">
         <PublicOrderSummary :tickets="tickets" />
+
+        <div v-if="linkWhatsapp" class="space-y-2">
+          <a
+            :href="linkWhatsapp"
+            target="_blank"
+            rel="noopener"
+            class="flex w-full items-center justify-center gap-2 rounded-xl bg-green-500 px-6 py-4 text-sm font-bold uppercase tracking-wide text-zinc-950 transition-colors duration-150 hover:bg-green-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/60"
+          >
+            <ChatBubbleLeftRightIcon class="h-5 w-5" />
+            Enviar para meu WhatsApp
+          </a>
+          <p class="text-center text-xs text-zinc-500">
+            Mande o link para você mesmo e não perca seus ingressos.
+          </p>
+        </div>
 
         <div class="space-y-4">
           <PublicTicketCard
