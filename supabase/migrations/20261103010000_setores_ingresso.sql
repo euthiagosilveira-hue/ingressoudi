@@ -34,6 +34,7 @@ declare
   v_def text;
 begin
   v_def := pg_get_functiondef(p_funcao::regprocedure);
+  v_def := replace(v_def, E'\r', '');
   if position(p_novo in v_def) > 0 then
     return;
   end if;
@@ -239,6 +240,7 @@ begin
   end if;
 
   v_def := pg_get_functiondef('private.criar_reserva(uuid,text,text,text,text[],boolean[])'::regprocedure);
+  v_def := replace(v_def, E'\r', '');
 
   if position('p_meias boolean[] DEFAULT NULL::boolean[])' in v_def) = 0
      or position(v_lote_antigo in v_def) = 0
@@ -843,6 +845,7 @@ begin
   end if;
 
   v_def := pg_get_functiondef('private.criar_lote_admin(uuid,text,integer,numeric,tipo_ativacao_lote,timestamptz)'::regprocedure);
+  v_def := replace(v_def, E'\r', '');
 
   if position('p_ativacao_em timestamp with time zone DEFAULT NULL::timestamp with time zone)' in v_def) = 0
      or position('insert into public.lotes (evento_id, nome, ordem, quantidade, preco, tipo_ativacao, ativacao_em, status)' in v_def) = 0
