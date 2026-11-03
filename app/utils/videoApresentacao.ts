@@ -1,6 +1,6 @@
 // Video de apresentacao da plataforma, exibido na pagina inicial.
 // Cole aqui o link do YouTube (publico ou nao listado). Vazio = bloco escondido.
-export const VIDEO_APRESENTACAO_URL = ''
+export const VIDEO_APRESENTACAO_URL = 'https://youtu.be/URZ9zDLiaWM'
 
 const ID_YOUTUBE = /^[A-Za-z0-9_-]{11}$/
 
