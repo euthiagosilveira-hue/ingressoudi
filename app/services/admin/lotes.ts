@@ -1,10 +1,12 @@
 import type { EventListItem, SalesStatus } from '~/types/evento'
-import type { LotActivationType, LotListItem } from '~/types/lote'
+import type { LotActivationType, LotListItem, SetorListItem } from '~/types/lote'
 import {
   mapearEventoLotesParaListItem,
   mapearLoteAdminParaListItem,
+  mapearSetorAdmin,
   type EventoLotesAdminRow,
-  type LoteAdminRow
+  type LoteAdminRow,
+  type SetorAdminRow
 } from '~/utils/lotes'
 
 interface RpcErrorLike {
@@ -16,11 +18,13 @@ export interface LotesAdminData {
   evento: EventListItem
   estoqueAntecipado: number
   lotes: LotListItem[]
+  setores: SetorListItem[]
 }
 
 interface ListarLotesRpc {
   evento: EventoLotesAdminRow | null
   lotes: LoteAdminRow[] | null
+  setores?: SetorAdminRow[] | null
 }
 
 export interface CriarLoteAdminInput {
@@ -29,6 +33,8 @@ export interface CriarLoteAdminInput {
   preco: number
   tipoAtivacao: LotActivationType
   ativacaoEm: string | null
+  /** Setor do lote; null = primeiro setor do evento. */
+  setorId?: string | null
 }
 
 function mensagemErroLote(error: RpcErrorLike | null, padrao: string): string {
@@ -36,6 +42,30 @@ function mensagemErroLote(error: RpcErrorLike | null, padrao: string): string {
   const mensagem = (e.message ?? '').toLowerCase()
 
   // Regras de dominio conhecidas (mensagens da RPC) tem prioridade.
+  if (mensagem.includes('ja existe um setor')) {
+    return 'Já existe um setor com esse nome neste evento.'
+  }
+  if (mensagem.includes('nome do setor muito longo')) {
+    return 'O nome do setor pode ter no máximo 40 caracteres.'
+  }
+  if (mensagem.includes('informe o nome do setor')) {
+    return 'Informe o nome do setor.'
+  }
+  if (mensagem.includes('setor com lotes')) {
+    return 'Este setor tem lotes e não pode ser excluído.'
+  }
+  if (mensagem.includes('pelo menos um setor')) {
+    return 'O evento precisa de pelo menos um setor.'
+  }
+  if (mensagem.includes('limite de 10 setores')) {
+    return 'O evento pode ter no máximo 10 setores.'
+  }
+  if (mensagem.includes('nao permite alterar setores')) {
+    return 'Este evento não permite mais alterar setores.'
+  }
+  if (mensagem.includes('nao pertence ao evento')) {
+    return 'Este setor não pertence ao evento.'
+  }
   if (mensagem.includes('vendas encerradas')) {
     return 'Abra as vendas do evento antes de ativar um lote.'
   }
@@ -95,7 +125,8 @@ export async function listarLotesAdmin(eventoId: string): Promise<LotesAdminData
   return {
     evento: mapearEventoLotesParaListItem(payload.evento),
     estoqueAntecipado: payload.evento.estoque_antecipado,
-    lotes: (payload.lotes ?? []).map(mapearLoteAdminParaListItem)
+    lotes: (payload.lotes ?? []).map(mapearLoteAdminParaListItem),
+    setores: (payload.setores ?? []).map(mapearSetorAdmin)
   }
 }
 
@@ -111,10 +142,39 @@ export async function criarLoteAdmin(
     p_quantidade: input.quantidade,
     p_preco: input.preco,
     p_tipo_ativacao: input.tipoAtivacao,
-    p_ativacao_em: input.ativacaoEm
+    p_ativacao_em: input.ativacaoEm,
+    // So enviado quando o evento tem setores (banco ja com a migracao de setores).
+    ...(input.setorId ? { p_setor_id: input.setorId } : {})
   })
   if (error) {
     throw new Error(mensagemErroLote(error, 'Não foi possível criar o lote.'))
+  }
+}
+
+/** Cria um setor no evento (ex.: Camarote). RPC segura, ADMINISTRADOR. */
+export async function criarSetorAdmin(eventoId: string, nome: string): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('criar_setor_admin', { p_evento_id: eventoId, p_nome: nome })
+  if (error) {
+    throw new Error(mensagemErroLote(error, 'Não foi possível criar o setor.'))
+  }
+}
+
+/** Renomeia um setor. RPC segura, ADMINISTRADOR. */
+export async function renomearSetorAdmin(setorId: string, nome: string): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('renomear_setor_admin', { p_setor_id: setorId, p_nome: nome })
+  if (error) {
+    throw new Error(mensagemErroLote(error, 'Não foi possível renomear o setor.'))
+  }
+}
+
+/** Exclui um setor sem lotes. RPC segura, ADMINISTRADOR. */
+export async function excluirSetorAdmin(setorId: string): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('excluir_setor_admin', { p_setor_id: setorId })
+  if (error) {
+    throw new Error(mensagemErroLote(error, 'Não foi possível excluir o setor.'))
   }
 }
 

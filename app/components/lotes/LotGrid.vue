@@ -6,6 +6,8 @@ import type { LotListItem } from '~/types/lote'
 const props = defineProps<{
   lotes: LotListItem[]
   vendasAbertas: boolean
+  /** Numera os lotes pela posicao na lista (lotes de um setor). */
+  numerarPorPosicao?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -20,9 +22,10 @@ const emit = defineEmits<{
 
     <div v-else class="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
       <LotCard
-        v-for="lote in props.lotes"
+        v-for="(lote, indice) in props.lotes"
         :key="lote.id"
         :lote="lote"
+        :posicao="props.numerarPorPosicao ? indice + 1 : undefined"
         :vendas-abertas="props.vendasAbertas"
         @action="emit('action', { id: lote.id, action: $event })"
       />

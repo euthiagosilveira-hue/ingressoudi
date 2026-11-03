@@ -4,20 +4,24 @@ import {
   ativarLoteAdmin,
   atualizarLoteAdmin,
   criarLoteAdmin,
+  criarSetorAdmin,
   definirVendasEventoAdmin,
   encerrarLoteAdmin,
+  excluirSetorAdmin,
   listarLotesAdmin,
+  renomearSetorAdmin,
   type AtualizarLoteAdminInput,
   type CriarLoteAdminInput
 } from '~/services/admin/lotes'
 import type { EventListItem } from '~/types/evento'
-import type { LotListItem } from '~/types/lote'
+import type { LotListItem, SetorListItem } from '~/types/lote'
 
 /** Estado administrativo dos lotes de um evento: RPC real, loading e refresh. */
 export function useAdminLots(eventoId: string) {
   const evento = ref<EventListItem | null>(null)
   const estoqueAntecipado = ref(0)
   const lotes = ref<LotListItem[]>([])
+  const setores = ref<SetorListItem[]>([])
   const carregando = ref(true)
   const erro = ref('')
   const processando = ref(false)
@@ -30,10 +34,12 @@ export function useAdminLots(eventoId: string) {
       evento.value = dados.evento
       estoqueAntecipado.value = dados.estoqueAntecipado
       lotes.value = dados.lotes
+      setores.value = dados.setores
     } catch (e) {
       erro.value = e instanceof Error ? e.message : 'Não foi possível carregar os lotes.'
       evento.value = null
       lotes.value = []
+      setores.value = []
     } finally {
       carregando.value = false
     }
@@ -80,6 +86,20 @@ export function useAdminLots(eventoId: string) {
     }
   }
 
+  async function executar(acao: () => Promise<void>) {
+    processando.value = true
+    try {
+      await acao()
+      await carregar()
+    } finally {
+      processando.value = false
+    }
+  }
+
+  const criarSetor = (nome: string) => executar(() => criarSetorAdmin(eventoId, nome))
+  const renomearSetor = (setorId: string, nome: string) => executar(() => renomearSetorAdmin(setorId, nome))
+  const excluirSetor = (setorId: string) => executar(() => excluirSetorAdmin(setorId))
+
   async function abrirVendas() {
     processando.value = true
     try {
@@ -98,6 +118,7 @@ export function useAdminLots(eventoId: string) {
     evento,
     estoqueAntecipado,
     lotes,
+    setores,
     carregando,
     erro,
     processando,
@@ -107,6 +128,9 @@ export function useAdminLots(eventoId: string) {
     ativar,
     encerrar,
     abrirVendas,
+    criarSetor,
+    renomearSetor,
+    excluirSetor,
     refresh: carregar
   }
 }

@@ -47,7 +47,7 @@ begin
     raise exception 'A: anon nao pode executar listar_lotes_admin';
   end if;
   if has_function_privilege('anon',
-       'public.criar_lote_admin(uuid,text,integer,numeric,public.tipo_ativacao_lote,timestamptz)'::regprocedure,
+       'public.criar_lote_admin(uuid,text,integer,numeric,public.tipo_ativacao_lote,timestamptz,uuid)'::regprocedure,
        'EXECUTE') then
     raise exception 'A: anon nao pode executar criar_lote_admin';
   end if;

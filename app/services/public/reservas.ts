@@ -103,6 +103,9 @@ function mapearErro(error: RpcErrorLike): ReservaError {
   if (mensagem.includes('cancelado')) {
     return new ReservaError('EVENTO_CANCELADO', error.message ?? 'Evento cancelado')
   }
+  if (mensagem.includes('setor')) {
+    return new ReservaError('EVENTO_INDISPONIVEL', error.message ?? 'Setor indisponível')
+  }
   if (mensagem.includes('lote ativo') || mensagem.includes('nenhum lote')) {
     return new ReservaError('SEM_LOTE', error.message ?? 'Sem lote ativo')
   }
@@ -132,7 +135,8 @@ function mapearErro(error: RpcErrorLike): ReservaError {
  */
 export async function criarReserva(
   eventoId: string,
-  draft: CheckoutDraft
+  draft: CheckoutDraft,
+  setorId?: string | null
 ): Promise<CheckoutReservation> {
   const client = useSupabaseClient()
 
@@ -144,7 +148,9 @@ export async function criarReserva(
     p_comprador_email: draft.comprador.email.trim(),
     p_nomes_participantes: draft.participantes.map((participante) => participante.nome.trim()),
     // Um valor por participante, na mesma ordem. So enviado quando ha meia.
-    ...(temMeia ? { p_meias: draft.participantes.map((participante) => participante.meia === true) } : {})
+    ...(temMeia ? { p_meias: draft.participantes.map((participante) => participante.meia === true) } : {}),
+    // Setor escolhido (evento com Pista/Camarote etc.). Sem setor, o banco usa o primeiro.
+    ...(setorId ? { p_setor_id: setorId } : {})
   })
 
   if (error) throw mapearErro(error)

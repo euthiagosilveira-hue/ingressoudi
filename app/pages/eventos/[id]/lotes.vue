@@ -20,6 +20,7 @@ const {
   evento,
   estoqueAntecipado,
   lotes,
+  setores,
   carregando,
   erro,
   processando,
@@ -28,6 +29,9 @@ const {
   ativar,
   encerrar,
   abrirVendas,
+  criarSetor,
+  renomearSetor,
+  excluirSetor,
   refresh
 } = useAdminLots(String(route.params.id))
 
@@ -38,7 +42,8 @@ async function aoCriar(payload: LotPayload) {
       quantidade: payload.quantidade,
       preco: payload.preco,
       tipoAtivacao: payload.tipoAtivacao,
-      ativacaoEm: payload.ativacaoEm
+      ativacaoEm: payload.ativacaoEm,
+      setorId: payload.setorId
     })
     toast.success('Lote criado com sucesso!')
   } catch (e) {
@@ -78,6 +83,22 @@ async function aoEncerrar(id: string, ativarProximo: boolean) {
     toast.error(e instanceof Error ? e.message : 'Não foi possível encerrar o lote.')
   }
 }
+
+async function acaoSetor(acao: () => Promise<void>, sucesso: string, falha: string) {
+  try {
+    await acao()
+    toast.success(sucesso)
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : falha)
+  }
+}
+
+const aoCriarSetor = (nome: string) =>
+  acaoSetor(() => criarSetor(nome), `Setor ${nome} criado.`, 'Não foi possível criar o setor.')
+const aoRenomearSetor = (id: string, nome: string) =>
+  acaoSetor(() => renomearSetor(id, nome), 'Setor renomeado.', 'Não foi possível renomear o setor.')
+const aoExcluirSetor = (id: string) =>
+  acaoSetor(() => excluirSetor(id), 'Setor excluído.', 'Não foi possível excluir o setor.')
 
 async function aoAbrirVendas() {
   try {
@@ -119,12 +140,16 @@ async function aoAbrirVendas() {
       :evento="evento"
       :lotes="lotes"
       :estoque-antecipado="estoqueAntecipado"
+      :setores="setores"
       :processando="processando"
       @criar="aoCriar"
       @atualizar="aoAtualizar"
       @ativar="aoAtivar"
       @encerrar="aoEncerrar"
       @abrir-vendas="aoAbrirVendas"
+      @criar-setor="aoCriarSetor"
+      @renomear-setor="aoRenomearSetor"
+      @excluir-setor="aoExcluirSetor"
     />
     <EventMeiaCard :evento-id="String(route.params.id)" />
   </div>

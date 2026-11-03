@@ -1,17 +1,31 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import BaseCard from '~/components/BaseCard.vue'
 import BaseInput from '~/components/BaseInput.vue'
+import BaseSelect from '~/components/BaseSelect.vue'
 import FormField from '~/components/FormField.vue'
 import { formatMoeda } from '~/utils/format'
-import type { LotFormErrors, LotFormValue } from '~/types/lote'
+import type { LotFormErrors, LotFormValue, SetorListItem } from '~/types/lote'
+import type { SelectOption } from '~/types/ui'
 
 const props = withDefaults(
   defineProps<{
     value: LotFormValue
     errors: LotFormErrors
     ordemBloqueada?: boolean
+    /** Setores do evento: o campo so aparece quando ha mais de um. */
+    setores?: SetorListItem[]
+    setorBloqueado?: boolean
   }>(),
-  { ordemBloqueada: false }
+  { ordemBloqueada: false, setores: () => [], setorBloqueado: false }
+)
+
+const setorOptions = computed<SelectOption[]>(() =>
+  props.setores.map((setor) => ({ value: setor.id, label: setor.nome }))
+)
+const nomeSetorAtual = computed(
+  () => props.setores.find((setor) => setor.id === props.value.setorId)?.nome ?? ''
 )
 
 type CampoNumerico = 'ordem' | 'quantidade' | 'preco'
@@ -33,6 +47,17 @@ function atribuirNumero(campo: CampoNumerico, entrada: string) {
     </h3>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <FormField
+        v-if="props.setores.length > 1"
+        label="Setor"
+        required
+        :hint="props.setorBloqueado ? 'O setor não muda depois que o lote é criado.' : 'Área do evento vendida neste lote.'"
+        class="sm:col-span-2"
+      >
+        <BaseInput v-if="props.setorBloqueado" :model-value="nomeSetorAtual" disabled />
+        <BaseSelect v-else v-model="value.setorId" :options="setorOptions" />
+      </FormField>
+
       <FormField label="Nome do lote" required :error="errors.nome" class="sm:col-span-2">
         <BaseInput
           v-model="value.nome"

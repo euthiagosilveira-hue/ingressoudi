@@ -10,6 +10,8 @@ export interface PublicTicket {
   participanteNome: string
   /** true = meia-entrada (comprovar o direito na entrada). */
   meia?: boolean
+  /** Setor do ingresso (ex.: Camarote); so vem quando o evento tem setores. */
+  setorNome?: string | null
   status: PublicTicketStatus
   qrToken: string | null
   utilizadoEm: string | null

@@ -1,5 +1,5 @@
 import type { EventStatus, SalesStatus } from '~/types/evento'
-import type { PublicEventDetail, PublicVendaSituacao } from '~/types/publicEvento'
+import type { PublicEventDetail, PublicSetor, PublicVendaSituacao } from '~/types/publicEvento'
 
 /**
  * Linha retornada pelaa RPC publica (snake_case).
@@ -128,16 +128,52 @@ export async function listarEventosPublicosOrganizacao(orgSlug: string): Promise
   }))
 }
 
+interface SetorPublicoRow {
+  setor_id: string
+  nome: string
+  ordem: number
+  lote_id: string | null
+  lote_nome: string | null
+  preco: number | string | null
+  situacao_venda: string | null
+}
+
+export function mapearSetorPublico(row: SetorPublicoRow): PublicSetor {
+  return {
+    setorId: row.setor_id,
+    nome: row.nome,
+    ordem: Number(row.ordem),
+    loteId: row.lote_id,
+    loteNome: row.lote_nome,
+    preco: row.preco === null ? null : Number(row.preco),
+    situacaoVenda: (row.situacao_venda ?? 'SEM_LOTE') as PublicVendaSituacao
+  }
+}
+
+/** Setores do evento. Falha de leitura nao bloqueia a pagina (fica sem setores). */
+async function listarSetoresEventoPublico(orgSlug: string, eventoSlug: string): Promise<PublicSetor[]> {
+  const client = useSupabaseClient()
+  const { data, error } = await client.rpc('listar_setores_evento_publico', {
+    p_org_slug: orgSlug,
+    p_evento_slug: eventoSlug
+  })
+  if (error || !Array.isArray(data)) return []
+  return (data as SetorPublicoRow[]).map(mapearSetorPublico)
+}
+
 /** Evento publicado de uma casa (inclui taxa visivel e marca da casa). */
 export async function obterEventoPublicoOrganizacao(
   orgSlug: string,
   eventoSlug: string
 ): Promise<PublicEventDetail | null> {
   const client = useSupabaseClient()
-  const { data, error } = await client.rpc('obter_evento_publico_organizacao', {
-    p_org_slug: orgSlug,
-    p_evento_slug: eventoSlug
-  })
+  const [{ data, error }, setores] = await Promise.all([
+    client.rpc('obter_evento_publico_organizacao', {
+      p_org_slug: orgSlug,
+      p_evento_slug: eventoSlug
+    }),
+    listarSetoresEventoPublico(orgSlug, eventoSlug)
+  ])
   if (error) throw new CatalogoIndisponivelError(error.message)
   const row = ((data ?? []) as EventoPublicoOrganizacaoRow[])[0]
   if (!row) return null
@@ -148,7 +184,8 @@ export async function obterEventoPublicoOrganizacao(
     organizacaoSlug: row.organizacao_slug,
     organizacaoNome: row.organizacao_nome,
     organizacaoLogoUrl: row.organizacao_logo_url,
-    meiaEntradaAtiva: row.meia_entrada_ativa === true
+    meiaEntradaAtiva: row.meia_entrada_ativa === true,
+    setores
   }
 }
 

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import BaseModal from '~/components/BaseModal.vue'
 import LotForm from '~/components/lotes/LotForm.vue'
-import type { LotFormMode, LotFormValue, LotOrdemRef, LotPayload } from '~/types/lote'
+import type { LotFormMode, LotFormValue, LotOrdemRef, LotPayload, SetorListItem } from '~/types/lote'
 
 const props = withDefaults(
   defineProps<{
@@ -16,6 +16,7 @@ const props = withDefaults(
     ordemBloqueada?: boolean
     submitLabel?: string
     submitting?: boolean
+    setores?: SetorListItem[]
   }>(),
   {
     mode: 'create',
@@ -25,7 +26,8 @@ const props = withDefaults(
     ativacaoBloqueada: false,
     ordemBloqueada: false,
     submitLabel: 'Salvar lote',
-    submitting: false
+    submitting: false,
+    setores: () => []
   }
 )
 
@@ -59,6 +61,7 @@ const subtitulo = computed(() =>
       :ordem-bloqueada="props.ordemBloqueada"
       :submit-label="props.submitLabel"
       :submitting="props.submitting"
+      :setores="props.setores"
       @submit="emit('submit', $event)"
       @cancel="emit('cancel')"
     />

@@ -19,6 +19,8 @@ export interface RegistrarEntradaQrResult {
   mensagem: string
   /** Ingresso de meia-entrada: conferir o documento do participante. */
   meia?: boolean
+  /** Setor do ingresso (ex.: CAMAROTE); so vem quando o evento tem setores. */
+  setorNome?: string | null
 }
 
 /** Erros de transporte/permissao do scanner (nao sao resultados de negocio). */
@@ -68,6 +70,8 @@ export interface IngressoBuscaNome {
   telefone: string | null
   /** Ingresso de meia-entrada (VIP nunca e meia). */
   meia?: boolean
+  /** Setor do ingresso; so vem quando o evento tem setores. */
+  setorNome?: string | null
 }
 
 export type TipoEntradaGate = 'INGRESSO' | 'VIP'

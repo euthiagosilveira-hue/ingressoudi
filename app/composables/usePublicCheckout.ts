@@ -176,7 +176,7 @@ export function usePublicCheckout(
         await new Promise((resolve) => setTimeout(resolve, 600))
         reserva.value = criarReservaMock(evento, draft)
       } else {
-        reserva.value = await criarReservaSupabase(evento.eventoId, draft)
+        reserva.value = await criarReservaSupabase(evento.eventoId, draft, evento.setorId)
       }
       step.value = 'RESERVA_CRIADA'
     } catch (erro) {

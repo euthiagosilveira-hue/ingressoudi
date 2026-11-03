@@ -30,15 +30,27 @@ const props = defineProps<{
 
 const { viewModel, extras, erro } = useAdminDashboard(props.eventoId)
 
+// Evento com mais de um setor: vendas separadas por setor.
+const setores = computed(() => {
+  const lista = extras.value?.setores ?? []
+  return lista.length > 1 ? lista : []
+})
+
 const resumoEvento = computed(() => {
   const x = extras.value
   if (!x) return []
   return [
-    {
-      label: 'Lote atual',
-      value: x.loteAtual ? `${x.loteAtual.nome} · ${formatMoeda(Number(x.loteAtual.preco))}` : 'Nenhum lote ativo',
-      detail: x.loteAtual ? `${x.loteAtual.disponiveis} ingressos disponíveis` : 'Ative um lote em Lotes'
-    },
+    setores.value.length
+      ? {
+          label: 'Setores',
+          value: `${setores.value.length} setores`,
+          detail: 'Vendas de cada setor logo abaixo'
+        }
+      : {
+          label: 'Lote atual',
+          value: x.loteAtual ? `${x.loteAtual.nome} · ${formatMoeda(Number(x.loteAtual.preco))}` : 'Nenhum lote ativo',
+          detail: x.loteAtual ? `${x.loteAtual.disponiveis} ingressos disponíveis` : 'Ative um lote em Lotes'
+        },
     {
       label: 'Vendas',
       value: x.vendasStatus === 'ABERTAS' ? 'Abertas' : 'Encerradas',
@@ -146,6 +158,27 @@ const metrics = computed<Metric[]>(() => {
       <p class="mt-0.5 text-xs text-zinc-400">{{ item.detail }}</p>
     </div>
   </div>
+
+  <section v-if="setores.length" class="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
+    <h2 class="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Vendas por setor</h2>
+    <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div v-for="setor in setores" :key="setor.setorId" class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+        <p class="text-base font-bold text-white">{{ setor.nome }}</p>
+        <p class="mt-1 text-sm text-zinc-300">
+          {{ setor.vendidos }} vendidos<template v-if="setor.capacidade"> de {{ setor.capacidade }}</template>
+          · {{ formatMoeda(setor.receita) }}
+        </p>
+        <p class="text-xs text-zinc-400">{{ setor.utilizados }} já entraram</p>
+        <p class="mt-1 text-xs text-zinc-500">
+          {{
+            setor.loteAtual
+              ? `${setor.loteAtual.nome} · ${formatMoeda(setor.loteAtual.preco)} · ${setor.loteAtual.disponiveis} disponíveis`
+              : 'Sem lote ativo'
+          }}
+        </p>
+      </div>
+    </div>
+  </section>
 
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-12">
     <TodayEventCard class="lg:col-span-1 xl:col-span-4" :event="viewModel.evento" />

@@ -55,6 +55,17 @@ export interface AdminDashboardData {
   entradasRecentes: AdminDashboardEntry[]
 }
 
+/** Vendas de um setor do evento (Pista, Camarote...). */
+export interface AdminPainelSetor {
+  setorId: string
+  nome: string
+  vendidos: number
+  utilizados: number
+  receita: number
+  capacidade: number
+  loteAtual: { nome: string; preco: number; disponiveis: number } | null
+}
+
 /** Dados extras do dashboard de um evento (obter_painel_evento_admin). */
 export interface AdminPainelEventoExtras {
   reservasAtivas: number
@@ -62,6 +73,8 @@ export interface AdminPainelEventoExtras {
   vendasStatus: string
   capacidadeTotal: number
   loteAtual: { nome: string; preco: number; disponiveis: number } | null
+  /** Setores com lote; so aparece separado quando ha mais de um. */
+  setores?: AdminPainelSetor[]
 }
 
 export interface AdminPainelEventoData extends AdminDashboardData {

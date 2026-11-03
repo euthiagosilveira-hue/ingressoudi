@@ -17,7 +17,8 @@ export function criarValorInicialLote(): LotFormValue {
     tipoAtivacao: 'MANUAL',
     dataAtivacao: '',
     horaAtivacao: '',
-    status: 'INATIVO'
+    status: 'INATIVO',
+    setorId: ''
   }
 }
 
@@ -94,7 +95,8 @@ export function useLotForm(
       ativacaoEm:
         valor.tipoAtivacao === 'DATA_HORA'
           ? montarAtivacaoEm(valor.dataAtivacao, valor.horaAtivacao)
-          : null
+          : null,
+      setorId: valor.setorId || null
     }
   }
 

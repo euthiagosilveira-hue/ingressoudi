@@ -11,6 +11,8 @@ import type { LotListItem } from '~/types/lote'
 const props = defineProps<{
   lote: LotListItem
   vendasAbertas: boolean
+  /** Posicao do lote dentro do setor (quando o evento tem setores). */
+  posicao?: number
 }>()
 
 const emit = defineEmits<{
@@ -37,7 +39,7 @@ const esgotado = computed(() => props.lote.disponiveis === 0)
             Esgotado
           </span>
         </div>
-        <p class="mt-0.5 text-xs text-zinc-500">{{ props.lote.ordem }}º lote</p>
+        <p class="mt-0.5 text-xs text-zinc-500">{{ props.posicao ?? props.lote.ordem }}º lote</p>
       </div>
       <LotStatusBadge :status="props.lote.status" />
     </div>

@@ -11,20 +11,28 @@ import LotDetailsModal from '~/components/lotes/LotDetailsModal.vue'
 import LotEventHeader from '~/components/lotes/LotEventHeader.vue'
 import LotFormModal from '~/components/lotes/LotFormModal.vue'
 import LotGrid from '~/components/lotes/LotGrid.vue'
+import LotSetoresCard from '~/components/lotes/LotSetoresCard.vue'
 import type { EventListItem } from '~/types/evento'
 import type {
   LotFormMode,
   LotFormValue,
   LotListItem,
   LotOrdemRef,
-  LotPayload
+  LotPayload,
+  SetorListItem
 } from '~/types/lote'
-import { mapearLoteParaFormulario, proximaOrdem, proximoLoteInativo } from '~/utils/lotes'
+import {
+  agruparLotesPorSetor,
+  mapearLoteParaFormulario,
+  proximaOrdem,
+  proximoLoteInativo
+} from '~/utils/lotes'
 
 const props = defineProps<{
   evento: EventListItem
   lotes: LotListItem[]
   estoqueAntecipado: number
+  setores?: SetorListItem[]
   processando?: boolean
 }>()
 
@@ -34,7 +42,15 @@ const emit = defineEmits<{
   ativar: [id: string]
   encerrar: [id: string, ativarProximo: boolean]
   abrirVendas: []
+  criarSetor: [nome: string]
+  renomearSetor: [setorId: string, nome: string]
+  excluirSetor: [setorId: string]
 }>()
+
+const listaSetores = computed(() => props.setores ?? [])
+const temSetores = computed(() => listaSetores.value.length > 1)
+const gruposSetor = computed(() => agruparLotesPorSetor(listaSetores.value, props.lotes))
+const setorDoNovoLote = ref('')
 
 const vendasAbertas = computed(() => props.evento.vendasStatus === 'ABERTAS')
 
@@ -66,11 +82,13 @@ const valorInicialForm = computed<Partial<LotFormValue>>(() => {
   return {
     ordem: proximaOrdem(props.lotes),
     tipoAtivacao: 'MANUAL',
-    status: 'INATIVO'
+    status: 'INATIVO',
+    setorId: setorDoNovoLote.value || listaSetores.value[0]?.id || ''
   }
 })
 
-function abrirNovo() {
+function abrirNovo(setorId = '') {
+  setorDoNovoLote.value = setorId
   formModo.value = 'create'
   loteEmEdicao.value = null
   formAberto.value = true
@@ -169,7 +187,7 @@ function acaoLote(payload: { id: string; action: string }) {
 
     <PageHeader title="Lotes" subtitle="Gerencie os preços e as etapas de venda deste evento.">
       <template #actions>
-        <AppButton variant="primary" :disabled="props.processando" @click="abrirNovo">
+        <AppButton variant="primary" :disabled="props.processando" @click="abrirNovo()">
           <PlusIcon class="h-4 w-4" />
           Novo lote
         </AppButton>
@@ -188,7 +206,31 @@ function acaoLote(payload: { id: string; action: string }) {
       @abrir-vendas="emit('abrirVendas')"
     />
 
-    <LotGrid :lotes="lotesOrdenados" :vendas-abertas="vendasAbertas" @action="acaoLote" @create="abrirNovo" />
+    <LotSetoresCard
+      :setores="listaSetores"
+      :processando="props.processando"
+      @criar="emit('criarSetor', $event)"
+      @renomear="(id, nome) => emit('renomearSetor', id, nome)"
+      @excluir="emit('excluirSetor', $event)"
+    />
+
+    <div v-if="temSetores" class="space-y-8">
+      <section v-for="grupo in gruposSetor" :key="grupo.setor.id" class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-white">{{ grupo.setor.nome }}</h2>
+          <AppButton variant="outline" size="sm" :disabled="props.processando" @click="abrirNovo(grupo.setor.id)">
+            <PlusIcon class="h-4 w-4" />
+            Novo lote em {{ grupo.setor.nome }}
+          </AppButton>
+        </div>
+        <p v-if="grupo.lotes.length === 0" class="rounded-xl border border-dashed border-zinc-800 p-4 text-sm text-zinc-500">
+          Nenhum lote neste setor ainda. Sem lote, o setor não aparece na página de compra.
+        </p>
+        <LotGrid v-else :lotes="grupo.lotes" :vendas-abertas="vendasAbertas" numerar-por-posicao @action="acaoLote" @create="abrirNovo(grupo.setor.id)" />
+      </section>
+    </div>
+
+    <LotGrid v-else :lotes="lotesOrdenados" :vendas-abertas="vendasAbertas" @action="acaoLote" @create="abrirNovo()" />
 
     <LotFormModal
       :open="formAberto"
@@ -200,6 +242,7 @@ function acaoLote(payload: { id: string; action: string }) {
       :ordem-bloqueada="formModo === 'edit'"
       :submit-label="formModo === 'edit' ? 'Salvar alterações' : 'Salvar lote'"
       :submitting="props.processando"
+      :setores="listaSetores"
       @submit="salvar"
       @cancel="fecharForm"
     />
@@ -213,7 +256,7 @@ function acaoLote(payload: { id: string; action: string }) {
     <ConfirmDialog
       :open="loteParaAtivar !== null"
       :title="`${loteParaAtivar?.status === 'ENCERRADO' ? 'Reativar' : 'Ativar'} ${loteParaAtivar?.nome ?? ''}?`"
-      description="O lote atualmente ativo será encerrado e este passará a ser o lote vigente."
+      :description="temSetores ? 'O lote ativo deste setor será encerrado e este passará a ser o lote vigente do setor.' : 'O lote atualmente ativo será encerrado e este passará a ser o lote vigente.'"
       :confirm-label="loteParaAtivar?.status === 'ENCERRADO' ? 'Reativar lote' : 'Ativar lote'"
       @confirm="confirmarAtivacao"
       @cancel="loteParaAtivar = null"
