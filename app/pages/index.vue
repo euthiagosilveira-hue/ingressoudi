@@ -9,6 +9,7 @@ import {
 import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
 import { PLATAFORMA_NOME } from '~/utils/marca'
 import { DESCRICAO_PLATAFORMA, dadosEstruturadosPlataforma } from '~/utils/seo'
+import { VIDEO_APRESENTACAO_URL, idVideoYoutube } from '~/utils/videoApresentacao'
 
 definePageMeta({
   layout: 'public-layout',
@@ -34,6 +35,8 @@ useHead({
     }
   ]
 })
+
+const videoApresentacaoId = idVideoYoutube(VIDEO_APRESENTACAO_URL)
 
 const recursos = [
   {
@@ -112,6 +115,10 @@ const recursos = [
       <p class="mt-4 text-sm text-zinc-500">
         Sem mensalidade: você só paga uma taxa por ingresso vendido online.
       </p>
+    </section>
+
+    <section v-if="videoApresentacaoId" class="mt-12 max-w-4xl sm:mt-16">
+      <PublicVideoApresentacao :video-id="videoApresentacaoId" />
     </section>
 
     <section class="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2">
