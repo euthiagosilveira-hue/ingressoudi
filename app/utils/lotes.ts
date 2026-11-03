@@ -4,7 +4,8 @@ import type {
   LotFormValue,
   LotListItem,
   LotOrdemRef,
-  LotStatus
+  LotStatus,
+  SetorListItem
 } from '~/types/lote'
 import { montarInicioEm, separarInstanteSaoPaulo } from './eventos.ts'
 import { imagemValida } from './imagem.ts'
@@ -53,10 +54,13 @@ export function montarAtivacaoEm(data: string, hora: string): string | null {
   return instante === '' ? null : instante
 }
 
-/** Proximo lote INATIVO (menor ordem acima do lote informado), o mesmo que o banco ativa ao encerrar. */
+/**
+ * Proximo lote INATIVO do mesmo setor (menor ordem acima do lote informado),
+ * o mesmo que o banco ativa ao encerrar.
+ */
 export function proximoLoteInativo(lotes: LotListItem[], lote: LotListItem): LotListItem | null {
   const candidatos = lotes
-    .filter((item) => item.status === 'INATIVO' && item.ordem > lote.ordem)
+    .filter((item) => item.status === 'INATIVO' && item.ordem > lote.ordem && item.setorId === lote.setorId)
     .sort((a, b) => a.ordem - b.ordem)
   return candidatos[0] ?? null
 }
@@ -77,6 +81,7 @@ export function ordemDuplicada(
 /** Linha real de lote retornada por public.listar_lotes_admin. */
 export interface LoteAdminRow {
   lote_id: string
+  setor_id?: string | null
   nome: string
   ordem: number
   quantidade: number
@@ -111,6 +116,7 @@ export function mapearLoteAdminParaListItem(row: LoteAdminRow): LotListItem {
   return {
     id: row.lote_id,
     eventoId: '',
+    setorId: row.setor_id ?? '',
     nome: row.nome,
     ordem: row.ordem,
     quantidade: row.quantidade,
@@ -143,6 +149,42 @@ export function mapearEventoLotesParaListItem(row: EventoLotesAdminRow): EventLi
   }
 }
 
+/** Setor retornado por public.listar_lotes_admin. */
+export interface SetorAdminRow {
+  setor_id: string
+  nome: string
+  ordem: number
+  total_lotes?: number | null
+  quantidade?: number | null
+  vendidos?: number | null
+}
+
+export function mapearSetorAdmin(row: SetorAdminRow): SetorListItem {
+  return {
+    id: row.setor_id,
+    nome: row.nome,
+    ordem: Number(row.ordem),
+    totalLotes: Number(row.total_lotes ?? 0),
+    quantidade: Number(row.quantidade ?? 0),
+    vendidos: Number(row.vendidos ?? 0)
+  }
+}
+
+export interface GrupoLotesSetor {
+  setor: SetorListItem
+  lotes: LotListItem[]
+}
+
+/** Lotes agrupados por setor (na ordem dos setores), cada grupo ordenado pela ordem do lote. */
+export function agruparLotesPorSetor(setores: SetorListItem[], lotes: LotListItem[]): GrupoLotesSetor[] {
+  return [...setores]
+    .sort((a, b) => a.ordem - b.ordem)
+    .map((setor) => ({
+      setor,
+      lotes: lotes.filter((lote) => lote.setorId === setor.id).sort((a, b) => a.ordem - b.ordem)
+    }))
+}
+
 /** Lote real -> estado inicial do LotForm (edicao), com data/hora em Sao Paulo. */
 export function mapearLoteParaFormulario(lote: LotListItem): Partial<LotFormValue> {
   const { data, hora } = separarInstanteSaoPaulo(lote.ativacaoEm ?? '')
@@ -154,6 +196,7 @@ export function mapearLoteParaFormulario(lote: LotListItem): Partial<LotFormValu
     tipoAtivacao: lote.tipoAtivacao,
     dataAtivacao: data,
     horaAtivacao: hora,
-    status: lote.status
+    status: lote.status,
+    setorId: lote.setorId
   }
 }

@@ -81,6 +81,12 @@ async function compartilhar() {
         <p class="text-base font-semibold text-white">{{ props.ticket.participanteNome }}</p>
         <p class="text-xs text-zinc-500">Ingresso {{ props.ticket.codigo }}</p>
         <span
+          v-if="props.ticket.setorNome"
+          class="mr-1 mt-1 inline-block rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white"
+        >
+          {{ props.ticket.setorNome }}
+        </span>
+        <span
           v-if="props.ticket.meia"
           class="mt-1 inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-300"
         >

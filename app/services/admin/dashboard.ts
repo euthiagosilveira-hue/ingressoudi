@@ -1,4 +1,28 @@
-import type { AdminDashboardData, AdminPainelEventoData } from '~/types/dashboard'
+import type { AdminDashboardData, AdminPainelEventoData, AdminPainelSetor } from '~/types/dashboard'
+
+interface SetorPainelRow {
+  setor_id: string
+  nome: string
+  vendidos?: number | null
+  utilizados?: number | null
+  receita?: number | string | null
+  capacidade?: number | null
+  lote_atual?: { nome: string; preco: number | string; disponiveis: number } | null
+}
+
+export function mapearSetorPainel(row: SetorPainelRow): AdminPainelSetor {
+  return {
+    setorId: row.setor_id,
+    nome: row.nome,
+    vendidos: Number(row.vendidos ?? 0),
+    utilizados: Number(row.utilizados ?? 0),
+    receita: Number(row.receita ?? 0),
+    capacidade: Number(row.capacidade ?? 0),
+    loteAtual: row.lote_atual
+      ? { nome: row.lote_atual.nome, preco: Number(row.lote_atual.preco), disponiveis: Number(row.lote_atual.disponiveis) }
+      : null
+  }
+}
 
 /** Dashboard administrativo real (RPC segura, ADMINISTRADOR). */
 export async function obterDashboardAdmin(): Promise<AdminDashboardData> {
@@ -39,6 +63,7 @@ export async function obterPainelEventoAdmin(eventoId: string): Promise<AdminPai
         : 'Não foi possível carregar o dashboard do evento.'
     )
   }
-  const extras = ((data ?? {}) as { extras?: AdminPainelEventoData['extras'] }).extras ?? null
+  const bruto = (data ?? {}) as { extras?: AdminPainelEventoData['extras']; setores?: SetorPainelRow[] | null }
+  const extras = bruto.extras ? { ...bruto.extras, setores: (bruto.setores ?? []).map(mapearSetorPainel) } : null
   return { ...normalizarDashboard(data), extras }
 }

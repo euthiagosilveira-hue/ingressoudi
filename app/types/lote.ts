@@ -2,9 +2,20 @@ export type LotStatus = 'INATIVO' | 'ATIVO' | 'ENCERRADO'
 
 export type LotActivationType = 'MANUAL' | 'ESGOTAMENTO' | 'DATA_HORA'
 
+/** Setor do evento (ex.: Pista, Camarote). Todo evento tem pelo menos um. */
+export interface SetorListItem {
+  id: string
+  nome: string
+  ordem: number
+  totalLotes: number
+  quantidade: number
+  vendidos: number
+}
+
 export interface LotListItem {
   id: string
   eventoId: string
+  setorId: string
   nome: string
   ordem: number
   quantidade: number
@@ -27,6 +38,7 @@ export interface LotFormValue {
   dataAtivacao: string
   horaAtivacao: string
   status: LotStatus
+  setorId: string
 }
 
 export type LotFormField = keyof LotFormValue
@@ -42,6 +54,7 @@ export interface LotPayload {
   preco: number
   tipoAtivacao: LotActivationType
   ativacaoEm: string | null
+  setorId: string | null
 }
 
 export interface LotOrdemRef {

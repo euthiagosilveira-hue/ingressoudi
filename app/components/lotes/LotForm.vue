@@ -3,7 +3,7 @@ import LotActivationSection from '~/components/lotes/LotActivationSection.vue'
 import LotBasicSection from '~/components/lotes/LotBasicSection.vue'
 import LotFormActions from '~/components/lotes/LotFormActions.vue'
 import { useLotForm } from '~/composables/useLotForm'
-import type { LotFormMode, LotFormValue, LotOrdemRef, LotPayload } from '~/types/lote'
+import type { LotFormMode, LotFormValue, LotOrdemRef, LotPayload, SetorListItem } from '~/types/lote'
 
 const props = withDefaults(
   defineProps<{
@@ -15,6 +15,7 @@ const props = withDefaults(
     ordemBloqueada?: boolean
     submitLabel?: string
     submitting?: boolean
+    setores?: SetorListItem[]
   }>(),
   {
     mode: 'create',
@@ -24,7 +25,8 @@ const props = withDefaults(
     ativacaoBloqueada: false,
     ordemBloqueada: false,
     submitLabel: 'Salvar lote',
-    submitting: false
+    submitting: false,
+    setores: () => []
   }
 )
 
@@ -47,7 +49,13 @@ function aoSubmeter() {
 
 <template>
   <form class="space-y-6" novalidate @submit.prevent="aoSubmeter">
-    <LotBasicSection :value="valor" :errors="erros" :ordem-bloqueada="props.ordemBloqueada" />
+    <LotBasicSection
+      :value="valor"
+      :errors="erros"
+      :ordem-bloqueada="props.ordemBloqueada"
+      :setores="props.setores"
+      :setor-bloqueado="props.mode === 'edit'"
+    />
     <LotActivationSection
       :value="valor"
       :errors="erros"

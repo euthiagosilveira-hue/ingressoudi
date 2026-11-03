@@ -197,6 +197,13 @@ async function novaBusca() {
       </div>
 
       <p
+        v-if="resultado?.setorNome"
+        class="rounded-xl border-2 border-white/70 bg-white/10 p-3 text-center text-2xl font-black uppercase tracking-wider text-white"
+      >
+        {{ resultado.setorNome }}
+      </p>
+
+      <p
         v-if="resultado?.meia"
         class="rounded-xl border-2 border-amber-400 bg-amber-400/10 p-3 text-center text-sm font-bold uppercase tracking-wide text-amber-300"
       >
@@ -313,6 +320,12 @@ async function novaBusca() {
                   class="inline-flex items-center rounded-full border border-amber-400/50 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300"
                 >
                   VIP
+                </span>
+                <span
+                  v-if="item.setorNome"
+                  class="inline-flex items-center rounded-full border border-white/40 bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+                >
+                  {{ item.setorNome }}
                 </span>
                 <span
                   v-if="item.meia"

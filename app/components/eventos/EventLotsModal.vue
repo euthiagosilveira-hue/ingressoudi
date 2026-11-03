@@ -24,7 +24,7 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const { evento, lotes, carregando, erro, processando, criar, atualizar, ativar, abrirVendas, refresh } =
+const { evento, lotes, setores, carregando, erro, processando, criar, atualizar, ativar, abrirVendas, refresh } =
   useAdminLots(props.eventoId)
 
 const modo = ref<'lista' | 'novo' | 'editar'>('lista')
@@ -39,7 +39,8 @@ const podeAbrirVendas = computed(() =>
 const valorInicialForm = computed<Partial<LotFormValue>>(() => ({
   ordem: proximaOrdem(lotes.value),
   tipoAtivacao: 'MANUAL',
-  status: 'INATIVO'
+  status: 'INATIVO',
+  setorId: setores.value[0]?.id ?? ''
 }))
 const valorInicialEdicao = computed<Partial<LotFormValue>>(() =>
   loteEmEdicao.value ? mapearLoteParaFormulario(loteEmEdicao.value) : {}
@@ -77,7 +78,8 @@ async function aoCriar(payload: LotPayload) {
       quantidade: payload.quantidade,
       preco: payload.preco,
       tipoAtivacao: payload.tipoAtivacao,
-      ativacaoEm: payload.ativacaoEm
+      ativacaoEm: payload.ativacaoEm,
+      setorId: payload.setorId
     })
     toast.success('Lote criado com sucesso!')
     modo.value = 'lista'
@@ -151,6 +153,7 @@ async function aoAbrirVendas() {
       mode="create"
       :initial-value="valorInicialForm"
       :ordens="ordens"
+      :setores="setores"
       :submitting="processando"
       @submit="aoCriar"
       @cancel="voltarLista"
@@ -162,6 +165,7 @@ async function aoAbrirVendas() {
       mode="edit"
       :initial-value="valorInicialEdicao"
       :ordens="ordens"
+      :setores="setores"
       :id-atual="loteEmEdicao?.id ?? ''"
       :ativacao-bloqueada="ativacaoBloqueadaEdicao"
       :ordem-bloqueada="true"
@@ -231,7 +235,10 @@ async function aoAbrirVendas() {
                 <h3 class="truncate text-base font-semibold text-white">{{ lote.nome }}</h3>
                 <LotStatusBadge :status="lote.status" />
               </div>
-              <p class="mt-0.5 text-xs text-zinc-500">{{ lote.ordem }}º lote</p>
+              <p class="mt-0.5 text-xs text-zinc-500">
+                {{ lote.ordem }}º lote<template v-if="setores.length > 1">
+                  · {{ setores.find((setor) => setor.id === lote.setorId)?.nome }}</template>
+              </p>
             </div>
             <p class="text-lg font-bold text-amber-400">{{ formatMoeda(lote.preco) }}</p>
           </div>

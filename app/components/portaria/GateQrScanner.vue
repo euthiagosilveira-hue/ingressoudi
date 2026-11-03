@@ -106,6 +106,13 @@ const cameraFallback = computed(() =>
       </div>
 
       <p
+        v-if="resultado?.setorNome"
+        class="rounded-xl border-2 border-white/70 bg-white/10 p-3 text-center text-2xl font-black uppercase tracking-wider text-white"
+      >
+        {{ resultado.setorNome }}
+      </p>
+
+      <p
         v-if="resultado?.meia"
         class="rounded-xl border-2 border-amber-400 bg-amber-400/10 p-3 text-center text-sm font-bold uppercase tracking-wide text-amber-300"
       >

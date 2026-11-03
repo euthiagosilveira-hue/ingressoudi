@@ -8,7 +8,7 @@ begin;
 
 do $$
 begin
-  if not has_function_privilege('anon', 'public.criar_reserva(uuid,text,text,text,text[],boolean[])', 'EXECUTE') then
+  if not has_function_privilege('anon', 'public.criar_reserva(uuid,text,text,text,text[],boolean[],uuid)', 'EXECUTE') then
     raise exception 'ACL: comprador anonimo precisa reservar com meia-entrada';
   end if;
   if has_function_privilege('anon', 'public.definir_meia_entrada_evento_admin(uuid,boolean)', 'EXECUTE') then

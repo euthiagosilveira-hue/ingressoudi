@@ -14,6 +14,17 @@ export type PublicVendaSituacao =
   | 'ESGOTADO'
   | 'DISPONIVEL'
 
+/** Setor a venda na pagina publica (ex.: Pista, Camarote) com o lote ativo dele. */
+export interface PublicSetor {
+  setorId: string
+  nome: string
+  ordem: number
+  loteId: string | null
+  loteNome: string | null
+  preco: number | null
+  situacaoVenda: PublicVendaSituacao
+}
+
 export interface PublicEventDetail {
   eventoId: string
   slug: string
@@ -55,4 +66,14 @@ export interface PublicEventDetail {
   disponiveis: number | null
 
   situacaoVenda: PublicVendaSituacao
+
+  /**
+   * Setores com lote cadastrado. Com dois ou mais, a pagina mostra um cartao
+   * por setor e o checkout compra no setor escolhido.
+   */
+  setores?: PublicSetor[]
+
+  /** Setor escolhido no checkout (enviado na reserva). */
+  setorId?: string | null
+  setorNome?: string | null
 }

@@ -11,6 +11,7 @@ interface IngressoRpc {
   codigo: string
   participante_nome: string
   meia?: boolean | null
+  setor_nome?: string | null
   status: string
   qr_token: string | null
   utilizado_em: string | null
@@ -53,6 +54,7 @@ function mapearIngresso(row: IngressoRpc): PublicTicket {
     codigo: row.codigo,
     participanteNome: row.participante_nome,
     meia: row.meia === true,
+    setorNome: row.setor_nome ?? null,
     status: row.status as PublicTicketStatus,
     qrToken: row.qr_token,
     utilizadoEm: row.utilizado_em

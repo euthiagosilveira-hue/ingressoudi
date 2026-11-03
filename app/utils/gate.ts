@@ -60,7 +60,8 @@ export function mapearResultadoEntradaRpc(raw: Record<string, unknown>): Registr
     entradaId: (raw?.entrada_id as string) ?? null,
     entradaEm: (raw?.entrada_em as string) ?? null,
     mensagem: (raw?.mensagem as string) ?? '',
-    meia: raw?.meia === true
+    meia: raw?.meia === true,
+    setorNome: typeof raw?.setor_nome === 'string' && raw.setor_nome ? raw.setor_nome : null
   }
 }
 
