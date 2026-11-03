@@ -35,6 +35,9 @@ declare
 begin
   v_def := pg_get_functiondef(p_funcao::regprocedure);
   v_def := replace(v_def, E'\r', '');
+  -- o SQL Editor no Windows pode colar o script com CRLF
+  p_antigo := replace(p_antigo, E'\r', '');
+  p_novo := replace(p_novo, E'\r', '');
   if position(p_novo in v_def) > 0 then
     return;
   end if;
@@ -241,6 +244,11 @@ begin
 
   v_def := pg_get_functiondef('private.criar_reserva(uuid,text,text,text,text[],boolean[])'::regprocedure);
   v_def := replace(v_def, E'\r', '');
+  -- o SQL Editor no Windows pode colar o script com CRLF
+  v_lote_antigo := replace(v_lote_antigo, E'\r', '');
+  v_lote_novo := replace(v_lote_novo, E'\r', '');
+  v_retorno_antigo := replace(v_retorno_antigo, E'\r', '');
+  v_retorno_novo := replace(v_retorno_novo, E'\r', '');
 
   if position('p_meias boolean[] DEFAULT NULL::boolean[])' in v_def) = 0
      or position(v_lote_antigo in v_def) = 0
