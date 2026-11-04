@@ -9,7 +9,8 @@ import {
   CurrencyDollarIcon,
   MagnifyingGlassIcon,
   PresentationChartBarIcon,
-  TicketIcon
+  TicketIcon,
+  TrashIcon
 } from '@heroicons/vue/24/outline'
 
 import BaseCard from '~/components/BaseCard.vue'
@@ -20,6 +21,7 @@ import PageHeader from '~/components/PageHeader.vue'
 import SegmentedControl from '~/components/SegmentedControl.vue'
 import EventPublicationBadge from '~/components/eventos/EventPublicationBadge.vue'
 import EventStatusBadge from '~/components/eventos/EventStatusBadge.vue'
+import ExcluirEventoModal from '~/components/plataforma/ExcluirEventoModal.vue'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import { listarEventosPlataforma } from '~/services/admin/eventosPlataforma'
 import {
@@ -102,6 +104,21 @@ async function carregar() {
   }
 }
 
+const excluindo = ref<EventoPlataforma | null>(null)
+const aviso = ref('')
+
+function pedirExclusao(e: EventoPlataforma) {
+  aviso.value = ''
+  excluindo.value = e
+}
+
+function aoExcluir(id: string) {
+  const nome = excluindo.value?.nome ?? 'O evento'
+  eventos.value = eventos.value.filter((e) => e.id !== id)
+  excluindo.value = null
+  aviso.value = `${nome} foi excluído.`
+}
+
 onMounted(() => void carregar())
 </script>
 
@@ -143,6 +160,14 @@ onMounted(() => void carregar())
         class="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300"
       >
         {{ erro }}
+      </p>
+
+      <p
+        v-if="aviso"
+        role="status"
+        class="rounded-xl border border-green-500/40 bg-green-500/10 p-3 text-sm text-green-300"
+      >
+        {{ aviso }}
       </p>
 
       <!-- Resumo da lista filtrada -->
@@ -264,6 +289,14 @@ onMounted(() => void carregar())
               <ArrowTopRightOnSquareIcon class="h-4 w-4" />
               Ver página
             </a>
+            <button
+              type="button"
+              class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-red-500/40 px-3 py-2 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/10"
+              @click="pedirExclusao(e)"
+            >
+              <TrashIcon class="h-4 w-4" />
+              Excluir
+            </button>
             </div>
           </li>
         </ul>
@@ -271,8 +304,17 @@ onMounted(() => void carregar())
 
       <p class="text-xs leading-relaxed text-zinc-500">
         "Abrir dashboard" entra na casa do evento em modo suporte, com as mesmas opções do produtor.
-        Eventos em rascunho não abrem para o público.
+        Eventos em rascunho não abrem para o público. "Excluir" apaga o evento de vez, com pedidos e
+        ingressos, e serve para tirar eventos de demonstração da plataforma.
       </p>
+
+      <ExcluirEventoModal
+        :open="excluindo !== null"
+        :evento-id="excluindo?.id ?? ''"
+        :evento-nome="excluindo?.nome ?? ''"
+        @close="excluindo = null"
+        @excluido="aoExcluir"
+      />
     </template>
   </div>
 </template>
