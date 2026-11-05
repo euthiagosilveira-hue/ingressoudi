@@ -12,7 +12,9 @@
 // Uso (credenciais de TESTE do vendedor, em Suas integracoes > Credenciais de teste):
 //   node --env-file=.env scripts/testar-cartao-mp.mjs
 // Requer no .env: MP_TESTE_ACCESS_TOKEN e MP_TESTE_PUBLIC_KEY (de teste, nunca as de producao).
-// Opcional: MP_TESTE_EMAIL_COMPRADOR (e-mail de um usuario de teste comprador).
+// Opcional: MP_TESTE_EMAIL_COMPRADOR (e-mail de um usuario de teste comprador). Com credencial de
+// usuario de teste, o comprador precisa ter e-mail @testuser.com; senao o MP responde 401
+// "Unauthorized use of live credentials".
 // O resultado fica tambem em teste-cartao-mp.log, na pasta do projeto.
 import { appendFileSync, writeFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
@@ -21,7 +23,7 @@ const BASE_URL = 'https://api.mercadopago.com'
 const LOG = 'teste-cartao-mp.log'
 const token = process.env.MP_TESTE_ACCESS_TOKEN || ''
 const publicKey = process.env.MP_TESTE_PUBLIC_KEY || ''
-const emailComprador = process.env.MP_TESTE_EMAIL_COMPRADOR || 'comprador.teste@ingressoudi.com.br'
+const emailComprador = process.env.MP_TESTE_EMAIL_COMPRADOR || 'test_user_ingressoudi@testuser.com'
 
 // Cartoes de teste oficiais do Mercado Pago (Brasil). O nome do titular define o resultado.
 const MASTER = { numero: '5031433215406351', cvv: '123', bandeira: 'master' }
@@ -158,7 +160,7 @@ async function main() {
 
   // 2) Parcelas para R$ 100.
   log('\n[2] Parcelas disponiveis para R$ 100 (bin 503143)')
-  const parcelas = await mp('GET', `/v1/payment_methods/installments?amount=100&bin=503143&payment_method_id=${MASTER.bandeira}`)
+  const parcelas = await mp('GET', `/v1/payment_methods/installments?amount=100&bin=50314332`)
   const custos = parcelas.ok ? (parcelas.dados?.[0]?.payer_costs ?? []) : []
   for (const c of custos.filter((c) => c.installments <= 3)) {
     log(`  ${c.installments}x de R$ ${c.installment_amount} = R$ ${c.total_amount} (juros ${c.installment_rate}%)`)
