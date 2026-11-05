@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import {
   MAX_PARCELAS,
+  desafio3ds,
   dividirNome,
   dividirTelefone,
   mensagemRecusaCartao,
@@ -37,12 +38,13 @@ const DADOS = {
   identificationNumber: '123.456.789-09'
 }
 
-test('payload do cartao usa valor e taxa do pedido, binary_mode e antifraude', () => {
+test('payload do cartao usa valor e taxa do pedido, 3DS opcional e antifraude', () => {
   const p = montarPayloadCartao(PEDIDO, DADOS)
   assert.equal(p.transaction_amount, 62)
   assert.equal(p.application_fee, 2)
   assert.equal(p.installments, 3)
-  assert.equal(p.binary_mode, true)
+  assert.equal(p.binary_mode, false)
+  assert.equal(p.three_d_secure_mode, 'optional')
   assert.equal(p.external_reference, 'pag-1')
   assert.equal(p.issuer_id, 24)
   assert.equal(p.statement_descriptor, 'INGRESSOUDI')
@@ -110,4 +112,14 @@ test('IP do comprador vai para o antifraude so quando valido', () => {
   const semIp = montarPayloadCartao({ ...PEDIDO, ipComprador: '<script>' }, DADOS)
   assert.equal(semIp.additional_info.ip_address, undefined)
   assert.equal(montarPayloadCartao(PEDIDO, DADOS).additional_info.ip_address, undefined)
+})
+
+test('desafio 3DS so quando o Mercado Pago pede confirmacao do banco', () => {
+  const base = { id: 123, status: 'pending', status_detail: 'pending_challenge', three_ds_info: { external_resource_url: 'https://acs.banco.com/3ds', creq: 'abc' } }
+  assert.deepEqual(desafio3ds(base), { paymentId: '123', externalResourceUrl: 'https://acs.banco.com/3ds', creq: 'abc' })
+  assert.equal(desafio3ds({ ...base, status_detail: 'pending_review_manual' }), null)
+  assert.equal(desafio3ds({ ...base, status: 'rejected' }), null)
+  assert.equal(desafio3ds({ ...base, three_ds_info: { external_resource_url: 'http://inseguro', creq: 'abc' } }), null)
+  assert.equal(desafio3ds({ ...base, three_ds_info: null }), null)
+  assert.match(mensagemRecusaCartao('cc_rejected_3ds_challenge'), /banco não confirmou/)
 })

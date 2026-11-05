@@ -24,6 +24,7 @@ export type PaymentServiceErrorCode =
   | 'ERRO_INESPERADO'
   | 'CARTAO_INDISPONIVEL'
   | 'LIMITE_TENTATIVAS'
+  | 'CARTAO_EM_ANALISE'
   | 'DADOS_CARTAO'
 
 export class PaymentServiceError extends Error {
