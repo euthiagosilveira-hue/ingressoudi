@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { ClipboardDocumentIcon } from '@heroicons/vue/24/outline'
+import { ClipboardDocumentIcon, CreditCardIcon } from '@heroicons/vue/24/outline'
 import QrcodeVue from 'qrcode.vue'
 
 import PaymentCardForm from '~/components/public/pagamento/PaymentCardForm.vue'
@@ -37,6 +37,11 @@ const emit = defineEmits<{
 // Cartao: so aparece quando a casa tem o cartao liberado pelo super admin.
 const configCartao = ref<ConfigCartaoPublico | null>(null)
 const forma = ref<'PIX' | 'CARTAO'>('PIX')
+const OPCOES_PAGAMENTO = [
+  { valor: 'PIX', titulo: 'Pix', detalhe: 'Aprovação na hora' },
+  { valor: 'CARTAO', titulo: 'Cartão', detalhe: 'Crédito em até 3x' }
+] as const
+
 const cartaoDisponivel = computed(() => Boolean(configCartao.value?.disponivel && props.checkoutToken))
 
 onMounted(async () => {
@@ -134,21 +139,48 @@ function copiaLegado(texto: string) {
     <template v-else>
       <div
         v-if="cartaoDisponivel"
-        class="grid grid-cols-2 gap-2 rounded-xl border border-zinc-800 bg-zinc-950/40 p-1"
+        class="grid grid-cols-2 gap-3"
         role="tablist"
         aria-label="Forma de pagamento"
       >
         <button
-          v-for="opcao in (['PIX', 'CARTAO'] as const)"
-          :key="opcao"
+          v-for="opcao in OPCOES_PAGAMENTO"
+          :key="opcao.valor"
           type="button"
           role="tab"
-          :aria-selected="forma === opcao"
-          class="rounded-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors"
-          :class="forma === opcao ? 'bg-amber-400 text-zinc-950' : 'text-zinc-300 hover:text-white'"
-          @click="forma = opcao"
+          :aria-selected="forma === opcao.valor"
+          class="flex items-center gap-3 rounded-xl border-2 px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 sm:px-4"
+          :class="
+            forma === opcao.valor
+              ? 'border-amber-400 bg-amber-400/10 text-white'
+              : 'border-zinc-800 bg-zinc-950/40 text-zinc-300 hover:border-zinc-600 hover:text-white'
+          "
+          @click="forma = opcao.valor"
         >
-          {{ opcao === 'PIX' ? 'Pix' : 'Cartão de crédito' }}
+          <span
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+            :class="forma === opcao.valor ? 'bg-amber-400 text-zinc-950' : 'bg-zinc-800 text-zinc-200'"
+          >
+            <svg
+              v-if="opcao.valor === 'PIX'"
+              viewBox="0 0 24 24"
+              class="h-6 w-6"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <g transform="rotate(45 12 12)">
+                <rect x="4.2" y="4.2" width="7.4" height="7.4" rx="2" />
+                <rect x="12.4" y="4.2" width="7.4" height="7.4" rx="2" />
+                <rect x="4.2" y="12.4" width="7.4" height="7.4" rx="2" />
+                <rect x="12.4" y="12.4" width="7.4" height="7.4" rx="2" />
+              </g>
+            </svg>
+            <CreditCardIcon v-else class="h-6 w-6" aria-hidden="true" />
+          </span>
+          <span class="min-w-0">
+            <span class="block text-sm font-semibold leading-tight sm:text-base">{{ opcao.titulo }}</span>
+            <span class="mt-0.5 block text-xs leading-tight text-zinc-400">{{ opcao.detalhe }}</span>
+          </span>
         </button>
       </div>
 
