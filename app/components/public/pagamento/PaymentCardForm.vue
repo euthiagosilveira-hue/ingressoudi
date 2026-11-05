@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { carregarSdkMercadoPago, deviceIdMercadoPago, type ConfigCartaoPublico } from '~/utils/cartaoCredito'
+import {
+  aguardarDeviceIdMercadoPago,
+  carregarSdkMercadoPago,
+  carregarSegurancaMercadoPago,
+  type ConfigCartaoPublico } from '~/utils/cartaoCredito'
 
 /**
  * Formulario de cartao do Mercado Pago (Card Payment Brick). O numero do
@@ -43,6 +47,7 @@ async function montar() {
   if (bloqueado.value || !props.config.publicKey) return
   carregandoForm.value = true
   erro.value = ''
+  carregarSegurancaMercadoPago()
   try {
     const MercadoPago = await carregarSdkMercadoPago()
     const mp = new MercadoPago(props.config.publicKey, { locale: 'pt-BR' })
@@ -86,6 +91,7 @@ async function pagar(formData: FormDataBrick): Promise<void> {
   recusa.value = ''
   erro.value = ''
   try {
+    const deviceId = await aguardarDeviceIdMercadoPago()
     const resposta = await $fetch<{
       status?: 'APROVADO' | 'RECUSADO' | 'PENDENTE'
       mensagem?: string
@@ -103,7 +109,7 @@ async function pagar(formData: FormDataBrick): Promise<void> {
         payerEmail: formData.payer?.email ?? null,
         identificationType: formData.payer?.identification?.type ?? null,
         identificationNumber: formData.payer?.identification?.number ?? null,
-        deviceId: deviceIdMercadoPago()
+        deviceId
       }
     })
     if (resposta.status === 'APROVADO' || resposta.status === 'PENDENTE') {

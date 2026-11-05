@@ -10,6 +10,10 @@ export interface ConfigCartaoPublico {
 }
 
 const SDK_URL = 'https://sdk.mercadopago.com/js/v2'
+// Script de antifraude do Mercado Pago: gera o identificador do aparelho
+// (window.MP_DEVICE_SESSION_ID). Sem ele o antifraude recusa muito mais
+// (cc_rejected_high_risk).
+const SECURITY_URL = 'https://www.mercadopago.com/v2/security.js'
 
 // Tipagem minima do SDK v2 (window.MercadoPago).
 type MercadoPagoCtor = new (
@@ -42,9 +46,38 @@ export function carregarSdkMercadoPago(): Promise<MercadoPagoCtor> {
   return carregamento
 }
 
-/** Identificador do aparelho gerado pelo SDK (ajuda o antifraude). */
+let segurancaCarregada = false
+
+/** Carrega o script de antifraude uma vez (so no navegador). */
+export function carregarSegurancaMercadoPago(): void {
+  if (segurancaCarregada || deviceIdMercadoPago()) return
+  segurancaCarregada = true
+  const script = document.createElement('script')
+  script.src = SECURITY_URL
+  script.async = true
+  script.setAttribute('view', 'checkout')
+  script.setAttribute('output', 'deviceId')
+  script.onerror = () => {
+    segurancaCarregada = false
+  }
+  document.head.appendChild(script)
+}
+
+/** Espera o identificador do aparelho por ate `ms` (nao bloqueia o pagamento). */
+export async function aguardarDeviceIdMercadoPago(ms = 3000): Promise<string | null> {
+  const inicio = Date.now()
+  while (Date.now() - inicio < ms) {
+    const id = deviceIdMercadoPago()
+    if (id) return id
+    await new Promise((r) => setTimeout(r, 150))
+  }
+  return deviceIdMercadoPago()
+}
+
+/** Identificador do aparelho gerado pelo script de antifraude. */
 export function deviceIdMercadoPago(): string | null {
-  const valor = (window as unknown as { MP_DEVICE_SESSION_ID?: unknown }).MP_DEVICE_SESSION_ID
+  const janela = window as unknown as { MP_DEVICE_SESSION_ID?: unknown; deviceId?: unknown }
+  const valor = janela.MP_DEVICE_SESSION_ID ?? janela.deviceId
   return typeof valor === 'string' && valor.trim() ? valor : null
 }
 

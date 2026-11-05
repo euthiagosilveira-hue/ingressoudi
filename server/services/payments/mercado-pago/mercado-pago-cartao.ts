@@ -31,6 +31,8 @@ export interface PedidoCartao {
   compradorTelefone: string | null
   compradorEmail: string | null
   notificationUrl?: string
+  /** IP do comprador (o antifraude do Mercado Pago usa). */
+  ipComprador?: string | null
 }
 
 export interface MpCardPaymentRequest {
@@ -52,6 +54,7 @@ export interface MpCardPaymentRequest {
   additional_info: {
     items: Array<{ id: string; title: string; quantity: number; unit_price: number; category_id: string }>
     payer: { first_name?: string; last_name?: string; phone?: { area_code: string; number: string } }
+    ip_address?: string
   }
   application_fee?: number
   notification_url?: string
@@ -152,6 +155,8 @@ export function montarPayloadCartao(pedido: PedidoCartao, dados: DadosCartaoBric
     payload.additional_info.payer.last_name = nome.last
   }
   if (telefone) payload.additional_info.payer.phone = telefone
+  const ip = String(pedido.ipComprador ?? '').split(',')[0]?.trim() ?? ''
+  if (/^[0-9a-fA-F.:]{3,45}$/.test(ip)) payload.additional_info.ip_address = ip
 
   const docTipo = String(dados.identificationType ?? '').trim()
   const docNumero = String(dados.identificationNumber ?? '').replace(/\D/g, '')
