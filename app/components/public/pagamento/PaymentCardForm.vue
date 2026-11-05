@@ -54,7 +54,7 @@ async function montar() {
       },
       customization: {
         paymentMethods: { minInstallments: 1, maxInstallments: props.config.maxParcelas, types: { excluded: ['debit_card', 'prepaid_card'] } },
-        visual: { style: { theme: 'dark' } }
+        visual: { style: { theme: 'dark' }, texts: { formTitle: 'Cartão de crédito' } }
       },
       callbacks: {
         onReady: () => {
@@ -144,8 +144,9 @@ onBeforeUnmount(desmontar)
 
 <template>
   <div class="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
-    <p class="text-sm font-semibold text-zinc-200">Pagamento com cartão de crédito</p>
-    <p class="text-xs text-zinc-500">Até {{ props.config.maxParcelas }}x. Os dados do cartão são processados pelo Mercado Pago.</p>
+    <p class="text-xs text-zinc-500">
+      Até {{ props.config.maxParcelas }}x. Os dados do cartão ficam com o Mercado Pago, não passam pelo Ingressoudi.
+    </p>
 
     <p
       v-if="recusa"
