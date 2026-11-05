@@ -103,3 +103,11 @@ test('config publica do cartao e rotulo da forma de pagamento', () => {
   assert.equal(rotuloFormaPagamento('CARTAO', 1, null, null), 'Cartão de crédito à vista')
   assert.equal(rotuloFormaPagamento(null), null)
 })
+
+test('IP do comprador vai para o antifraude so quando valido', () => {
+  const comIp = montarPayloadCartao({ ...PEDIDO, ipComprador: '177.10.20.30, 10.0.0.1' }, DADOS)
+  assert.equal(comIp.additional_info.ip_address, '177.10.20.30')
+  const semIp = montarPayloadCartao({ ...PEDIDO, ipComprador: '<script>' }, DADOS)
+  assert.equal(semIp.additional_info.ip_address, undefined)
+  assert.equal(montarPayloadCartao(PEDIDO, DADOS).additional_info.ip_address, undefined)
+})

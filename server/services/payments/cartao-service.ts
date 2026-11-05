@@ -1,4 +1,4 @@
-import type { H3Event } from 'h3'
+import { getRequestIP, type H3Event } from 'h3'
 
 import { serverSupabaseServiceRole } from '#supabase/server'
 
@@ -198,7 +198,8 @@ export async function pagarComCartao(
         compradorNome: checkout.comprador_nome ?? '',
         compradorTelefone: checkout.comprador_telefone ?? null,
         compradorEmail: checkout.comprador_email,
-        notificationUrl: montarNotificationUrl(String(config.public.siteUrl ?? ''), checkout.organizacao_id)
+        notificationUrl: montarNotificationUrl(String(config.public.siteUrl ?? ''), checkout.organizacao_id),
+        ipComprador: getRequestIP(event, { xForwardedFor: true }) ?? null
       },
       dados
     )
@@ -213,9 +214,9 @@ export async function pagarComCartao(
   }
 
   let pagamento: MpCardPayment
+  const deviceId = String(dados.deviceId ?? '').trim()
   try {
     const headers: Record<string, string> = { 'X-Idempotency-Key': tentativaId }
-    const deviceId = String(dados.deviceId ?? '').trim()
     if (deviceId) headers['X-meli-session-id'] = deviceId.slice(0, 200)
     pagamento = await provider.request<MpCardPayment>('/v1/payments', {
       method: 'POST',
@@ -253,6 +254,17 @@ export async function pagarComCartao(
 
   const cartaoId = String(pagamento.id)
   const status = statusTentativa(pagamento.status)
+  if (status !== 'APROVADA') {
+    console.info('[mercado-pago] cartao nao aprovado', {
+      pedidoCodigo: checkout.codigo_pedido,
+      mpPaymentId: cartaoId,
+      status: pagamento.status,
+      statusDetail: pagamento.status_detail ?? null,
+      comDeviceId: Boolean(deviceId),
+      comDocumento: Boolean(payload.payer.identification),
+      comIp: Boolean(payload.additional_info.ip_address)
+    })
+  }
   await client.rpc('registrar_tentativa_cartao', {
     p_tentativa_id: tentativaId,
     p_mp_payment_id: cartaoId,
