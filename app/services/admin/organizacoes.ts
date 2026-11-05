@@ -21,6 +21,7 @@ export interface OrganizacaoPlataforma {
   ativo: boolean
   aprovada: boolean
   listaVip: boolean
+  cartao: boolean
   taxaServico: number
   criadoEm: string
   mercadoPagoConectado: boolean
@@ -40,6 +41,7 @@ export async function listarOrganizacoesPlataforma(): Promise<OrganizacaoPlatafo
     ativo: Boolean(o.ativo),
     aprovada: Boolean(o.aprovada),
     listaVip: Boolean(o.lista_vip_ativa),
+    cartao: Boolean(o.cartao_ativo),
     taxaServico: Number(o.taxa_servico ?? 0),
     criadoEm: String(o.criado_em ?? ''),
     mercadoPagoConectado: Boolean(o.mercado_pago_conectado),
@@ -79,6 +81,16 @@ export async function definirListaVipOrganizacao(organizacaoId: string, ativa: b
     p_ativa: ativa
   })
   if (error) throw new Error('Não foi possível atualizar a Lista VIP.')
+}
+
+/** Liga (true) ou desliga (false) o pagamento com cartao de uma casa (somente super admin). */
+export async function definirCartaoOrganizacao(organizacaoId: string, ativo: boolean): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('definir_cartao_organizacao', {
+    p_organizacao_id: organizacaoId,
+    p_ativo: ativo
+  })
+  if (error) throw new Error('Não foi possível atualizar o pagamento com cartão.')
 }
 
 /** Cria uma organizacao (somente super admin). Quem cria vira ADMINISTRADOR dela. */

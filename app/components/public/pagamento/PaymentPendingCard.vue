@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ClipboardDocumentIcon } from '@heroicons/vue/24/outline'
 import QrcodeVue from 'qrcode.vue'
 
+import PaymentCardForm from '~/components/public/pagamento/PaymentCardForm.vue'
 import PaymentExpiration from '~/components/public/pagamento/PaymentExpiration.vue'
 import PaymentStatusBadge from '~/components/public/pagamento/PaymentStatusBadge.vue'
 import PaymentSummary from '~/components/public/pagamento/PaymentSummary.vue'
 import type { CheckoutPublico } from '~/types/checkoutPagamento'
 import type { PaymentStatus } from '~/types/pagamento'
 import { valorQrPix } from '~/utils/pagamentos'
+import { mapearConfigCartao, type ConfigCartaoPublico } from '~/utils/cartaoCredito'
 
 interface PixData {
   pixCopyPaste: string | null
@@ -24,12 +26,28 @@ const props = defineProps<{
   pixCarregando?: boolean
   pixErro?: boolean
   verificando?: boolean
+  checkoutToken?: string | null
 }>()
 
 const emit = defineEmits<{
   atualizar: []
   tentarPix: []
 }>()
+
+// Cartao: so aparece quando a casa tem o cartao liberado pelo super admin.
+const configCartao = ref<ConfigCartaoPublico | null>(null)
+const forma = ref<'PIX' | 'CARTAO'>('PIX')
+const cartaoDisponivel = computed(() => Boolean(configCartao.value?.disponivel && props.checkoutToken))
+
+onMounted(async () => {
+  if (!props.checkoutToken) return
+  try {
+    const dados = await $fetch('/api/payments/cartao', { query: { token: props.checkoutToken } })
+    configCartao.value = mapearConfigCartao(dados)
+  } catch {
+    configCartao.value = null
+  }
+})
 
 const statusPagamento: PaymentStatus = props.checkout.pagamento?.status ?? 'PENDENTE'
 
@@ -114,7 +132,34 @@ function copiaLegado(texto: string) {
     </div>
 
     <template v-else>
-      <div v-if="temPix" class="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+      <div
+        v-if="cartaoDisponivel"
+        class="grid grid-cols-2 gap-2 rounded-xl border border-zinc-800 bg-zinc-950/40 p-1"
+        role="tablist"
+        aria-label="Forma de pagamento"
+      >
+        <button
+          v-for="opcao in (['PIX', 'CARTAO'] as const)"
+          :key="opcao"
+          type="button"
+          role="tab"
+          :aria-selected="forma === opcao"
+          class="rounded-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors"
+          :class="forma === opcao ? 'bg-amber-400 text-zinc-950' : 'text-zinc-300 hover:text-white'"
+          @click="forma = opcao"
+        >
+          {{ opcao === 'PIX' ? 'Pix' : 'Cartão de crédito' }}
+        </button>
+      </div>
+
+      <PaymentCardForm
+        v-if="cartaoDisponivel && forma === 'CARTAO' && configCartao && props.checkoutToken"
+        :checkout-token="props.checkoutToken"
+        :config="configCartao"
+        @aprovado="emit('atualizar')"
+      />
+
+      <div v-else-if="temPix" class="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
         <p class="text-sm font-semibold text-zinc-200">Pagamento via Pix</p>
 
         <ol

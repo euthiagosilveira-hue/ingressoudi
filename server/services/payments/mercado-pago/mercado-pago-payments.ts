@@ -18,6 +18,7 @@ export interface MpPayment {
   external_reference?: string | null
   transaction_amount?: number | null
   application_fee?: number | null
+  payment_method_id?: string | null
   date_of_expiration?: string | null
   point_of_interaction?: {
     transaction_data?: {
@@ -113,7 +114,10 @@ export function mapMpPaymentToCharge(payment: MpPayment): PixCharge {
     pixCopyPaste: dados?.qr_code ?? null,
     pixQrCode: dados?.qr_code_base64 ?? null,
     expiresAt: payment.date_of_expiration ?? null,
-    amount: typeof payment.transaction_amount === 'number' ? payment.transaction_amount : null
+    amount: typeof payment.transaction_amount === 'number' ? payment.transaction_amount : null,
+    providerStatus: payment.status ?? null,
+    providerStatusDetail: payment.status_detail ?? null,
+    paymentMethodId: payment.payment_method_id ?? null
   }
 }
 
@@ -125,7 +129,8 @@ export class MercadoPagoPaymentsProvider implements PaymentProvider {
     this.accessToken = accessToken
   }
 
-  private async request<T>(path: string, init: RequestInit): Promise<T> {
+  /** Uso interno e pelo modulo de cartao (mesma autenticacao e tratamento de erro). */
+  async request<T>(path: string, init: RequestInit): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
       ...init,
       headers: {
@@ -152,6 +157,15 @@ export class MercadoPagoPaymentsProvider implements PaymentProvider {
       method: 'POST',
       headers: { 'X-Idempotency-Key': input.idempotencyKey },
       body: JSON.stringify(payload)
+    })
+    return mapMpPaymentToCharge(payment)
+  }
+
+  /** Cancela um pagamento ainda pendente (ex.: Pix aberto quando o cartao foi aprovado). */
+  async cancelPayment(paymentId: string): Promise<PixCharge> {
+    const payment = await this.request<MpPayment>(`/v1/payments/${encodeURIComponent(paymentId)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: 'cancelled' })
     })
     return mapMpPaymentToCharge(payment)
   }

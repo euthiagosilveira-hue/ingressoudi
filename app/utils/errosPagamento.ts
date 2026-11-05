@@ -10,6 +10,9 @@ export type TipoErroPagamento =
   | 'VALOR_DIVERGENTE'
   | 'REEMBOLSO'
   | 'CONFIGURACAO'
+  | 'CARTAO'
+  | 'CONTESTACAO'
+  | 'PAGAMENTO_DUPLICADO'
 
 export interface ErroPagamento {
   id: string
@@ -32,7 +35,10 @@ export const ROTULOS_TIPO_ERRO: Record<TipoErroPagamento, string> = {
   CONFIRMACAO: 'Confirmação do pagamento',
   VALOR_DIVERGENTE: 'Valor divergente',
   REEMBOLSO: 'Reembolso',
-  CONFIGURACAO: 'Configuração'
+  CONFIGURACAO: 'Configuração',
+  CARTAO: 'Cartão de crédito',
+  CONTESTACAO: 'Contestação / estorno',
+  PAGAMENTO_DUPLICADO: 'Pagamento duplicado'
 }
 
 export function rotuloTipoErro(tipo: string): string {
