@@ -43,7 +43,8 @@ export interface MpCardPaymentRequest {
   payment_method_id: string
   issuer_id?: number
   external_reference: string
-  binary_mode: true
+  binary_mode: false
+  three_d_secure_mode: 'optional'
   statement_descriptor: string
   payer: {
     email: string
@@ -69,6 +70,24 @@ export interface MpCardPayment {
   installments?: number | null
   payment_method_id?: string | null
   card?: { last_four_digits?: string | null } | null
+  three_ds_info?: { external_resource_url?: string | null; creq?: string | null } | null
+}
+
+/** Desafio 3DS pedido pelo banco (o comprador confirma no app/SMS do banco). */
+export interface Desafio3ds {
+  paymentId: string
+  externalResourceUrl: string
+  creq: string
+}
+
+/** Devolve o desafio quando o Mercado Pago pede a confirmacao do banco. */
+export function desafio3ds(pagamento: MpCardPayment): Desafio3ds | null {
+  if (String(pagamento.status ?? '').toLowerCase() !== 'pending') return null
+  if (String(pagamento.status_detail ?? '').toLowerCase() !== 'pending_challenge') return null
+  const url = String(pagamento.three_ds_info?.external_resource_url ?? '').trim()
+  const creq = String(pagamento.three_ds_info?.creq ?? '').trim()
+  if (!/^https:\/\//.test(url) || !creq) return null
+  return { paymentId: String(pagamento.id), externalResourceUrl: url, creq }
 }
 
 function arredondar(valor: number): number {
@@ -104,8 +123,9 @@ function emailValido(email: string | null | undefined): string | null {
 
 /**
  * Monta o pagamento com cartao. O valor e a taxa vem SEMPRE do pedido no banco,
- * nunca do navegador. `binary_mode` faz o Mercado Pago responder na hora
- * (aprovado ou recusado), sem deixar a reserva presa em "em analise".
+ * nunca do navegador. Com 3DS opcional, quando o antifraude fica em duvida o
+ * Mercado Pago pede a confirmacao do banco em vez de recusar; para isso o
+ * `binary_mode` precisa ficar desligado (o desafio volta como "pending").
  */
 export function montarPayloadCartao(pedido: PedidoCartao, dados: DadosCartaoBrick): MpCardPaymentRequest {
   const parcelas = parcelasValidas(dados.installments)
@@ -129,7 +149,8 @@ export function montarPayloadCartao(pedido: PedidoCartao, dados: DadosCartaoBric
     installments: parcelas,
     payment_method_id: metodo,
     external_reference: pedido.pagamentoId,
-    binary_mode: true,
+    binary_mode: false,
+    three_d_secure_mode: 'optional',
     statement_descriptor: 'INGRESSOUDI',
     payer: { email },
     additional_info: {
@@ -198,6 +219,8 @@ export function mensagemRecusaCartao(statusDetail: string | null | undefined): s
     cc_rejected_blacklist: 'O pagamento foi recusado. Use outro cartão ou pague com Pix.',
     cc_rejected_card_type_not_allowed: 'Este tipo de cartão não é aceito. Use um cartão de crédito.',
     cc_amount_rate_limit_exceeded: 'O cartão atingiu o limite permitido. Use outro cartão ou pague com Pix.',
+    cc_rejected_3ds_challenge: 'O banco não confirmou a compra. Tente de novo ou pague com Pix.',
+    cc_rejected_3ds_mandatory: 'Este cartão exige confirmação do banco que não foi concluída. Tente outro cartão ou pague com Pix.',
     rejected_by_issuer: 'O banco do cartão recusou o pagamento. Use outro cartão ou pague com Pix.'
   }
   const chave = String(statusDetail ?? '').toLowerCase()

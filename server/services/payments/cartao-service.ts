@@ -15,6 +15,7 @@ import { MercadoPagoPaymentsProvider, montarNotificationUrl, valorConfere } from
 import {
   MAX_PARCELAS,
   MAX_TENTATIVAS_CARTAO,
+  desafio3ds,
   mensagemRecusaCartao,
   montarPayloadCartao,
   statusTentativa,
@@ -36,9 +37,11 @@ export interface ConfigCartao {
 }
 
 export interface ResultadoCartao {
-  status: 'APROVADO' | 'RECUSADO' | 'PENDENTE'
+  status: 'APROVADO' | 'RECUSADO' | 'PENDENTE' | 'DESAFIO'
   mensagem?: string
   tentativasRestantes?: number
+  /** So em DESAFIO: dados para abrir a confirmacao do banco (3DS). */
+  desafio?: { paymentId: string; externalResourceUrl: string; creq: string }
 }
 
 function cartaoDisponivel(checkout: CheckoutBackend): boolean {
@@ -176,6 +179,18 @@ export async function pagarComCartao(
 
   if (await pixJaPago(event, checkoutToken, checkout, provider)) return { status: 'APROVADO' }
 
+  // Sem binary_mode o Mercado Pago pode deixar um cartao "em analise": nao cobra
+  // outro cartao enquanto o anterior ainda pode ser aprovado.
+  const anterior = await verificarCartao(event, checkoutToken)
+  if (anterior.status === 'APROVADO') return { status: 'APROVADO' }
+  if (anterior.status === 'PENDENTE' && (await temTentativaPendente(event, checkout.pagamento_id))) {
+    throw new PaymentServiceError(
+      'CARTAO_EM_ANALISE',
+      'Já existe um pagamento com cartão em análise neste pedido. Aguarde alguns minutos e atualize a página.',
+      409
+    )
+  }
+
   const client = serverSupabaseServiceRole(event)
   const { data: inicio, error: erroInicio } = await client.rpc('iniciar_tentativa_cartao', { p_token: checkoutToken })
   if (erroInicio) throw erroDaRpc(erroInicio.message ?? '')
@@ -279,9 +294,26 @@ export async function pagarComCartao(
     return { status: 'RECUSADO', mensagem: mensagemRecusaCartao(pagamento.status_detail), tentativasRestantes: restantes }
   }
   if (status === 'PENDENTE') {
-    // Com binary_mode nao deveria acontecer; webhook e cron confirmam depois.
+    const desafio = desafio3ds(pagamento)
+    if (desafio) return { status: 'DESAFIO', desafio, tentativasRestantes: restantes }
+    // Em analise no Mercado Pago: o aviso (webhook) confirma depois.
     return { status: 'PENDENTE' }
   }
+
+  return concluirCartaoAprovado(event, checkoutToken, checkout, provider, accessToken, pagamento)
+}
+
+/** Cartao aprovado: confere valor, cancela o Pix aberto e confirma o pedido. */
+async function concluirCartaoAprovado(
+  event: H3Event,
+  checkoutToken: string,
+  checkout: CheckoutBackend,
+  provider: MercadoPagoPaymentsProvider,
+  accessToken: string,
+  pagamento: MpCardPayment
+): Promise<ResultadoCartao> {
+  const client = serverSupabaseServiceRole(event)
+  const cartaoId = String(pagamento.id)
 
   if (!valorConfere(pagamento.transaction_amount, checkout.valor_total)) {
     await alertarErroPagamento(event, {
@@ -319,4 +351,77 @@ export async function pagarComCartao(
     }
   }
   return { status: 'APROVADO' }
+}
+
+async function temTentativaPendente(event: H3Event, pagamentoId: string | null | undefined): Promise<boolean> {
+  if (!pagamentoId) return false
+  const { data } = await serverSupabaseServiceRole(event)
+    .from('pagamentos_cartao_tentativas')
+    .select('id')
+    .eq('pagamento_id', pagamentoId)
+    .eq('status', 'PENDENTE')
+    .not('mp_payment_id', 'is', null)
+    .limit(1)
+  return Array.isArray(data) && (data as unknown[]).length > 0
+}
+
+/**
+ * Depois da confirmacao do banco (3DS): consulta no Mercado Pago a ultima
+ * tentativa pendente do pedido e conclui (aprovado, recusado ou ainda pendente).
+ */
+export async function verificarCartao(event: H3Event, checkoutToken: string): Promise<ResultadoCartao> {
+  const checkout = await obterCheckoutBackend(event, checkoutToken)
+  if (!checkout) throw new PaymentServiceError('CHECKOUT_INVALIDO', 'Checkout não encontrado.', 404)
+  if (checkout.pagamento_status === 'APROVADO') return { status: 'APROVADO' }
+  const restantes = Math.max(0, MAX_TENTATIVAS_CARTAO - Number(checkout.tentativas_cartao ?? 0))
+  if (!checkout.pagamento_id) return { status: 'PENDENTE', tentativasRestantes: restantes }
+
+  const client = serverSupabaseServiceRole(event)
+  const { data } = await client
+    .from('pagamentos_cartao_tentativas')
+    .select('id,mp_payment_id,status,status_detail')
+    .eq('pagamento_id', checkout.pagamento_id)
+    .order('criado_em', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const tentativa = data as { id: string; mp_payment_id: string | null; status: string; status_detail: string | null } | null
+  if (!tentativa) return { status: 'PENDENTE', tentativasRestantes: restantes }
+  if (tentativa.status === 'RECUSADA' || tentativa.status === 'ERRO') {
+    return { status: 'RECUSADO', mensagem: mensagemRecusaCartao(tentativa.status_detail), tentativasRestantes: restantes }
+  }
+  if (tentativa.status !== 'PENDENTE' || !tentativa.mp_payment_id) {
+    return { status: 'PENDENTE', tentativasRestantes: restantes }
+  }
+
+  const accessToken = await tokenDaOrganizacao(event, checkout)
+  if (!accessToken) throw new PaymentServiceError('PAGAMENTO_INDISPONIVEL', MSG_SEM_CONTA, 503)
+  const provider = new MercadoPagoPaymentsProvider(accessToken)
+  let pagamento: MpCardPayment
+  try {
+    pagamento = await provider.request<MpCardPayment>(`/v1/payments/${encodeURIComponent(String(tentativa.mp_payment_id))}`, {
+      method: 'GET'
+    })
+  } catch {
+    return { status: 'PENDENTE', tentativasRestantes: restantes }
+  }
+  if (String(pagamento.external_reference ?? '') !== String(checkout.pagamento_id)) {
+    return { status: 'PENDENTE', tentativasRestantes: restantes }
+  }
+
+  const status = statusTentativa(pagamento.status)
+  if (status === 'PENDENTE') return { status: 'PENDENTE', tentativasRestantes: restantes }
+  await client.rpc('registrar_tentativa_cartao', {
+    p_tentativa_id: tentativa.id,
+    p_mp_payment_id: String(pagamento.id),
+    p_status: status,
+    p_status_detail: pagamento.status_detail ?? null,
+    p_parcelas: pagamento.installments ?? null,
+    p_bandeira: pagamento.payment_method_id ?? null,
+    p_final: pagamento.card?.last_four_digits ?? null
+  })
+  if (status === 'RECUSADA') {
+    return { status: 'RECUSADO', mensagem: mensagemRecusaCartao(pagamento.status_detail), tentativasRestantes: restantes }
+  }
+  if (checkout.pedido_status !== 'RESERVADO') return { status: 'PENDENTE', tentativasRestantes: restantes }
+  return concluirCartaoAprovado(event, checkoutToken, checkout, provider, accessToken, pagamento)
 }
