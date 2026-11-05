@@ -12,9 +12,9 @@
 // Uso (credenciais de TESTE do vendedor, em Suas integracoes > Credenciais de teste):
 //   node --env-file=.env scripts/testar-cartao-mp.mjs
 // Requer no .env: MP_TESTE_ACCESS_TOKEN e MP_TESTE_PUBLIC_KEY (de teste, nunca as de producao).
-// Opcional: MP_TESTE_EMAIL_COMPRADOR (e-mail de um usuario de teste comprador). Com credencial de
-// usuario de teste, o comprador precisa ter e-mail @testuser.com; senao o MP responde 401
-// "Unauthorized use of live credentials".
+// Opcional: MP_TESTE_EMAIL_COMPRADOR (qualquer e-mail diferente do da conta; nao use e-mail de usuario de teste).
+// IMPORTANTE: use as "Credenciais de teste" da SUA conta real. As credenciais de um usuario de teste
+// (TESTUSER...) sao tratadas como de producao e o MP responde 401 "Unauthorized use of live credentials".
 // O resultado fica tambem em teste-cartao-mp.log, na pasta do projeto.
 import { appendFileSync, writeFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
@@ -23,7 +23,7 @@ const BASE_URL = 'https://api.mercadopago.com'
 const LOG = 'teste-cartao-mp.log'
 const token = process.env.MP_TESTE_ACCESS_TOKEN || ''
 const publicKey = process.env.MP_TESTE_PUBLIC_KEY || ''
-const emailComprador = process.env.MP_TESTE_EMAIL_COMPRADOR || 'test_user_ingressoudi@testuser.com'
+const emailComprador = process.env.MP_TESTE_EMAIL_COMPRADOR || 'comprador.teste@ingressoudi.com.br'
 
 // Cartoes de teste oficiais do Mercado Pago (Brasil). O nome do titular define o resultado.
 const MASTER = { numero: '5031433215406351', cvv: '123', bandeira: 'master' }
@@ -81,6 +81,10 @@ async function conferirContaDeTeste() {
   }
   const tags = Array.isArray(r.dados?.tags) ? r.dados.tags : []
   const ehTeste = token.startsWith('TEST-') || tags.includes('test_user')
+  if (tags.includes('test_user') && !token.startsWith('TEST-')) {
+    log('  AVISO: esta e a credencial de um USUARIO de teste. Para cartao, o Mercado Pago pede as')
+    log('  "Credenciais de teste" da sua conta real (comecam com TEST-). Os pagamentos devem dar 401.')
+  }
   log(`  conta ${r.dados?.id} (${r.dados?.nickname ?? '?'}), tags: ${tags.join(', ') || 'nenhuma'}`)
   if (!ehTeste) {
     log('  BLOQUEADO: a credencial parece ser de PRODUCAO. Use as credenciais de teste.')
