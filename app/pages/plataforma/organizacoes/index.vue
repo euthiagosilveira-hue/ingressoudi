@@ -12,6 +12,7 @@ import { useOperatorAuth } from '~/composables/useOperatorAuth'
 import {
   criarOrganizacao,
   definirAprovacaoOrganizacao,
+  definirCartaoOrganizacao,
   definirListaVipOrganizacao,
   listarOrganizacoesPlataforma,
   type OrganizacaoPlataforma
@@ -92,6 +93,19 @@ async function alterarListaVip(casa: OrganizacaoPlataforma, ativa: boolean) {
     toast.success(ativa ? `Lista VIP liberada para ${casa.nome}.` : `Lista VIP desligada para ${casa.nome}.`)
   } catch (e) {
     toast.error(e instanceof Error ? e.message : 'Não foi possível atualizar a Lista VIP.')
+  } finally {
+    alterandoId.value = ''
+  }
+}
+
+async function alterarCartao(casa: OrganizacaoPlataforma, ativo: boolean) {
+  alterandoId.value = casa.id
+  try {
+    await definirCartaoOrganizacao(casa.id, ativo)
+    casa.cartao = ativo
+    toast.success(ativo ? `Cartão de crédito liberado para ${casa.nome}.` : `Cartão de crédito desligado para ${casa.nome}.`)
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Não foi possível atualizar o pagamento com cartão.')
   } finally {
     alterandoId.value = ''
   }
@@ -212,6 +226,12 @@ async function acessar(id: string) {
                 >
                   Lista VIP
                 </span>
+                <span
+                  v-if="casa.cartao"
+                  class="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
+                >
+                  Cartão
+                </span>
               </p>
               <p class="truncate text-xs text-zinc-500">
                 <a :href="rotaOrganizacao(casa.slug)" target="_blank" class="hover:text-amber-400">/{{ casa.slug }}</a>
@@ -259,6 +279,14 @@ async function acessar(id: string) {
                 @click="alterarListaVip(casa, !casa.listaVip)"
               >
                 {{ casa.listaVip ? 'Desligar Lista VIP' : 'Liberar Lista VIP' }}
+              </AppButton>
+              <AppButton
+                size="sm"
+                variant="ghost"
+                :disabled="alterandoId === casa.id"
+                @click="alterarCartao(casa, !casa.cartao)"
+              >
+                {{ casa.cartao ? 'Desligar cartão' : 'Liberar cartão' }}
               </AppButton>
               <AppButton
                 v-if="!casa.aprovada"

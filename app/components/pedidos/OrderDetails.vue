@@ -86,7 +86,7 @@ async function confirmarSolicitacaoReembolso() {
       r.manual
         ? 'Pedido cancelado. Registre a devolução em dinheiro ao comprador.'
         : r.emProcesso
-          ? 'Reembolso enviado: o Mercado Pago está processando a devolução do Pix.'
+          ? 'Reembolso enviado: o Mercado Pago está processando a devolução.'
           : `Reembolso de ${formatMoeda(r.valor)} concluído. Os ingressos foram cancelados.`
     )
     emit('atualizado')
@@ -148,8 +148,8 @@ onMounted(() => {
             Reembolso total (ingressos + taxa de serviço).
             {{
               ehPix
-                ? 'O Pix volta para a conta de quem pagou, saindo da conta Mercado Pago da casa.'
-                : 'Venda sem Pix: faça a devolução em dinheiro; aqui apenas registramos.'
+                ? 'O valor volta para quem pagou (no Pix ou na fatura do cartão), saindo da conta Mercado Pago da casa.'
+                : 'Venda em dinheiro: faça a devolução em dinheiro; aqui apenas registramos.'
             }}
           </p>
         </div>

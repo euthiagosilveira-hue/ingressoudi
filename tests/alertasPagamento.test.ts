@@ -25,7 +25,9 @@ test('aviso de erro de pagamento leva para a tela de erros e cita a casa', () =>
 })
 
 test('tipos de erro iguais no servidor, na tela e no check do banco', () => {
-  const migracao = ler('../supabase/migrations/20261023020000_alertas_erro_pagamento.sql')
+  const migracao =
+    ler('../supabase/migrations/20261023020000_alertas_erro_pagamento.sql') +
+    ler('../supabase/migrations/20261105010000_cartao_credito.sql')
   const tiposServidor = Object.keys(TITULOS_ERRO_PAGAMENTO).sort()
   assert.deepEqual(Object.keys(ROTULOS_TIPO_ERRO).sort(), tiposServidor)
   for (const tipo of tiposServidor) assert.ok(migracao.includes(`'${tipo}'`), tipo)

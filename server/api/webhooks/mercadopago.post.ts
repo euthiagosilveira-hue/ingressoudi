@@ -123,20 +123,70 @@ export default defineEventHandler(async (event) => {
     return { error: 'CONSULTA_FALHOU' }
   }
 
+  // Estorno ou contestacao (chargeback) feitos fora do painel: cancela o
+  // pedido e os ingressos ainda nao usados. So age se for a transacao que
+  // aprovou o pedido (o Pix cancelado quando o cartao foi aprovado e ignorado).
+  const statusBruto = String(charge.providerStatus ?? '').toLowerCase()
+  if ((statusBruto === 'refunded' || statusBruto === 'charged_back') && ehUuid(charge.externalReference)) {
+    const contestacao = statusBruto === 'charged_back'
+    const { data: estorno, error: erroEstorno } = await client.rpc('estornar_pedido_externo', {
+      p_pagamento_id: charge.externalReference,
+      p_transacao_id: charge.transactionId,
+      p_tipo: contestacao ? 'CONTESTACAO' : 'REEMBOLSO'
+    })
+    if (erroEstorno) {
+      await alertarErroPagamento(event, {
+        tipo: 'CONTESTACAO',
+        organizacaoId,
+        mensagem: `Pagamento ${contestacao ? 'contestado' : 'estornado'} no Mercado Pago, mas o pedido não foi cancelado no sistema. O Mercado Pago vai reenviar.`,
+        detalhe: { erro: erroEstorno.message },
+        referencia: charge.externalReference
+      })
+      setResponseStatus(event, 500)
+      return { error: 'ERRO_ESTORNO' }
+    }
+    const resultado = estorno as { resultado?: string; codigo_pedido?: string; ingressos_utilizados?: number } | null
+    if (resultado?.resultado === 'cancelado') {
+      const usados = Number(resultado.ingressos_utilizados ?? 0)
+      await alertarErroPagamento(event, {
+        tipo: 'CONTESTACAO',
+        organizacaoId,
+        mensagem: contestacao
+          ? `Contestação (chargeback) no pedido ${resultado.codigo_pedido}: pedido e ingressos não usados foram cancelados.${usados ? ` ${usados} ingresso(s) já tinham entrado no evento.` : ''}`
+          : `Pedido ${resultado.codigo_pedido} estornado direto no Mercado Pago: pedido e ingressos não usados foram cancelados.`,
+        detalhe: { ...resultado, forma: charge.paymentMethodId ?? null },
+        referencia: charge.externalReference
+      })
+    }
+    return { ok: true }
+  }
+
   if (charge.status !== 'APROVADO' || !ehUuid(charge.externalReference)) {
     return { ok: true }
   }
 
   const { data: pagamento } = await client
     .from('pagamentos')
-    .select('id,organizacao_id,valor,status')
+    .select('id,organizacao_id,valor,status,transacao_id')
     .eq('id', charge.externalReference)
     .maybeSingle()
 
   if (!pagamento || String(pagamento.organizacao_id) !== organizacaoId) {
     return { ok: true, ignorado: true }
   }
-  if (pagamento.status === 'APROVADO') return { ok: true }
+  if (pagamento.status === 'APROVADO') {
+    // Outra cobranca aprovada para um pedido ja pago (ex.: Pix e cartao): avisa.
+    if (pagamento.transacao_id && String(pagamento.transacao_id) !== String(charge.transactionId)) {
+      await alertarErroPagamento(event, {
+        tipo: 'PAGAMENTO_DUPLICADO',
+        organizacaoId,
+        mensagem: 'Pedido já pago recebeu outro pagamento aprovado. Estorne a cobrança extra pelo Mercado Pago.',
+        detalhe: { cobrancaExtra: charge.transactionId, cobrancaDoPedido: pagamento.transacao_id, forma: charge.paymentMethodId ?? null },
+        referencia: String(pagamento.id)
+      })
+    }
+    return { ok: true }
+  }
 
   if (!valorConfere(charge.amount, pagamento.valor)) {
     console.error('[mercado-pago] webhook com valor divergente', {
@@ -146,7 +196,7 @@ export default defineEventHandler(async (event) => {
     await alertarErroPagamento(event, {
       tipo: 'VALOR_DIVERGENTE',
       organizacaoId,
-      mensagem: 'Pix aprovado com valor diferente do pedido; não foi confirmado.',
+      mensagem: 'Pagamento aprovado com valor diferente do pedido; não foi confirmado.',
       detalhe: { valorMp: charge.amount, valorPedido: Number(pagamento.valor) },
       referencia: String(pagamento.id)
     })
@@ -162,7 +212,7 @@ export default defineEventHandler(async (event) => {
     await alertarErroPagamento(event, {
       tipo: 'CONFIRMACAO',
       organizacaoId,
-      mensagem: 'Pix aprovado no Mercado Pago, mas a confirmação no sistema falhou. O Mercado Pago vai reenviar.',
+      mensagem: 'Pagamento aprovado no Mercado Pago, mas a confirmação no sistema falhou. O Mercado Pago vai reenviar.',
       detalhe: { erro: error.message },
       referencia: charge.externalReference
     })

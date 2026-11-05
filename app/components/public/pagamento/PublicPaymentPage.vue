@@ -119,6 +119,7 @@ watch(
           :pix-carregando="pixCarregando"
           :pix-erro="pixErro"
           :verificando="verificandoExpiracao"
+          :checkout-token="token"
           @atualizar="atualizar"
           @tentar-pix="tentarPix"
         />

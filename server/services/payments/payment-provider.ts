@@ -20,6 +20,11 @@ export interface PixCharge {
   expiresAt: string | null
   /** Valor cobrado no provedor (quando disponivel), para conferencia. */
   amount?: number | null
+  /** Status bruto do provedor (ex.: refunded, charged_back), para estornos. */
+  providerStatus?: string | null
+  providerStatusDetail?: string | null
+  /** Forma de pagamento no provedor (pix, master, visa...). */
+  paymentMethodId?: string | null
 }
 
 export interface CreatePixChargeInput {

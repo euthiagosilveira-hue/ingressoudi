@@ -32,6 +32,9 @@ export type TipoErroPagamento =
   | 'VALOR_DIVERGENTE'
   | 'REEMBOLSO'
   | 'CONFIGURACAO'
+  | 'CARTAO'
+  | 'CONTESTACAO'
+  | 'PAGAMENTO_DUPLICADO'
 
 export const TITULOS_ERRO_PAGAMENTO: Record<TipoErroPagamento, string> = {
   PIX_CRIACAO: 'Falha ao gerar Pix',
@@ -42,7 +45,10 @@ export const TITULOS_ERRO_PAGAMENTO: Record<TipoErroPagamento, string> = {
   CONFIRMACAO: 'Falha ao confirmar pagamento',
   VALOR_DIVERGENTE: 'Pagamento com valor diferente',
   REEMBOLSO: 'Reembolso falhou',
-  CONFIGURACAO: 'Pagamentos sem configuração'
+  CONFIGURACAO: 'Pagamentos sem configuração',
+  CARTAO: 'Falha no pagamento com cartão',
+  CONTESTACAO: 'Contestação ou estorno de pagamento',
+  PAGAMENTO_DUPLICADO: 'Pagamento duplicado'
 }
 
 export function avisoErroPagamento(tipo: TipoErroPagamento, casa: string | null, mensagem: string): AvisoPush {

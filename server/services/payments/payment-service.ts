@@ -22,6 +22,9 @@ export type PaymentServiceErrorCode =
   | 'PROVIDER_CONFLITO'
   | 'DADOS_INVALIDOS'
   | 'ERRO_INESPERADO'
+  | 'CARTAO_INDISPONIVEL'
+  | 'LIMITE_TENTATIVAS'
+  | 'DADOS_CARTAO'
 
 export class PaymentServiceError extends Error {
   code: PaymentServiceErrorCode
@@ -35,7 +38,7 @@ export class PaymentServiceError extends Error {
   }
 }
 
-interface CheckoutBackend {
+export interface CheckoutBackend {
   pedido_id: string
   codigo_pedido: string
   comprador_email: string | null
@@ -53,6 +56,15 @@ interface CheckoutBackend {
   pix_copia_cola: string | null
   pix_qr_code: string | null
   expira_em: string | null
+  // Cartao (migration 20261105010000_cartao_credito)
+  comprador_nome?: string | null
+  comprador_telefone?: string | null
+  evento_nome?: string | null
+  quantidade?: number | null
+  forma_pagamento?: string | null
+  cartao_ativo?: boolean | null
+  mp_public_key?: string | null
+  tentativas_cartao?: number | null
 }
 
 export interface PixResponse {
@@ -68,10 +80,10 @@ export function ehUuid(valor: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(valor)
 }
 
-const MSG_SEM_CONTA =
+export const MSG_SEM_CONTA =
   'O organizador deste evento ainda não conectou o Mercado Pago. Tente novamente mais tarde.'
 
-async function obterCheckoutBackend(event: H3Event, token: string): Promise<CheckoutBackend | null> {
+export async function obterCheckoutBackend(event: H3Event, token: string): Promise<CheckoutBackend | null> {
   const client = serverSupabaseServiceRole(event)
   const { data, error } = await client.rpc('obter_checkout_pagamento_backend', { p_token: token })
   if (error) throw new PaymentServiceError('ERRO_INESPERADO', error.message, 500)
@@ -79,7 +91,7 @@ async function obterCheckoutBackend(event: H3Event, token: string): Promise<Chec
 }
 
 /** Token da conta Mercado Pago da organizacao dona do pedido (ou null). */
-async function tokenDaOrganizacao(event: H3Event, checkout: CheckoutBackend): Promise<string | null> {
+export async function tokenDaOrganizacao(event: H3Event, checkout: CheckoutBackend): Promise<string | null> {
   if (!checkout.organizacao_id) return null
   try {
     return await obterAccessTokenOrganizacao(event, checkout.organizacao_id)
@@ -95,7 +107,7 @@ async function tokenDaOrganizacao(event: H3Event, checkout: CheckoutBackend): Pr
   }
 }
 
-async function garantirPagamentoLogico(
+export async function garantirPagamentoLogico(
   event: H3Event,
   token: string,
   checkout: CheckoutBackend
@@ -308,7 +320,7 @@ export async function criarPix(
  * Recuperacao: pagamento oficial APROVADO mas interno ainda nao. Confirma pelo
  * service_role (idempotente), somente se a referencia e o valor conferem.
  */
-async function confirmarPagamentoOficial(
+export async function confirmarPagamentoOficial(
   event: H3Event,
   checkoutToken: string,
   checkout: CheckoutBackend,
