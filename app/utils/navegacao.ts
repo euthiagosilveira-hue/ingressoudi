@@ -1,4 +1,4 @@
-export type PerfilNavegacao = 'ADMINISTRADOR' | 'PORTARIA' | null
+export type PerfilNavegacao = 'ADMINISTRADOR' | 'PORTARIA' | 'SOCIO' | null
 
 export type PerfilSidebar = Exclude<PerfilNavegacao, null>
 
@@ -13,6 +13,27 @@ export const PERFIS_ADMIN: PerfilSidebar[] = ['ADMINISTRADOR']
 
 /** Itens operacionais liberados para ADMINISTRADOR e PORTARIA. */
 export const PERFIS_ADMIN_PORTARIA: PerfilSidebar[] = ['ADMINISTRADOR', 'PORTARIA']
+
+/** Itens do Socio do Evento (somente as vendas dos eventos dele). */
+export const PERFIS_SOCIO: PerfilSidebar[] = ['SOCIO']
+
+/**
+ * Um redirect pos-login so e honrado se o perfil puder abrir aquela area:
+ * ADMINISTRADOR qualquer rota interna; PORTARIA so /portaria; SOCIO so /socio.
+ */
+export function redirectPermitidoPerfil(destino: string, perfil: string | null | undefined): boolean {
+  if (perfil === 'ADMINISTRADOR') return true
+  if (perfil === 'PORTARIA') return destino === '/portaria' || destino.startsWith('/portaria/') || destino.startsWith('/portaria?')
+  if (perfil === 'SOCIO') return destino === '/socio' || destino.startsWith('/socio/') || destino.startsWith('/socio?')
+  return false
+}
+
+/** Tela inicial de cada perfil depois do login, do convite ou da troca de casa. */
+export function destinoInicialPerfil(perfil: string | null | undefined): string {
+  if (perfil === 'PORTARIA') return '/portaria'
+  if (perfil === 'SOCIO') return '/socio'
+  return '/painel'
+}
 
 /**
  * Regra unica de visibilidade da navegacao por perfil.

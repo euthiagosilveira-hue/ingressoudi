@@ -42,6 +42,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
+  // Socio do Evento nao opera a portaria: vai para as vendas dele.
+  if (perfil?.ativo && perfil.perfil === 'SOCIO') {
+    return navigateTo('/socio')
+  }
+
   const decisao = decidirAcessoOperador({
     temSessao: true,
     perfil: perfil?.perfil ?? null,

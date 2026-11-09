@@ -14,6 +14,7 @@ import {
 
 import { AuthError, useOperatorAuth } from '~/composables/useOperatorAuth'
 import { mensagemLoginErro, sanitizarRedirect } from '~/utils/auth'
+import { destinoInicialPerfil, redirectPermitidoPerfil } from '~/utils/navegacao'
 
 definePageMeta({
   layout: false
@@ -56,7 +57,7 @@ async function entrar() {
       typeof route.query.redirect === 'string' ? route.query.redirect : null
     )
     // Honra o redirect apenas se for interno e permitido ao perfil.
-    if (destino && (perfil.perfil === 'ADMINISTRADOR' || destino.startsWith('/portaria'))) {
+    if (destino && redirectPermitidoPerfil(destino, perfil.perfil)) {
       await navigateTo(destino)
       return
     }
@@ -64,7 +65,7 @@ async function entrar() {
       await navigateTo('/plataforma/painel')
       return
     }
-    await navigateTo(perfil.perfil === 'PORTARIA' ? '/portaria' : '/painel')
+    await navigateTo(destinoInicialPerfil(perfil.perfil))
   } catch (e) {
     erro.value = e instanceof AuthError ? e.message : mensagemLoginErro('ERRO_TEMPORARIO')
     // Garante que uma sessao sem permissao nao permaneca ativa.

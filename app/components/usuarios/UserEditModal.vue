@@ -6,8 +6,10 @@ import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import BaseSelect from '~/components/BaseSelect.vue'
 import FormField from '~/components/FormField.vue'
+import UserEventosSocio from '~/components/usuarios/UserEventosSocio.vue'
 import type { EdicaoUsuarioInput, PerfilUsuario, UsuarioListItem } from '~/types/usuario'
 import {
+  PERFIL_DESCRICAO,
   PERFIS_USUARIO,
   formularioValido,
   rotuloPerfil,
@@ -29,9 +31,10 @@ const form = reactive({
   nome: '',
   email: '',
   perfil: 'PORTARIA' as PerfilUsuario,
-  ativo: 'true'
+  ativo: 'true',
+  eventoIds: [] as string[]
 })
-const erros = ref<{ nome?: string; perfil?: string }>({})
+const erros = ref<{ nome?: string; perfil?: string; eventos?: string }>({})
 
 const perfilOptions = PERFIS_USUARIO.map((perfil) => ({ value: perfil, label: rotuloPerfil(perfil) }))
 const statusOptions = [
@@ -49,6 +52,7 @@ watch(
       form.email = props.usuario.email
       form.perfil = props.usuario.perfil
       form.ativo = props.usuario.ativo ? 'true' : 'false'
+      form.eventoIds = props.usuario.eventosSocio.map((e) => e.id)
       erros.value = {}
     }
   }
@@ -58,10 +62,17 @@ function enviar() {
   if (!props.usuario) return
   const perfil = ultimoAdmin.value ? 'ADMINISTRADOR' : form.perfil
   const ativo = ultimoAdmin.value ? true : form.ativo === 'true'
-  const validacao = validarEdicao({ id: props.usuario.id, nome: form.nome, perfil, ativo })
+  const input = {
+    id: props.usuario.id,
+    nome: form.nome,
+    perfil,
+    ativo,
+    eventoIds: perfil === 'SOCIO' ? [...form.eventoIds] : undefined
+  }
+  const validacao = validarEdicao(input)
   erros.value = validacao
   if (!formularioValido(validacao)) return
-  emit('submit', { id: props.usuario.id, nome: form.nome, perfil, ativo })
+  emit('submit', input)
 }
 </script>
 
@@ -81,7 +92,12 @@ function enviar() {
         <BaseInput v-model="form.email" type="email" disabled />
       </FormField>
 
-      <FormField label="Perfil" required :error="erros.perfil">
+      <FormField
+        label="Perfil"
+        required
+        :error="erros.perfil"
+        :hint="ultimoAdmin ? undefined : PERFIL_DESCRICAO[form.perfil]"
+      >
         <p
           v-if="ultimoAdmin"
           class="rounded-lg border border-zinc-700 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-300"
@@ -90,6 +106,12 @@ function enviar() {
         </p>
         <BaseSelect v-else v-model="form.perfil" :options="perfilOptions" />
       </FormField>
+
+      <UserEventosSocio
+        v-if="!ultimoAdmin && form.perfil === 'SOCIO'"
+        v-model="form.eventoIds"
+        :erro="erros.eventos"
+      />
 
       <FormField label="Status">
         <p

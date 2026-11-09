@@ -39,6 +39,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
+  // Socio do Evento logado tentando abrir o administrativo: vai para as vendas dele.
+  if (perfil?.ativo && perfil.perfil === 'SOCIO') {
+    return navigateTo('/socio')
+  }
+
   if (!perfil || !perfil.ativo || perfil.perfil !== 'ADMINISTRADOR') {
     await supabase.auth.signOut()
     return navigateTo('/login?erro=SEM_PERMISSAO')

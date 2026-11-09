@@ -37,7 +37,16 @@ const emit = defineEmits<{
             <p class="text-sm font-semibold text-white">{{ usuario.nome }}</p>
           </td>
           <td class="px-4 py-3 text-sm text-zinc-300">{{ usuario.email }}</td>
-          <td class="px-4 py-3"><UserRoleBadge :perfil="usuario.perfil" /></td>
+          <td class="px-4 py-3">
+            <UserRoleBadge :perfil="usuario.perfil" />
+            <p
+              v-if="usuario.perfil === 'SOCIO'"
+              class="mt-1 max-w-[220px] truncate text-xs text-zinc-500"
+              :title="usuario.eventosSocio.map((e) => e.nome).join(', ')"
+            >
+              {{ usuario.eventosSocio.length ? usuario.eventosSocio.map((e) => e.nome).join(', ') : 'Nenhum evento' }}
+            </p>
+          </td>
           <td class="px-4 py-3"><UserStatusBadge :ativo="usuario.ativo" :pendente="usuario.pendente" /></td>
           <td class="px-4 py-3 text-sm text-zinc-400">{{ usuario.ultimoAcesso }}</td>
           <td class="px-4 py-3">

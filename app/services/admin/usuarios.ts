@@ -29,6 +29,21 @@ export async function atualizarUsuarioAdmin(input: EdicaoUsuarioInput): Promise<
   if (error) {
     throw new Error(mensagemErroUsuario(error, 'Não foi possível atualizar o usuário.'))
   }
+  if (input.perfil === 'SOCIO' && input.eventoIds) {
+    await definirEventosSocioAdmin(input.id, input.eventoIds)
+  }
+}
+
+/** Define os eventos que o Socio do Evento acompanha (substitui a lista). */
+export async function definirEventosSocioAdmin(usuarioId: string, eventoIds: string[]): Promise<void> {
+  const client = useSupabaseClient()
+  const { error } = await client.rpc('definir_eventos_socio_admin', {
+    p_usuario_id: usuarioId,
+    p_evento_ids: eventoIds
+  })
+  if (error) {
+    throw new Error(mensagemErroUsuario(error, 'Não foi possível salvar os eventos do sócio.'))
+  }
 }
 
 interface RespostaConvite {
@@ -71,7 +86,8 @@ export async function convidarUsuarioAdmin(input: ConviteUsuarioInput): Promise<
   const resposta = await postarConvite('/api/admin/users/invite', {
     nome: input.nome.trim(),
     email: input.email.trim(),
-    perfil: input.perfil
+    perfil: input.perfil,
+    eventos: input.perfil === 'SOCIO' ? (input.eventoIds ?? []) : undefined
   })
   return {
     link: resposta.link ?? null,

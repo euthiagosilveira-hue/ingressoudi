@@ -1,6 +1,8 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
-const PERFIS = ['ADMINISTRADOR', 'PORTARIA']
+const PERFIS = ['ADMINISTRADOR', 'PORTARIA', 'SOCIO']
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const LIMITE_EVENTOS = 200
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const LIMITE_NOME = 120
 
@@ -19,6 +21,8 @@ const LIMITE_NOME = 120
  *      devolve o link para o administrador enviar (copiar ou WhatsApp);
  *   5. compensa (remove usuario/auth user) se a sincronizacao falhar;
  *   6. registra auditoria na organizacao.
+ *   7. SOCIO (Socio do Evento): grava os eventos que ele acompanha
+ *      (public.socios_eventos), so eventos da organizacao ativa.
  *
  * Usa service role SOMENTE no backend. Devolve apenas o link do convite.
  */
@@ -30,14 +34,21 @@ export default defineEventHandler(async (event) => {
     return { error: 'NAO_AUTENTICADO' }
   }
 
-  const body = await readBody<{ nome?: string; email?: string; perfil?: string }>(event).catch(
-    () => ({})
-  )
+  const body = await readBody<{ nome?: string; email?: string; perfil?: string; eventos?: unknown }>(
+    event
+  ).catch(() => ({}))
   const nome = String(body?.nome ?? '').trim()
   const email = String(body?.email ?? '').trim().toLowerCase()
   const perfil = String(body?.perfil ?? '').trim()
+  const eventos = Array.isArray(body?.eventos)
+    ? [...new Set(body.eventos.map((e) => String(e ?? '').trim()).filter((e) => UUID_RE.test(e)))]
+    : []
 
   if (!nome || nome.length > LIMITE_NOME || !EMAIL_RE.test(email) || !PERFIS.includes(perfil)) {
+    setResponseStatus(event, 400)
+    return { error: 'DADOS_INVALIDOS' }
+  }
+  if (perfil === 'SOCIO' && (eventos.length === 0 || eventos.length > LIMITE_EVENTOS)) {
     setResponseStatus(event, 400)
     return { error: 'DADOS_INVALIDOS' }
   }
@@ -76,6 +87,33 @@ export default defineEventHandler(async (event) => {
     return { error: 'SEM_PERMISSAO' }
   }
 
+  // SOCIO: todos os eventos marcados precisam ser desta organizacao.
+  if (perfil === 'SOCIO') {
+    const { data: eventosDaCasa, error: erroEventos } = await admin
+      .from('eventos')
+      .select('id')
+      .eq('organizacao_id', organizacaoId)
+      .in('id', eventos)
+    if (erroEventos || (eventosDaCasa ?? []).length !== eventos.length) {
+      setResponseStatus(event, 400)
+      return { error: 'DADOS_INVALIDOS' }
+    }
+  }
+
+  // Grava os eventos do socio; em falha, desfaz o vinculo criado agora.
+  async function vincularEventosSocio(usuarioId: string): Promise<boolean> {
+    if (perfil !== 'SOCIO') return true
+    const { error } = await admin.from('socios_eventos').insert(
+      eventos.map((eventoId) => ({
+        organizacao_id: organizacaoId,
+        usuario_id: usuarioId,
+        evento_id: eventoId,
+        criado_por: uid
+      }))
+    )
+    return !error
+  }
+
   // 3) e-mail ja cadastrado na plataforma?
   const { data: existente } = await admin
     .from('usuarios')
@@ -105,12 +143,22 @@ export default defineEventHandler(async (event) => {
       return { error: 'ERRO_INESPERADO' }
     }
 
+    if (!(await vincularEventosSocio(String(existente.id)))) {
+      await admin
+        .from('membros_organizacao')
+        .delete()
+        .eq('organizacao_id', organizacaoId)
+        .eq('usuario_id', existente.id)
+      setResponseStatus(event, 500)
+      return { error: 'ERRO_INESPERADO' }
+    }
+
     await admin.from('auditoria').insert({
       usuario_id: uid,
       acao: 'USUARIO_VINCULADO',
       entidade: 'usuarios',
       entidade_id: existente.id,
-      dados_novos: { email, perfil, ativo: true },
+      dados_novos: { email, perfil, ativo: true, ...(perfil === 'SOCIO' ? { eventos } : {}) },
       organizacao_id: organizacaoId
     })
 
@@ -157,11 +205,23 @@ export default defineEventHandler(async (event) => {
         .from('membros_organizacao')
         .insert({ organizacao_id: organizacaoId, usuario_id: novoUsuarioId, perfil, ativo: true })
 
-  if (erroSync || erroMembro) {
+  const erroEventosSocio =
+    !erroSync && !erroMembro && !(await vincularEventosSocio(novoUsuarioId))
+      ? { code: '', message: 'eventos do socio' }
+      : null
+
+  if (erroSync || erroMembro || erroEventosSocio) {
     // Compensacao: evita auth.users/usuarios orfaos.
+    if (!erroMembro && !erroSync) {
+      await admin
+        .from('membros_organizacao')
+        .delete()
+        .eq('organizacao_id', organizacaoId)
+        .eq('usuario_id', novoUsuarioId)
+    }
     if (!erroSync) await admin.from('usuarios').delete().eq('id', novoUsuarioId)
     await admin.auth.admin.deleteUser(novoUsuarioId).catch(() => {})
-    const erro = erroSync ?? erroMembro
+    const erro = erroSync ?? erroMembro ?? erroEventosSocio
     const mensagem = (erro?.message ?? '').toLowerCase()
     if (erro?.code === '23505' || mensagem.includes('duplicate') || mensagem.includes('unique')) {
       setResponseStatus(event, 409)
@@ -176,7 +236,14 @@ export default defineEventHandler(async (event) => {
     acao: 'USUARIO_CRIADO',
     entidade: 'usuarios',
     entidade_id: novoUsuarioId,
-    dados_novos: { nome, email, perfil, ativo: true, convite: 'link' },
+    dados_novos: {
+      nome,
+      email,
+      perfil,
+      ativo: true,
+      convite: 'link',
+      ...(perfil === 'SOCIO' ? { eventos } : {})
+    },
     organizacao_id: organizacaoId
   })
 

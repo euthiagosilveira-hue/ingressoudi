@@ -31,6 +31,11 @@ const emit = defineEmits<{
         <p class="text-xs text-zinc-500">Último acesso: {{ usuario.ultimoAcesso }}</p>
       </div>
 
+      <p v-if="usuario.perfil === 'SOCIO'" class="text-xs text-zinc-400">
+        Acompanha:
+        {{ usuario.eventosSocio.length ? usuario.eventosSocio.map((e) => e.nome).join(', ') : 'nenhum evento' }}
+      </p>
+
       <div class="flex gap-2 border-t border-zinc-800 pt-3">
         <AppButton
           v-if="usuario.pendente && usuario.ativo"

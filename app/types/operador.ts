@@ -1,4 +1,4 @@
-export type PerfilOperador = 'ADMINISTRADOR' | 'PORTARIA'
+export type PerfilOperador = 'ADMINISTRADOR' | 'PORTARIA' | 'SOCIO'
 
 export interface OrganizacaoResumo {
   id: string
