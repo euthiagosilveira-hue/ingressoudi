@@ -38,6 +38,8 @@ interface AdminEventRow {
   lotes_count: number
   pedidos_count: number
   ingressos_count: number
+  ingressos_vendidos?: number | null
+  disponiveis?: number | null
 }
 
 function mapear(row: AdminEventRow): AdminEventListItem {
@@ -68,7 +70,10 @@ function mapear(row: AdminEventRow): AdminEventListItem {
       : null,
     lotesCount: row.lotes_count,
     pedidosCount: row.pedidos_count,
-    ingressosCount: row.ingressos_count
+    ingressosCount: row.ingressos_count,
+    // Campos novos (20261109010000). Enquanto o SQL nao roda, ficam null.
+    ingressosVendidos: typeof row.ingressos_vendidos === 'number' ? row.ingressos_vendidos : null,
+    disponiveis: typeof row.disponiveis === 'number' ? row.disponiveis : null
   }
 }
 

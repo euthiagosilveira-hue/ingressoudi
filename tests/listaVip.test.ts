@@ -29,6 +29,8 @@ function evento(overrides: Partial<AdminEventListItem>): AdminEventListItem {
     lotesCount: 0,
     pedidosCount: 0,
     ingressosCount: 0,
+    ingressosVendidos: 0,
+    disponiveis: 0,
     ...overrides
   }
 }
