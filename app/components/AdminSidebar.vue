@@ -11,6 +11,7 @@ import {
   GlobeAltIcon,
   PresentationChartBarIcon,
   PresentationChartLineIcon,
+  QuestionMarkCircleIcon,
   Cog6ToothIcon,
   QrCodeIcon,
   RectangleStackIcon,
@@ -230,6 +231,16 @@ const raizClasses = computed(() =>
         />
       </template>
       <InstalarAppBotao variante="sidebar" />
+      <a
+        href="/ajuda"
+        target="_blank"
+        rel="noopener"
+        class="flex w-full cursor-pointer items-center gap-3.5 rounded-lg px-4 py-3 text-sm text-zinc-400 transition-colors duration-150 hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40"
+        @click="emit('navigate')"
+      >
+        <QuestionMarkCircleIcon class="h-[22px] w-[22px]" />
+        <span class="flex-1 text-left">Central de ajuda</span>
+      </a>
     </nav>
 
     <div v-if="operador" class="mt-5 rounded-xl border border-zinc-800 bg-zinc-900 p-4">

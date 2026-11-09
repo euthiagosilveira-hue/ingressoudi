@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import AjudaLink from '~/components/ajuda/AjudaLink.vue'
+
 withDefaults(
   defineProps<{
     title: string
     subtitle?: string
+    /** Slug do artigo da central de ajuda sobre esta tela. */
+    ajuda?: string
   }>(),
-  { subtitle: '' }
+  { subtitle: '', ajuda: '' }
 )
 </script>
 
@@ -15,6 +19,7 @@ withDefaults(
       <p v-if="subtitle" class="mt-1 text-sm text-zinc-400">{{ subtitle }}</p>
     </div>
     <div class="flex flex-wrap items-center gap-3">
+      <AjudaLink v-if="ajuda" :artigo="ajuda" />
       <slot name="actions" />
     </div>
   </header>

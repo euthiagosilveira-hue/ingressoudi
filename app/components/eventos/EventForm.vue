@@ -76,7 +76,7 @@ function visualizarPublico() {
       Voltar para eventos
     </NuxtLink>
 
-    <PageHeader :title="titulo" subtitle="Preencha as informações do seu evento.">
+    <PageHeader ajuda="criar-evento" :title="titulo" subtitle="Preencha as informações do seu evento.">
       <template #actions>
         <AppButton variant="outline" :disabled="modoCriacao" @click="visualizarPublico">
           Visualizar público

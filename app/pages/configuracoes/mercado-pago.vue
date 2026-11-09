@@ -71,7 +71,7 @@ onMounted(() => void carregar())
 
 <template>
   <div class="space-y-6">
-    <PageHeader
+    <PageHeader ajuda="conectar-mercado-pago"
       title="Mercado Pago"
       subtitle="As vendas Pix caem direto na conta Mercado Pago da sua organização."
     >

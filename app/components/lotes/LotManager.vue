@@ -185,7 +185,7 @@ function acaoLote(payload: { id: string; action: string }) {
       </nav>
     </div>
 
-    <PageHeader title="Lotes" subtitle="Gerencie os preços e as etapas de venda deste evento.">
+    <PageHeader ajuda="setores-e-lotes" title="Lotes" subtitle="Gerencie os preços e as etapas de venda deste evento.">
       <template #actions>
         <AppButton variant="primary" :disabled="props.processando" @click="abrirNovo()">
           <PlusIcon class="h-4 w-4" />

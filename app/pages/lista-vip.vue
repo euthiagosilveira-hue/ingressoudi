@@ -51,7 +51,7 @@ const semEventos = computed(() => operacionais.value.length === 0 && historicos.
 
 <template>
   <div class="space-y-6">
-    <PageHeader title="Lista VIP" subtitle="Gerencie os convidados VIP dos seus eventos." />
+    <PageHeader ajuda="lista-vip" title="Lista VIP" subtitle="Gerencie os convidados VIP dos seus eventos." />
 
     <BaseCard v-if="!liberada">
       <p class="text-sm text-zinc-400">

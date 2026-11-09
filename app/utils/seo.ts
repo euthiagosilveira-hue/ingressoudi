@@ -2,6 +2,7 @@
  * SEO: endereco canonico, sitemap e dados estruturados da pagina inicial.
  * Funcoes puras para rodar igual no servidor (sitemap.xml) e na pagina.
  */
+import { ARTIGOS_AJUDA } from './ajuda.ts'
 import { PLATAFORMA_NOME } from './marca.ts'
 
 /** Endereco oficial quando NUXT_PUBLIC_SITE_URL nao estiver definido. */
@@ -20,7 +21,9 @@ export const PAGINAS_SITEMAP: readonly string[] = [
   '/recuperar-ingressos',
   '/termos',
   '/privacidade',
-  '/reembolso'
+  '/reembolso',
+  '/ajuda',
+  ...ARTIGOS_AJUDA.map((artigo) => `/ajuda/${artigo.slug}`)
 ]
 
 /**
