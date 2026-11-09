@@ -131,7 +131,7 @@ const vendasAbertas = computed(() => props.event.vendasStatus === 'ABERTAS')
           <span class="text-sm font-semibold text-white">{{ formatNumero(props.event.vendidos) }}</span>
           <span class="text-xs text-zinc-500">vendidos</span>
         </div>
-        <div>
+        <div v-if="props.event.disponiveis !== null">
           <span class="text-sm font-semibold text-white">{{ formatNumero(props.event.disponiveis) }}</span>
           <span class="text-xs text-zinc-500"> disponíveis</span>
         </div>

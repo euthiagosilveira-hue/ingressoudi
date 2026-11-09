@@ -21,7 +21,9 @@ test('mapearEventoAdminParaListItem adapta o item real para o shape dos cards', 
     loteAtivo: { id: 'lote-1', nome: 'Lote 1', ordem: 1, preco: 40, quantidade: 150, vendidos: 132, disponiveis: 18 },
     lotesCount: 2,
     pedidosCount: 7,
-    ingressosCount: 9
+    ingressosCount: 9,
+    ingressosVendidos: null,
+    disponiveis: null
   })
 
   assert.equal(item.id, 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee')
@@ -31,6 +33,7 @@ test('mapearEventoAdminParaListItem adapta o item real para o shape dos cards', 
   assert.equal(item.publicacaoStatus, 'PUBLICADO')
   assert.equal(item.vendasStatus, 'ENCERRADAS')
   assert.equal(item.vendidos, 9)
+  assert.equal(item.disponiveis, null)
   assert.equal(item.imagemUrl, 'https://cdn.exemplo.com/capa.jpg')
   assert.deepEqual(item.loteAtual, { id: 'lote-1', nome: 'Lote 1', preco: 40, precoMeia: null })
 })
@@ -53,10 +56,39 @@ test('mapearEventoAdminParaListItem calcula a meia do lote atual quando o evento
     loteAtivo: { id: 'lote-1', nome: 'Lote promocional', ordem: 1, preco: 25.01, quantidade: 10, vendidos: 1, disponiveis: 9 },
     lotesCount: 1,
     pedidosCount: 1,
-    ingressosCount: 1
+    ingressosCount: 1,
+    ingressosVendidos: 1,
+    disponiveis: 99
   })
 
   assert.deepEqual(item.loteAtual, { id: 'lote-1', nome: 'Lote promocional', preco: 25.01, precoMeia: 12.51 })
+})
+
+test('mapearEventoAdminParaListItem usa vendidos e disponiveis do banco', () => {
+  const item = mapearEventoAdminParaListItem({
+    eventoId: 'evento-estoque',
+    nome: 'Evento com estoque',
+    slug: 'evento-estoque',
+    inicioEm: '2026-11-15T17:00:00Z',
+    local: 'Chacara',
+    status: 'AGENDADO',
+    vendasStatus: 'ABERTAS',
+    publicacaoStatus: 'PUBLICADO',
+    capacidadeTotal: 300,
+    estoqueAntecipado: 200,
+    publicadoEm: null,
+    imagemUrl: null,
+    loteAtivo: null,
+    lotesCount: 2,
+    pedidosCount: 40,
+    // 45 ingressos no total, mas so 38 pagos: o resto expirou ou foi cancelado.
+    ingressosCount: 45,
+    ingressosVendidos: 38,
+    disponiveis: 160
+  })
+
+  assert.equal(item.vendidos, 38)
+  assert.equal(item.disponiveis, 160)
 })
 
 test('mapearEventoAdminParaListItem mantem "sem lote" quando nao ha ativo', () => {
@@ -76,7 +108,9 @@ test('mapearEventoAdminParaListItem mantem "sem lote" quando nao ha ativo', () =
     loteAtivo: null,
     lotesCount: 0,
     pedidosCount: 0,
-    ingressosCount: 0
+    ingressosCount: 0,
+    ingressosVendidos: 0,
+    disponiveis: 100
   })
   assert.equal(item.loteAtual, null)
 })

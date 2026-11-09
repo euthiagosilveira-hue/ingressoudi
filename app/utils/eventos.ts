@@ -28,8 +28,8 @@ export function mapearEventoAdminParaListItem(evento: AdminEventListItem): Event
           precoMeia: evento.meiaEntradaAtiva ? precoMeia(evento.loteAtivo.preco) : null
         }
       : null,
-    vendidos: evento.ingressosCount,
-    disponiveis: 0
+    vendidos: evento.ingressosVendidos ?? evento.ingressosCount,
+    disponiveis: evento.disponiveis
   }
 }
 

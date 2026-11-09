@@ -34,7 +34,8 @@ export interface EventListItem {
   loteAtual: EventLoteAtual | null
 
   vendidos: number
-  disponiveis: number
+  /** null quando o numero nao esta disponivel. */
+  disponiveis: number | null
 }
 
 export type EventStatusFilter = 'TODOS' | EventStatus
@@ -114,6 +115,10 @@ export interface AdminEventListItem {
   lotesCount: number
   pedidosCount: number
   ingressosCount: number
+  /** Ingressos pagos ou ja usados (VALIDO + UTILIZADO). */
+  ingressosVendidos: number | null
+  /** Quanto ainda pode ser vendido no evento (estoque menos vendidos e reservas ativas). */
+  disponiveis: number | null
 }
 
 /** Evento administrativo completo (public.obter_evento_admin). */
