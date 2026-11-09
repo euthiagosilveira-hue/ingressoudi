@@ -18,7 +18,7 @@ export interface MembroCasa {
   usuarioId: string
   nome: string
   email: string
-  perfil: 'ADMINISTRADOR' | 'PORTARIA'
+  perfil: 'ADMINISTRADOR' | 'PORTARIA' | 'SOCIO'
   ativo: boolean
   dono: boolean
   ultimoAcessoEm: string | null
@@ -122,7 +122,7 @@ export function mapearDetalheCasa(row: Linha): DetalheCasa {
       usuarioId: s(u.usuario_id),
       nome: s(u.nome),
       email: s(u.email),
-      perfil: u.perfil === 'PORTARIA' ? 'PORTARIA' : 'ADMINISTRADOR',
+      perfil: u.perfil === 'PORTARIA' || u.perfil === 'SOCIO' ? u.perfil : 'ADMINISTRADOR',
       ativo: u.ativo !== false,
       dono: u.dono === true,
       ultimoAcessoEm: textoOuNulo(u.ultimo_acesso_em)

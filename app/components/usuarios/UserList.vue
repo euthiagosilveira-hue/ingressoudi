@@ -115,7 +115,7 @@ async function aoSalvar(input: EdicaoUsuarioInput) {
 
     <PageHeader ajuda="convidar-equipe"
       title="Usuários"
-      subtitle="Gerencie quem pode acessar o administrativo e a portaria."
+      subtitle="Gerencie quem pode acessar o administrativo, a portaria e as vendas dos sócios."
     >
       <template #actions>
         <AppButton variant="primary" @click="abrirConvite">Convidar usuário</AppButton>

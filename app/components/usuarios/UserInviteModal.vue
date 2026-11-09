@@ -6,9 +6,11 @@ import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import BaseSelect from '~/components/BaseSelect.vue'
 import FormField from '~/components/FormField.vue'
+import UserEventosSocio from '~/components/usuarios/UserEventosSocio.vue'
 import UserInviteLinkPanel from '~/components/usuarios/UserInviteLinkPanel.vue'
 import type { ConviteUsuarioInput, PerfilUsuario, ResultadoConvite } from '~/types/usuario'
 import {
+  PERFIL_DESCRICAO,
   PERFIS_USUARIO,
   formularioValido,
   rotuloPerfil,
@@ -30,10 +32,11 @@ const emit = defineEmits<{
 const form = reactive({
   nome: '',
   email: '',
-  perfil: 'PORTARIA' as PerfilUsuario
+  perfil: 'PORTARIA' as PerfilUsuario,
+  eventoIds: [] as string[]
 })
 const nomeConvidado = ref('')
-const erros = ref<{ nome?: string; email?: string; perfil?: string }>({})
+const erros = ref<{ nome?: string; email?: string; perfil?: string; eventos?: string }>({})
 
 const perfilOptions = PERFIS_USUARIO.map((perfil) => ({ value: perfil, label: rotuloPerfil(perfil) }))
 
@@ -44,17 +47,24 @@ watch(
       form.nome = ''
       form.email = ''
       form.perfil = 'PORTARIA'
+      form.eventoIds = []
       erros.value = {}
     }
   }
 )
 
 function enviar() {
-  const validacao = validarConvite({ nome: form.nome, email: form.email, perfil: form.perfil })
+  const input = {
+    nome: form.nome,
+    email: form.email,
+    perfil: form.perfil,
+    eventoIds: form.perfil === 'SOCIO' ? [...form.eventoIds] : []
+  }
+  const validacao = validarConvite(input)
   erros.value = validacao
   if (!formularioValido(validacao)) return
   nomeConvidado.value = form.nome.trim()
-  emit('submit', { nome: form.nome, email: form.email, perfil: form.perfil })
+  emit('submit', input)
 }
 </script>
 
@@ -104,9 +114,11 @@ function enviar() {
         />
       </FormField>
 
-      <FormField label="Perfil" required :error="erros.perfil">
+      <FormField label="Perfil" required :error="erros.perfil" :hint="PERFIL_DESCRICAO[form.perfil]">
         <BaseSelect v-model="form.perfil" :options="perfilOptions" />
       </FormField>
+
+      <UserEventosSocio v-if="form.perfil === 'SOCIO'" v-model="form.eventoIds" :erro="erros.eventos" />
     </div>
 
     <template #footer>

@@ -6,6 +6,7 @@ import {
   BanknotesIcon,
   BuildingOffice2Icon,
   CalendarDaysIcon,
+  ChartBarIcon,
   ExclamationTriangleIcon,
   FunnelIcon,
   GlobeAltIcon,
@@ -25,9 +26,12 @@ import { useRoute } from '#imports'
 import InstalarAppBotao from '~/components/InstalarAppBotao.vue'
 import SidebarItem from '~/components/SidebarItem.vue'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
+import { rotuloPerfil } from '~/utils/usuarios'
 import {
   PERFIS_ADMIN,
   PERFIS_ADMIN_PORTARIA,
+  PERFIS_SOCIO,
+  destinoInicialPerfil,
   listaVipLiberada,
   podeVerItemSidebar,
   type PerfilSidebar
@@ -67,7 +71,7 @@ async function aoTrocarOrganizacao(evento: Event) {
   try {
     const perfil = await trocarOrganizacao(id)
     // recarrega a aplicacao para nao manter dados da organizacao anterior em memoria
-    window.location.assign(perfil?.perfil === 'PORTARIA' ? '/portaria' : '/painel')
+    window.location.assign(destinoInicialPerfil(perfil?.perfil))
   } catch {
     erroTroca.value = 'Não foi possível trocar de organização.'
     trocando.value = false
@@ -103,6 +107,7 @@ const activeLabel = computed(() => {
 
 const itens: NavItem[] = [
   { to: '/painel', icon: Squares2X2Icon, label: 'Dashboard', allowedProfiles: PERFIS_ADMIN },
+  { to: '/socio', icon: ChartBarIcon, label: 'Vendas', allowedProfiles: PERFIS_SOCIO },
   { to: '/eventos', icon: CalendarDaysIcon, label: 'Eventos', allowedProfiles: PERFIS_ADMIN },
   { to: '/pedidos', icon: RectangleStackIcon, label: 'Pedidos', allowedProfiles: PERFIS_ADMIN },
   { to: '/ingressos', icon: TicketIcon, label: 'Ingressos', allowedProfiles: PERFIS_ADMIN },
@@ -277,7 +282,7 @@ const raizClasses = computed(() =>
       <span
         class="mt-2 inline-flex items-center rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300"
       >
-        {{ operador.perfil }}
+        {{ rotuloPerfil(operador.perfil) }}
       </span>
       <button
         type="button"

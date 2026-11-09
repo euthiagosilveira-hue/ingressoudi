@@ -151,9 +151,9 @@ export const ARTIGOS_AJUDA: readonly ArtigoAjuda[] = [
     resumo: 'Cada pessoa entra com o próprio login, e o perfil define o que ela vê.',
     categoria: 'equipe',
     publico: ['produtor'],
-    palavras: ['usuário', 'usuários', 'convite', 'convidar', 'porteiro', 'portaria', 'perfil', 'administrador', 'equipe', 'acesso', 'whatsapp', 'link', 'inativo'],
+    palavras: ['usuário', 'usuários', 'convite', 'convidar', 'porteiro', 'portaria', 'perfil', 'administrador', 'equipe', 'acesso', 'whatsapp', 'link', 'inativo', 'sócio', 'socio', 'parceiro', 'vendas'],
     antes:
-      'Perfil Administrador vê tudo: eventos, pedidos, financeiro e configurações. Perfil Portaria vê só a tela de validação de ingressos.',
+      'Perfil Administrador vê tudo: eventos, pedidos, financeiro e configurações. Perfil Portaria vê só a tela de validação de ingressos. Perfil Sócio do Evento vê só os números de venda dos eventos que você marcar, sem nomes de compradores e sem poder alterar nada.',
     passos: [
       {
         texto:
@@ -162,7 +162,7 @@ export const ARTIGOS_AJUDA: readonly ArtigoAjuda[] = [
         alt: 'Lista de usuários com nome, e-mail, perfil e status'
       },
       {
-        texto: 'Preencha **Nome** e **E-mail**, escolha o **Perfil** e clique em **Gerar convite**.',
+        texto: 'Preencha **Nome** e **E-mail**, escolha o **Perfil** e clique em **Gerar convite**. Para um sócio, escolha **Sócio do Evento** e marque os eventos que ele vai acompanhar.',
         imagem: 'convite-formulario',
         alt: 'Janela Convidar usuário com nome, e-mail e perfil Portaria'
       },
@@ -179,7 +179,8 @@ export const ARTIGOS_AJUDA: readonly ArtigoAjuda[] = [
     ],
     problemas: [
       { pergunta: 'Como tiro alguém da equipe?', resposta: 'Na lista de usuários, clique em Editar e mude o Status para Inativo.' },
-      { pergunta: 'A pessoa já tem conta no Ingressoudi.', resposta: 'Ela é adicionada direto à sua equipe e entra com a senha de sempre.' }
+      { pergunta: 'A pessoa já tem conta no Ingressoudi.', resposta: 'Ela é adicionada direto à sua equipe e entra com a senha de sempre.' },
+      { pergunta: 'Como libero outro evento para o sócio?', resposta: 'Na lista de usuários, clique em Editar no sócio, marque o evento e salve. Desmarcar tira o acesso àquele evento na hora.' }
     ]
   },
   {

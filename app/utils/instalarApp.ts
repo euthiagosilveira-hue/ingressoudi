@@ -1,3 +1,5 @@
+import { destinoInicialPerfil } from './navegacao.ts'
+
 export type PlataformaInstalacao = 'ios' | 'android' | 'outra'
 
 interface NavegadorLike {
@@ -73,7 +75,7 @@ export function destinoAoAbrirApp(opcoes: {
   temIngressosSalvos: boolean
 }): string {
   if (opcoes.perfil && opcoes.ativo !== false) {
-    return opcoes.perfil === 'PORTARIA' ? '/portaria' : '/painel'
+    return destinoInicialPerfil(opcoes.perfil)
   }
   if (opcoes.temIngressosSalvos) return '/recuperar-ingressos'
   return '/'

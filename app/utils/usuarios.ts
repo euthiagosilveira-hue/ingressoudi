@@ -6,11 +6,19 @@ import type {
   UsuarioListItem
 } from '~/types/usuario'
 
-export const PERFIS_USUARIO: PerfilUsuario[] = ['ADMINISTRADOR', 'PORTARIA']
+export const PERFIS_USUARIO: PerfilUsuario[] = ['ADMINISTRADOR', 'PORTARIA', 'SOCIO']
 
 const PERFIL_LABEL: Record<PerfilUsuario, string> = {
   ADMINISTRADOR: 'Administrador',
-  PORTARIA: 'Portaria'
+  PORTARIA: 'Portaria',
+  SOCIO: 'Sócio do Evento'
+}
+
+/** Explicacao curta de cada perfil, mostrada no convite e na edicao. */
+export const PERFIL_DESCRICAO: Record<PerfilUsuario, string> = {
+  ADMINISTRADOR: 'Acesso completo à organização.',
+  PORTARIA: 'Só valida ingressos na entrada do evento.',
+  SOCIO: 'Só acompanha as vendas dos eventos marcados abaixo. Não vê compradores e não altera nada.'
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -46,7 +54,8 @@ function mapearBase(row: AdminUsuarioRow): Omit<UsuarioListItem, 'ehUltimoAdminA
     ativo: row.ativo,
     pendente: row.pendente === true,
     ultimoAcesso: formatarDataHora(row.ultimo_acesso_em),
-    criadoEm: formatarDataHora(row.criado_em)
+    criadoEm: formatarDataHora(row.criado_em),
+    eventosSocio: row.perfil === 'SOCIO' && Array.isArray(row.eventos_socio) ? row.eventos_socio : []
   }
 }
 
@@ -71,13 +80,17 @@ export interface ErrosFormularioUsuario {
   nome?: string
   email?: string
   perfil?: string
+  eventos?: string
 }
+
+const ERRO_EVENTOS_SOCIO = 'Marque pelo menos um evento para o sócio acompanhar.'
 
 export function validarConvite(input: ConviteUsuarioInput): ErrosFormularioUsuario {
   const erros: ErrosFormularioUsuario = {}
   if (!input.nome?.trim()) erros.nome = 'Informe o nome.'
   if (!emailValido(input.email)) erros.email = 'Informe um e-mail válido.'
   if (!PERFIS_USUARIO.includes(input.perfil)) erros.perfil = 'Selecione um perfil.'
+  if (input.perfil === 'SOCIO' && !(input.eventoIds?.length)) erros.eventos = ERRO_EVENTOS_SOCIO
   return erros
 }
 
@@ -85,6 +98,7 @@ export function validarEdicao(input: EdicaoUsuarioInput): ErrosFormularioUsuario
   const erros: ErrosFormularioUsuario = {}
   if (!input.nome?.trim()) erros.nome = 'Informe o nome.'
   if (!PERFIS_USUARIO.includes(input.perfil)) erros.perfil = 'Selecione um perfil.'
+  if (input.perfil === 'SOCIO' && !(input.eventoIds?.length)) erros.eventos = ERRO_EVENTOS_SOCIO
   return erros
 }
 

@@ -1,3 +1,5 @@
+import { destinoInicialPerfil } from './navegacao.ts'
+
 export const CONVITE_EXPIRADO_MSG =
   'Este convite expirou ou já foi utilizado. Solicite um novo convite ao administrador.'
 
@@ -30,9 +32,9 @@ export function mensagemErroConviteLink(erro: ErroLinkConvite | null): string {
   return CONVITE_EXPIRADO_MSG
 }
 
-/** Destino pos-setup conforme o perfil (ADMIN -> '/painel', PORTARIA -> '/portaria'). */
+/** Destino pos-setup conforme o perfil (ADMIN -> '/painel', PORTARIA -> '/portaria', SOCIO -> '/socio'). */
 export function destinoAposConvite(perfil: string | null | undefined): string {
-  return perfil === 'PORTARIA' ? '/portaria' : '/painel'
+  return destinoInicialPerfil(perfil)
 }
 
 export interface ErrosSenhaConvite {

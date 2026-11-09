@@ -17,6 +17,7 @@ import {
   listarOrganizacoesPlataforma,
   type OrganizacaoPlataforma
 } from '~/services/admin/organizacoes'
+import { destinoInicialPerfil } from '~/utils/navegacao'
 import { rotaOrganizacao } from '~/utils/rotasPublicas'
 import { definirTaxaOrganizacao } from '~/services/admin/mercadoPago'
 
@@ -159,7 +160,7 @@ async function acessar(id: string) {
   erro.value = ''
   try {
     const perfil = await trocarOrganizacao(id)
-    window.location.assign(perfil?.perfil === 'PORTARIA' ? '/portaria' : '/painel')
+    window.location.assign(destinoInicialPerfil(perfil?.perfil))
   } catch {
     erro.value = 'Não foi possível acessar a organização.'
   }

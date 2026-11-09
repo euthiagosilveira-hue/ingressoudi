@@ -1,6 +1,6 @@
 import type { AuthErrorCode, PerfilOperador } from '~/types/operador'
 
-const PERFIS_PERMITIDOS: PerfilOperador[] = ['ADMINISTRADOR', 'PORTARIA']
+const PERFIS_PERMITIDOS: PerfilOperador[] = ['ADMINISTRADOR', 'PORTARIA', 'SOCIO']
 
 /**
  * Extrai o UID de um usuario retornado por useSupabaseUser().
@@ -36,7 +36,13 @@ export function codigoErroPerfil(
   return null
 }
 
+/** Perfis que podem entrar no sistema (cada um ve so as telas dele). */
 export function perfilPermitido(perfil: string | null | undefined): boolean {
+  return PERFIS_PERMITIDOS.includes(perfil as PerfilOperador)
+}
+
+/** Perfis que operam a portaria. O SOCIO entra no sistema, mas nao na portaria. */
+export function perfilOperaPortaria(perfil: string | null | undefined): boolean {
   return perfil === 'ADMINISTRADOR' || perfil === 'PORTARIA'
 }
 
@@ -52,7 +58,7 @@ export function decidirAcessoOperador(input: {
   ativo: boolean | null
 }): DecisaoAcesso {
   if (!input.temSessao) return 'IR_LOGIN'
-  if (!perfilPermitido(input.perfil)) return 'NEGAR'
+  if (!perfilOperaPortaria(input.perfil)) return 'NEGAR'
   if (input.ativo !== true) return 'NEGAR'
   return 'PERMITIR'
 }

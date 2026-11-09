@@ -32,6 +32,7 @@ import {
   type FiltroEventosCasa
 } from '~/utils/organizacaoPlataforma'
 import { rotaEvento, rotaOrganizacao } from '~/utils/rotasPublicas'
+import { rotuloPerfil } from '~/utils/usuarios'
 import { useRoute } from '#imports'
 
 definePageMeta({
@@ -309,7 +310,7 @@ onMounted(() => void carregar())
                 <p class="truncate text-xs text-zinc-500">{{ u.email }}</p>
               </div>
               <p class="shrink-0 text-xs text-zinc-500">
-                {{ u.perfil === 'PORTARIA' ? 'Portaria' : 'Administrador' }} · último acesso
+                {{ rotuloPerfil(u.perfil) }} · último acesso
                 {{ u.ultimoAcessoEm ? formatDataNumerica(u.ultimoAcessoEm) : 'nunca' }}
               </p>
             </li>
