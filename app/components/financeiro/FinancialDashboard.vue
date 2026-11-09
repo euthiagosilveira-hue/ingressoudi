@@ -70,7 +70,7 @@ function acaoPagamento(payload: { id: string; pedidoId: string; action: string }
 
 <template>
   <div class="space-y-6">
-    <PageHeader
+    <PageHeader ajuda="acompanhar-vendas"
       title="Financeiro"
       subtitle="Acompanhe pagamentos, reembolsos e valores dos eventos."
     />

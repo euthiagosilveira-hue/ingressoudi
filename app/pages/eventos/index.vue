@@ -115,7 +115,7 @@ function acaoEvento(payload: { id: string; action: string }) {
 </script>
 
 <template>
-  <PageHeader title="Eventos" subtitle="Gerencie seus eventos, vendas e ingressos.">
+  <PageHeader ajuda="criar-evento" title="Eventos" subtitle="Gerencie seus eventos, vendas e ingressos.">
     <template #actions>
       <AppButton variant="primary" @click="irParaCriar">
         <PlusIcon class="h-4 w-4" />

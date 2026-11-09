@@ -106,7 +106,7 @@ function irParaPortaria() {
 
 <template>
   <div class="space-y-6">
-    <PageHeader title="Entradas" subtitle="Consulte e audite os acessos registrados nos eventos.">
+    <PageHeader ajuda="acompanhar-vendas" title="Entradas" subtitle="Consulte e audite os acessos registrados nos eventos.">
       <template #actions>
         <AppButton variant="outline" @click="irParaPortaria">Ir para Portaria</AppButton>
       </template>

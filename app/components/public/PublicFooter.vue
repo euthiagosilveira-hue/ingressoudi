@@ -15,7 +15,8 @@ const ano = new Date().getFullYear()
       <p class="font-semibold text-zinc-300">{{ organizacao?.nome ?? PLATAFORMA_NOME }}</p>
       <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
         <InstalarAppBotao variante="link" />
-        <nav class="flex gap-4" aria-label="Documentos legais">
+        <nav class="flex flex-wrap gap-4" aria-label="Documentos legais">
+          <NuxtLink to="/ajuda" class="hover:text-zinc-300">Ajuda</NuxtLink>
           <NuxtLink to="/termos" class="hover:text-zinc-300">Termos de uso</NuxtLink>
           <NuxtLink to="/privacidade" class="hover:text-zinc-300">Privacidade</NuxtLink>
           <NuxtLink to="/reembolso" class="hover:text-zinc-300">Reembolso</NuxtLink>

@@ -113,7 +113,7 @@ async function aoSalvar(input: EdicaoUsuarioInput) {
       </NuxtLink>
     </div>
 
-    <PageHeader
+    <PageHeader ajuda="convidar-equipe"
       title="Usuários"
       subtitle="Gerencie quem pode acessar o administrativo e a portaria."
     >

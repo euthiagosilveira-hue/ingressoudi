@@ -82,7 +82,7 @@ onMounted(() => void carregar())
 
 <template>
   <div class="space-y-6">
-    <PageHeader title="Página pública" subtitle="Como sua casa aparece para quem compra ingressos.">
+    <PageHeader ajuda="divulgar-links" title="Página pública" subtitle="Como sua casa aparece para quem compra ingressos.">
       <template #actions>
         <AppButton to="/configuracoes" size="sm">Voltar</AppButton>
       </template>

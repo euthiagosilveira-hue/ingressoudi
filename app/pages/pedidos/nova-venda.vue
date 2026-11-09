@@ -204,7 +204,7 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-6">
-    <PageHeader
+    <PageHeader ajuda="venda-na-porta"
       title="Nova venda manual"
       subtitle="Registre uma venda presencial recebida em dinheiro."
     >

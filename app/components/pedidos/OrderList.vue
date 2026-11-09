@@ -65,7 +65,7 @@ function acaoPedido(payload: { id: string; action: string }) {
 
 <template>
   <div class="space-y-6">
-    <PageHeader title="Pedidos" subtitle="Acompanhe reservas, pagamentos e vendas dos eventos.">
+    <PageHeader ajuda="acompanhar-vendas" title="Pedidos" subtitle="Acompanhe reservas, pagamentos e vendas dos eventos.">
       <template #actions>
         <AppButton v-if="isAdmin" variant="primary" to="/pedidos/nova-venda">
           Nova venda manual

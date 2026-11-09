@@ -120,7 +120,7 @@ function confirmarRemocao() {
       </nav>
     </div>
 
-    <PageHeader
+    <PageHeader ajuda="lista-vip"
       title="Lista VIP"
       subtitle="Gerencie os convidados com acesso liberado para este evento."
     >
