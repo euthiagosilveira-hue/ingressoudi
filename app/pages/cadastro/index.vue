@@ -5,6 +5,7 @@ import { CheckCircleIcon, EnvelopeIcon, ExclamationTriangleIcon } from '@heroico
 import AppButton from '~/components/AppButton.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import FormField from '~/components/FormField.vue'
+import CamposOrganizador from '~/components/organizador/CamposOrganizador.vue'
 import { slugDisponivel } from '~/services/auth/cadastro'
 import {
   gerarSlug,
@@ -16,6 +17,8 @@ import {
   type DadosCadastro,
   type ErrosCadastro
 } from '~/utils/cadastro'
+import { CONTRATO_ORGANIZADOR_URL } from '~/utils/contratoOrganizador'
+import type { DadosOrganizador, ErrosOrganizador } from '~/utils/documento'
 import { PLATAFORMA_NOME } from '~/utils/marca'
 
 definePageMeta({
@@ -30,15 +33,22 @@ useSeoMeta({
 const supabase = useSupabaseClient()
 const config = useRuntimeConfig()
 
-const form = reactive<DadosCadastro>({
+const form = reactive<Omit<DadosCadastro, keyof DadosOrganizador>>({
   nome: '',
   email: '',
   senha: '',
   confirmacao: '',
   casaNome: '',
   casaSlug: '',
-  termos: false
+  termos: false,
+  contrato: false
 })
+const organizador = ref<DadosOrganizador>({ tipoDocumento: 'CPF', documento: '', responsavelNome: '', telefone: '' })
+const errosOrganizador = computed<ErrosOrganizador>(() => ({
+  documento: erros.documento,
+  responsavelNome: erros.responsavelNome,
+  telefone: erros.telefone
+}))
 const erros = reactive<ErrosCadastro>({})
 const erroGeral = ref('')
 const enviando = ref(false)
@@ -98,7 +108,8 @@ function limparErros() {
 
 async function cadastrar() {
   limparErros()
-  const validacao = validarCadastro(form)
+  const dados: DadosCadastro = { ...form, ...organizador.value }
+  const validacao = validarCadastro(dados)
   Object.assign(erros, validacao)
   if (disponibilidade.value === 'ocupado') erros.casaSlug = 'Esse endereço já está em uso. Escolha outro.'
   if (temErros(erros)) return
@@ -110,7 +121,7 @@ async function cadastrar() {
       password: form.senha,
       options: {
         emailRedirectTo: `${baseUrl.value}/cadastro/concluir`,
-        data: metadadosCadastro(form)
+        data: metadadosCadastro(dados)
       }
     })
     if (error) {
@@ -260,7 +271,14 @@ async function cadastrar() {
           </FormField>
         </fieldset>
 
-        <div>
+        <fieldset class="space-y-4">
+          <legend class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+            Quem vende os ingressos
+          </legend>
+          <CamposOrganizador v-model="organizador" :erros="errosOrganizador" />
+        </fieldset>
+
+        <div class="space-y-3">
           <label class="flex cursor-pointer items-start gap-3 text-sm text-zinc-300">
             <input
               v-model="form.termos"
@@ -275,7 +293,21 @@ async function cadastrar() {
                 Política de privacidade</NuxtLink>.
             </span>
           </label>
-          <p v-if="erros.termos" class="mt-1.5 text-xs text-red-400">{{ erros.termos }}</p>
+          <p v-if="erros.termos" class="-mt-1.5 text-xs text-red-400">{{ erros.termos }}</p>
+          <label class="flex cursor-pointer items-start gap-3 text-sm text-zinc-300">
+            <input
+              v-model="form.contrato"
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-600 bg-zinc-900 accent-amber-400"
+            />
+            <span>
+              Li e aceito o
+              <NuxtLink :to="CONTRATO_ORGANIZADOR_URL" target="_blank" class="text-amber-400 hover:text-amber-300">
+                Contrato do Organizador</NuxtLink>
+              e declaro que os dados informados são verdadeiros.
+            </span>
+          </label>
+          <p v-if="erros.contrato" class="-mt-1.5 text-xs text-red-400">{{ erros.contrato }}</p>
         </div>
 
         <AppButton type="submit" variant="primary" size="lg" block :disabled="enviando">

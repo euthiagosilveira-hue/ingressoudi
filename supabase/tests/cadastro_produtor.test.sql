@@ -151,6 +151,16 @@ begin
 
   perform set_config('request.jwt.claims', json_build_object('sub', v_prod::text)::text, true);
   perform set_config('request.jwt.claim.sub', v_prod::text, true);
+  -- Aprovada, mas sem dados do organizador e sem aceite do contrato: nao publica.
+  begin
+    perform public.atualizar_evento_admin(v_ev, 'Show Novo', 'show-novo', null, null,
+                                          now() + interval '3 days', 'Casa', 'Rua', 100, 50, 'PUBLICADO', null);
+    raise exception 'T10: sem contrato nao deveria publicar';
+  exception when others then
+    if position('contrato do organizador' in lower(sqlerrm)) = 0 then raise exception 'T10 contrato: %', sqlerrm; end if;
+  end;
+  perform public.salvar_dados_organizador('CNPJ', '11.222.333/0001-81', 'Casa Nova Ltda', '(34) 99999-0000');
+  perform private.registrar_aceite_contrato(v_prod, v_org, private.contrato_organizador_versao(), '127.0.0.1', 'teste');
   perform public.atualizar_evento_admin(v_ev, 'Show Novo', 'show-novo', null, null,
                                         now() + interval '3 days', 'Casa', 'Rua', 100, 50, 'PUBLICADO', null);
   if (select publicacao_status from public.eventos where id = v_ev) <> 'PUBLICADO' then

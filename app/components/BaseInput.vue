@@ -17,6 +17,8 @@ const props = withDefaults(
     prefix?: string
     /** Em campos de senha, mostra o botao de olho para exibir/ocultar o texto. */
     revelarSenha?: boolean
+    /** Teclado do celular (ex.: numeric para CPF/CNPJ). */
+    inputmode?: 'text' | 'numeric' | 'tel' | 'email' | 'decimal' | 'search' | 'url' | 'none'
   }>(),
   {
     label: '',
@@ -29,7 +31,8 @@ const props = withDefaults(
     autocomplete: 'off',
     invalid: false,
     prefix: '',
-    revelarSenha: false
+    revelarSenha: false,
+    inputmode: undefined
   }
 )
 
@@ -77,6 +80,7 @@ const inputClasses = computed(() => [
         :disabled="disabled"
         :required="required"
         :autocomplete="autocomplete"
+        :inputmode="inputmode"
         :aria-invalid="invalid || undefined"
         v-model="value"
         :class="[inputClasses, prefix ? 'pl-10' : '', comOlho ? 'pr-11' : '']"

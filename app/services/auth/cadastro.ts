@@ -24,7 +24,11 @@ export async function concluirCadastroProdutor(dados: MetadadosCadastro): Promis
     p_nome: dados.nome,
     p_casa_nome: dados.casa_nome,
     p_casa_slug: dados.casa_slug || null,
-    p_termos_versao: dados.termos_versao
+    p_termos_versao: dados.termos_versao,
+    p_tipo_documento: dados.tipo_documento ?? null,
+    p_documento: dados.tipo_documento ? (dados.documento ?? null) : null,
+    p_responsavel_nome: dados.responsavel_nome ?? null,
+    p_telefone: dados.telefone ?? null
   })
   if (error) throw new Error(mensagemErroCadastro(error.message))
   const r = (data ?? {}) as { organizacao_id?: string; slug?: string; ja_existente?: boolean }

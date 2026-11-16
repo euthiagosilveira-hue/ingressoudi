@@ -1,4 +1,5 @@
 import { resolverUid, uidDoUsuario } from '~/utils/auth'
+import { TELA_DADOS_ORGANIZADOR, rotaLiberadaComContratoPendente } from '~/utils/contratoOrganizador'
 
 /**
  * Protege a area administrativa (/eventos etc.).
@@ -47,5 +48,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!perfil || !perfil.ativo || perfil.perfil !== 'ADMINISTRADOR') {
     await supabase.auth.signOut()
     return navigateTo('/login?erro=SEM_PERMISSAO')
+  }
+
+  // Dados do organizador ou aceite do contrato pendentes: so a tela de aceite
+  // (e a ajuda) fica liberada. O super admin em modo suporte nao e bloqueado.
+  if (perfil.organizacao?.contratoPendente && !perfil.modoSuporte && !rotaLiberadaComContratoPendente(to.path)) {
+    return navigateTo(TELA_DADOS_ORGANIZADOR)
   }
 })

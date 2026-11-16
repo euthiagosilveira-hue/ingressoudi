@@ -4,6 +4,9 @@
  * (public.concluir_cadastro_produtor / public.slug_organizacao_disponivel).
  */
 
+import { CONTRATO_ORGANIZADOR_VERSAO } from './contratoOrganizador.ts'
+import { soDigitos, validarDadosOrganizador, type TipoDocumento } from './documento.ts'
+
 /** Versao dos Termos de uso e da Politica de privacidade aceita no cadastro. */
 export const TERMOS_VERSAO = 'v1-2026-10'
 
@@ -33,7 +36,12 @@ export interface DadosCadastro {
   confirmacao: string
   casaNome: string
   casaSlug: string
+  tipoDocumento: TipoDocumento
+  documento: string
+  responsavelNome: string
+  telefone: string
   termos: boolean
+  contrato: boolean
 }
 
 export type ErrosCadastro = Partial<Record<keyof DadosCadastro, string>>
@@ -46,7 +54,12 @@ export function validarCadastro(d: DadosCadastro): ErrosCadastro {
   else if (d.senha !== d.confirmacao) erros.confirmacao = 'As senhas não conferem.'
   if (!d.casaNome.trim()) erros.casaNome = 'Informe o nome da casa ou produtora.'
   if (!slugValido(d.casaSlug)) erros.casaSlug = 'Use apenas letras minúsculas, números e hífens.'
+  const org = validarDadosOrganizador(d)
+  if (org.documento) erros.documento = org.documento
+  if (org.responsavelNome) erros.responsavelNome = org.responsavelNome
+  if (org.telefone) erros.telefone = org.telefone
   if (!d.termos) erros.termos = 'Aceite os termos de uso e a política de privacidade.'
+  if (!d.contrato) erros.contrato = 'Aceite o Contrato do Organizador.'
   return erros
 }
 
@@ -60,6 +73,13 @@ export interface MetadadosCadastro {
   casa_nome: string
   casa_slug: string
   termos_versao: string
+  /** Dados do organizador (contas criadas antes desta versao nao tem). */
+  tipo_documento?: TipoDocumento | null
+  documento?: string | null
+  responsavel_nome?: string | null
+  telefone?: string | null
+  /** Versao do Contrato do Organizador marcada no formulario de cadastro. */
+  contrato_versao?: string | null
 }
 
 export function metadadosCadastro(d: DadosCadastro): MetadadosCadastro {
@@ -67,7 +87,12 @@ export function metadadosCadastro(d: DadosCadastro): MetadadosCadastro {
     nome: d.nome.trim(),
     casa_nome: d.casaNome.trim(),
     casa_slug: d.casaSlug.trim(),
-    termos_versao: TERMOS_VERSAO
+    termos_versao: TERMOS_VERSAO,
+    tipo_documento: d.tipoDocumento,
+    documento: soDigitos(d.documento),
+    responsavel_nome: d.responsavelNome.trim(),
+    telefone: soDigitos(d.telefone),
+    contrato_versao: d.contrato ? CONTRATO_ORGANIZADOR_VERSAO : null
   }
 }
 
@@ -76,11 +101,17 @@ export function lerMetadadosCadastro(meta: unknown): MetadadosCadastro | null {
   if (!meta || typeof meta !== 'object') return null
   const m = meta as Record<string, unknown>
   const texto = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
-  const dados = {
+  const tipo = texto(m.tipo_documento)
+  const dados: MetadadosCadastro = {
     nome: texto(m.nome),
     casa_nome: texto(m.casa_nome),
     casa_slug: texto(m.casa_slug),
-    termos_versao: texto(m.termos_versao)
+    termos_versao: texto(m.termos_versao),
+    tipo_documento: tipo === 'CPF' || tipo === 'CNPJ' ? tipo : null,
+    documento: texto(m.documento) || null,
+    responsavel_nome: texto(m.responsavel_nome) || null,
+    telefone: texto(m.telefone) || null,
+    contrato_versao: texto(m.contrato_versao) || null
   }
   return dados.nome && dados.casa_nome && dados.termos_versao ? dados : null
 }
@@ -92,6 +123,9 @@ export function mensagemErroCadastro(mensagem: string | null | undefined): strin
     return 'Este e-mail já tem conta. Entre com ele para concluir o cadastro.'
   if (m.includes('endereco') || m.includes('endereço')) return 'Esse endereço já está em uso. Escolha outro.'
   if (m.includes('termos')) return 'Aceite os termos de uso para continuar.'
+  if (m.includes('cpf invalido')) return 'CPF inválido: confira os números.'
+  if (m.includes('cnpj invalido')) return 'CNPJ inválido: confira os números.'
+  if (m.includes('telefone invalido')) return 'Telefone inválido: informe DDD e número.'
   if (m.includes('password') && (m.includes('least') || m.includes('weak') || m.includes('short')))
     return `Senha fraca: use pelo menos ${SENHA_MINIMA} caracteres, com letras e números.`
   if (m.includes('rate limit') || m.includes('too many') || m.includes('security purposes'))

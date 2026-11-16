@@ -8,6 +8,8 @@ export interface OrganizacaoResumo {
   aprovada?: boolean
   /** Lista VIP liberada pela plataforma para esta organizacao. */
   listaVip?: boolean
+  /** Falta completar os dados do organizador ou aceitar o contrato vigente. */
+  contratoPendente?: boolean
 }
 
 export interface OrganizacaoDoOperador extends OrganizacaoResumo {

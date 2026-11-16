@@ -1,3 +1,5 @@
+import { computed, watch } from 'vue'
+
 export interface OrganizacaoPublica {
   slug: string
   nome: string
@@ -58,4 +60,61 @@ export function useOrganizacaoPublica() {
   }
 
   return { organizacao, definir, limpar }
+}
+
+export interface OrganizadorPublico {
+  slug: string
+  nome: string
+  documento: string | null
+  tipoDocumento: 'CPF' | 'CNPJ' | null
+}
+
+/**
+ * Quem organiza os eventos da casa da pagina publica atual (nome e documento
+ * para exibicao: CNPJ completo, CPF mascarado). Busca uma vez por casa.
+ */
+export function useOrganizadorPublico() {
+  const { organizacao } = useOrganizacaoPublica()
+  const organizador = useState<OrganizadorPublico | null>('organizador-publico', () => null)
+  const client = useSupabaseClient()
+
+  async function carregar(slug: string) {
+    if (organizador.value?.slug === slug) return
+    try {
+      const { data } = await client.rpc('obter_organizacao_publica', { p_slug: slug })
+      const row = data as {
+        organizador_nome?: string | null
+        organizador_documento?: string | null
+        organizador_tipo_documento?: string | null
+      } | null
+      if (organizacao.value?.slug !== slug) return
+      const tipo = row?.organizador_tipo_documento
+      organizador.value = row?.organizador_nome
+        ? {
+            slug,
+            nome: row.organizador_nome,
+            documento: row.organizador_documento ?? null,
+            tipoDocumento: tipo === 'CPF' || tipo === 'CNPJ' ? tipo : null
+          }
+        : { slug, nome: '', documento: null, tipoDocumento: null }
+    } catch {
+      // Informativo: falha nao bloqueia a pagina.
+    }
+  }
+
+  watch(
+    () => organizacao.value?.slug,
+    (slug) => {
+      if (slug && import.meta.client) void carregar(slug)
+    },
+    { immediate: true }
+  )
+
+  const visivel = computed(() =>
+    organizador.value && organizador.value.slug === organizacao.value?.slug && organizador.value.nome
+      ? organizador.value
+      : null
+  )
+
+  return { organizador: visivel }
 }
