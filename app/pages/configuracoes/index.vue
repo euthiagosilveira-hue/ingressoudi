@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BanknotesIcon, GlobeAltIcon, UsersIcon } from '@heroicons/vue/24/outline'
+import { BanknotesIcon, DocumentTextIcon, GlobeAltIcon, UsersIcon } from '@heroicons/vue/24/outline'
 
 import BaseCard from '~/components/BaseCard.vue'
 import PageHeader from '~/components/PageHeader.vue'
@@ -89,6 +89,25 @@ const linkPublico = computed(() => {
               </p>
               <p class="mt-1 text-xs text-zinc-500">
                 Conecte a conta que recebe as vendas Pix e veja a taxa de serviço.
+              </p>
+            </div>
+          </div>
+        </BaseCard>
+      </NuxtLink>
+      <NuxtLink to="/configuracoes/organizador" class="group">
+        <BaseCard class="h-full transition-colors duration-200 group-hover:border-amber-400/40">
+          <div class="flex items-start gap-3">
+            <span
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 text-amber-400"
+            >
+              <DocumentTextIcon class="h-6 w-6" />
+            </span>
+            <div>
+              <p class="text-sm font-semibold text-white transition-colors group-hover:text-amber-400">
+                Dados do organizador e contrato
+              </p>
+              <p class="mt-1 text-xs text-zinc-500">
+                CPF ou CNPJ, telefone e o Contrato do Organizador aceito.
               </p>
             </div>
           </div>

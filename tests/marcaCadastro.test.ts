@@ -60,7 +60,12 @@ const valido: DadosCadastro = {
   confirmacao: 'senha-forte-1',
   casaNome: 'Bar do Samba',
   casaSlug: 'bar-do-samba',
-  termos: true
+  tipoDocumento: 'CNPJ',
+  documento: '11.222.333/0001-81',
+  responsavelNome: 'Bar do Samba Ltda',
+  telefone: '(34) 99999-0000',
+  termos: true,
+  contrato: true
 }
 
 test('cadastro: validacao do formulario', () => {

@@ -8,7 +8,7 @@ interface SessaoRpc {
   ativo: boolean
   super_admin: boolean
   modo_suporte?: boolean
-  organizacao: (OrganizacaoResumo & { lista_vip?: boolean }) | null
+  organizacao: (OrganizacaoResumo & { lista_vip?: boolean; contrato_pendente?: boolean }) | null
   organizacoes: Array<OrganizacaoResumo & { perfil: string }>
 }
 
@@ -30,7 +30,8 @@ function mapearSessao(data: unknown): OperadorProfile | null {
           nome: s.organizacao.nome,
           slug: s.organizacao.slug,
           aprovada: s.organizacao.aprovada,
-          listaVip: Boolean(s.organizacao.lista_vip)
+          listaVip: Boolean(s.organizacao.lista_vip),
+          contratoPendente: Boolean(s.organizacao.contrato_pendente)
         }
       : null,
     organizacoes: (s.organizacoes ?? []).map((o) => ({

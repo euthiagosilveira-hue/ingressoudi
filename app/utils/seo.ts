@@ -20,6 +20,7 @@ export const PAGINAS_SITEMAP: readonly string[] = [
   '/cadastro',
   '/recuperar-ingressos',
   '/termos',
+  '/contrato-organizador',
   '/privacidade',
   '/reembolso',
   '/ajuda',

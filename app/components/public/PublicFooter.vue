@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import InstalarAppBotao from '~/components/InstalarAppBotao.vue'
-import { useOrganizacaoPublica } from '~/composables/useOrganizacaoPublica'
+import { useOrganizacaoPublica, useOrganizadorPublico } from '~/composables/useOrganizacaoPublica'
 import { PLATAFORMA_NOME } from '~/utils/marca'
 
 const { organizacao } = useOrganizacaoPublica()
+const { organizador } = useOrganizadorPublico()
 const ano = new Date().getFullYear()
 </script>
 
@@ -12,7 +13,13 @@ const ano = new Date().getFullYear()
     <div
       class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6"
     >
-      <p class="font-semibold text-zinc-300">{{ organizacao?.nome ?? PLATAFORMA_NOME }}</p>
+      <div>
+        <p class="font-semibold text-zinc-300">{{ organizacao?.nome ?? PLATAFORMA_NOME }}</p>
+        <p v-if="organizador" class="mt-1 text-xs text-zinc-500">
+          Eventos organizados e vendidos por {{ organizador.nome
+          }}<template v-if="organizador.documento"> · {{ organizador.tipoDocumento }} {{ organizador.documento }}</template>
+        </p>
+      </div>
       <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
         <InstalarAppBotao variante="link" />
         <nav class="flex flex-wrap gap-4" aria-label="Documentos legais">

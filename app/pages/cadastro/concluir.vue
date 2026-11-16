@@ -5,9 +5,11 @@ import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 import AppButton from '~/components/AppButton.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import FormField from '~/components/FormField.vue'
+import { aceitarContratoOrganizador } from '~/services/admin/organizador'
 import { avisarNovaOrganizacao } from '~/services/admin/push'
 import { concluirCadastroProdutor, lerMetadadosCadastro } from '~/services/auth/cadastro'
-import { TERMOS_VERSAO, gerarSlug, mensagemErroCadastro, slugValido } from '~/utils/cadastro'
+import { TERMOS_VERSAO, gerarSlug, mensagemErroCadastro, slugValido, type MetadadosCadastro } from '~/utils/cadastro'
+import { CONTRATO_ORGANIZADOR_VERSAO } from '~/utils/contratoOrganizador'
 import { extrairErroConvite } from '~/utils/convite'
 import { PLATAFORMA_NOME } from '~/utils/marca'
 
@@ -42,12 +44,17 @@ async function sessaoAtual(): Promise<boolean> {
   return false
 }
 
-async function concluir(meta: { nome: string; casa_nome: string; casa_slug: string; termos_versao: string }) {
+async function concluir(meta: MetadadosCadastro) {
   estado.value = 'processando'
   mensagem.value = ''
   try {
     const cadastro = await concluirCadastroProdutor(meta)
     if (!cadastro.jaExistente && cadastro.organizacaoId) await avisarNovaOrganizacao(cadastro.organizacaoId)
+    // Contrato marcado no formulario de cadastro: registra o aceite (IP e data
+    // vem do servidor). Se falhar, o painel pede o aceite no primeiro acesso.
+    if (!cadastro.jaExistente && meta.contrato_versao === CONTRATO_ORGANIZADOR_VERSAO) {
+      await aceitarContratoOrganizador(CONTRATO_ORGANIZADOR_VERSAO).catch(() => {})
+    }
     // Recarrega a aplicacao ja na casa nova (painel com aviso de analise).
     window.location.assign('/painel')
   } catch (e) {

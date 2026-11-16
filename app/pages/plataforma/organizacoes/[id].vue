@@ -18,6 +18,7 @@ import BaseCard from '~/components/BaseCard.vue'
 import DashboardMetricCard from '~/components/DashboardMetricCard.vue'
 import PageHeader from '~/components/PageHeader.vue'
 import SegmentedControl from '~/components/SegmentedControl.vue'
+import ContratoCasaCard from '~/components/plataforma/ContratoCasaCard.vue'
 import EventPublicationBadge from '~/components/eventos/EventPublicationBadge.vue'
 import EventStatusBadge from '~/components/eventos/EventStatusBadge.vue'
 import { useOperatorAuth } from '~/composables/useOperatorAuth'
@@ -291,6 +292,8 @@ onMounted(() => void carregar())
             <p class="mt-3 text-xs text-zinc-600">Taxa, Lista VIP e aprovação se alteram na lista de Organizações.</p>
           </BaseCard>
         </div>
+
+        <ContratoCasaCard :organizacao-id="casa.organizacao.id" />
 
         <!-- Equipe -->
         <BaseCard :padded="false" class="overflow-hidden">

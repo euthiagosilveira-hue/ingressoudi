@@ -58,8 +58,8 @@ export const ARTIGOS_AJUDA: readonly ArtigoAjuda[] = [
     resumo: 'Crie seu acesso e a página da sua casa ou produtora em poucos minutos.',
     categoria: 'primeiros-passos',
     publico: ['produtor'],
-    palavras: ['cadastro', 'cadastrar', 'registrar', 'conta', 'começar', 'casa', 'produtora', 'endereço', 'senha', 'e-mail'],
-    antes: 'Você só precisa de um e-mail. Não tem mensalidade: você paga apenas uma taxa por ingresso vendido online.',
+    palavras: ['cadastro', 'cadastrar', 'registrar', 'conta', 'começar', 'casa', 'produtora', 'endereço', 'senha', 'e-mail', 'cpf', 'cnpj'],
+    antes: 'Você precisa de um e-mail, do seu CPF ou do CNPJ da empresa e de um telefone. Não tem mensalidade: você paga apenas uma taxa por ingresso vendido online.',
     passos: [
       {
         texto: 'Entre em www.ingressoudi.com.br e clique em **Começar grátis**.',
@@ -68,7 +68,7 @@ export const ARTIGOS_AJUDA: readonly ArtigoAjuda[] = [
       },
       {
         texto:
-          'Preencha **Seu nome**, **E-mail**, **Senha** e **Confirmar senha** (mínimo de 8 caracteres). Depois, o **Nome** da sua casa ou produtora. O **Endereço da sua página** é criado sozinho; quando aparecer **Endereço disponível** em verde, ele é seu. Marque que aceita os Termos de uso e clique em **Criar conta**.',
+          'Preencha **Seu nome**, **E-mail**, **Senha** e **Confirmar senha** (mínimo de 8 caracteres). Depois, o **Nome** da sua casa ou produtora. O **Endereço da sua página** é criado sozinho; quando aparecer **Endereço disponível** em verde, ele é seu. Em **Quem vende os ingressos**, escolha **Pessoa física** (CPF) ou **Empresa** (CNPJ) e preencha o documento, o nome completo ou a razão social e o telefone. Marque que aceita os Termos de uso e o **Contrato do Organizador** e clique em **Criar conta**.',
         imagem: 'cadastro-formulario',
         alt: 'Formulário Crie sua conta de produtor preenchido'
       },
@@ -83,7 +83,54 @@ export const ARTIGOS_AJUDA: readonly ArtigoAjuda[] = [
       { pergunta: 'Apareceu "Este e-mail já tem conta".', resposta: 'Você já se cadastrou antes. Clique em Entrar e use a senha que criou.' },
       { pergunta: 'Apareceu "Esse endereço já está em uso".', resposta: 'Outra casa já usa esse endereço. Escolha outro, por exemplo acrescentando a cidade.' },
       { pergunta: 'O e-mail de confirmação não chegou.', resposta: 'Olhe a caixa de spam e as abas Promoções ou Atualizações do seu e-mail.' },
-      { pergunta: 'Apareceu "Este link expirou ou já foi utilizado".', resposta: 'Entre com o e-mail e a senha que você cadastrou para concluir o cadastro.' }
+      { pergunta: 'Apareceu "Este link expirou ou já foi utilizado".', resposta: 'Entre com o e-mail e a senha que você cadastrou para concluir o cadastro.' },
+      { pergunta: 'Apareceu "CPF inválido" ou "CNPJ inválido".', resposta: 'Confira os números. Se você vende como empresa, escolha Empresa antes de digitar o CNPJ.' }
+    ]
+  },
+  {
+    slug: 'dados-organizador-contrato',
+    titulo: 'Dados do organizador e Contrato do Organizador',
+    resumo: 'Informe CPF ou CNPJ e telefone e aceite o contrato para usar o painel e publicar eventos.',
+    categoria: 'primeiros-passos',
+    publico: ['produtor'],
+    palavras: ['contrato', 'aceite', 'aceitar', 'cpf', 'cnpj', 'documento', 'telefone', 'razão social', 'organizador', 'bloqueado', 'termos'],
+    antes:
+      'Toda casa precisa informar quem vende os ingressos e aceitar o Contrato do Organizador. Se o painel abrir direto na tela **Dados do organizador**, é isso que falta. As vendas dos eventos já publicados continuam normalmente.',
+    passos: [
+      {
+        texto:
+          'Abra **Configurações** e depois **Dados do organizador e contrato**. Se faltar algo, o painel já abre nessa tela.'
+      },
+      {
+        texto:
+          'Escolha **Pessoa física** (CPF) ou **Empresa** (CNPJ). Preencha o documento, o **nome completo** ou a **razão social**, como está no documento, e o **telefone com DDD**.'
+      },
+      {
+        texto:
+          'Clique em **Ler o contrato completo** para ler o Contrato do Organizador. Depois marque **Li e aceito o Contrato do Organizador** e clique em **Salvar e aceitar o contrato**.'
+      },
+      {
+        texto:
+          'Pronto: o painel é liberado e você pode publicar eventos. A tela passa a mostrar quando e por quem o contrato foi aceito. Você pode corrigir o telefone ou o documento ali mesmo, a qualquer momento.'
+      },
+      {
+        texto:
+          'Na página do evento, o comprador vê o nome de quem organiza e o documento: o CNPJ completo ou o CPF só em parte (por exemplo, ***.456.789-**).'
+      }
+    ],
+    problemas: [
+      {
+        pergunta: 'Não consigo publicar o evento: "aceite o Contrato do Organizador".',
+        resposta: 'Abra Configurações > Dados do organizador e contrato, complete os dados e aceite o contrato.'
+      },
+      {
+        pergunta: 'Apareceu "O contrato foi atualizado".',
+        resposta: 'Saiu uma versão nova do contrato. Recarregue a página, leia a versão nova e aceite de novo.'
+      },
+      {
+        pergunta: 'Sou da portaria e não vejo essa tela.',
+        resposta: 'Só um administrador da casa informa os dados e aceita o contrato. A portaria continua funcionando normalmente.'
+      }
     ]
   },
   {
@@ -106,7 +153,7 @@ export const ARTIGOS_AJUDA: readonly ArtigoAjuda[] = [
       },
       {
         texto:
-          'Quando o aviso some do painel, a casa está aprovada e você já pode publicar eventos e vender. Pagamento com cartão e Lista VIP são liberados por casa: peça à equipe Ingressoudi se quiser usar.'
+          'Quando o aviso some do painel, a casa está aprovada e você já pode publicar eventos e vender, desde que os dados do organizador estejam completos e o Contrato do Organizador aceito. Pagamento com cartão e Lista VIP são liberados por casa: peça à equipe Ingressoudi se quiser usar.'
       }
     ]
   },

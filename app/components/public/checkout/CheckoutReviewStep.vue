@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useOrganizadorPublico } from '~/composables/useOrganizacaoPublica'
 import { formatData, formatHora, formatMoeda } from '~/utils/format'
 import { AVISO_MEIA_ENTRADA } from '~/utils/meiaEntrada'
 import type { CheckoutBuyer, CheckoutParticipant, CheckoutStep } from '~/types/checkout'
@@ -21,6 +22,8 @@ const props = withDefaults(
   }>(),
   { erro: '', taxa: 0, quantidadeMeia: 0, precoMeia: null }
 )
+
+const { organizador } = useOrganizadorPublico()
 
 const emit = defineEmits<{
   editar: [step: CheckoutStep]
@@ -121,6 +124,12 @@ const acaoEditar =
 
     <p class="border-t border-zinc-800 pt-4 text-xs text-zinc-500">
       Após a confirmação do pagamento, os nomes dos participantes não poderão ser alterados.
+    </p>
+
+    <p v-if="organizador" class="text-xs text-zinc-500">
+      Evento organizado e vendido por <span class="text-zinc-300">{{ organizador.nome }}</span
+      ><template v-if="organizador.documento"> ({{ organizador.tipoDocumento }} {{ organizador.documento }})</template>,
+      responsável pela realização do evento e pelos reembolsos.
     </p>
 
     <p class="text-xs text-zinc-500">

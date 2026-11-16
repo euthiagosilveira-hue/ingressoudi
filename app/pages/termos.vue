@@ -33,7 +33,12 @@ useSeoMeta({
 
     <h2>2. Cadastro do Organizador</h2>
     <ul>
-      <li>O Organizador deve informar dados verdadeiros e mantê-los atualizados.</li>
+      <li>O Organizador deve informar dados verdadeiros (nome ou razão social, CPF ou CNPJ e telefone) e mantê-los atualizados.</li>
+      <li>
+        O Organizador também aceita o
+        <NuxtLink to="/contrato-organizador" class="text-amber-400 hover:text-amber-300">Contrato do Organizador</NuxtLink>,
+        que detalha as responsabilidades pelo evento, pelo reembolso aos compradores e o ressarcimento à Plataforma.
+      </li>
       <li>
         Novos cadastros passam por análise. A Plataforma pode aprovar, recusar ou suspender casas que descumpram estes
         Termos ou a legislação.
